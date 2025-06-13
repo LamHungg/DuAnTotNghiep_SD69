@@ -36,3 +36,374 @@
     transform: rotate(360deg);
   }
 }
+
+/* Sidebar menu highlight */
+.active-menu {
+  background: #f6f8fa !important;
+  color: #2d3748 !important;
+  font-weight: 600;
+  box-shadow: 0 2px 8px 0 rgba(0, 0, 0, 0.03);
+  border-radius: 8px;
+}
+
+.nav-link {
+  transition: background 0.2s, color 0.2s;
+}
+
+.nav-link:hover {
+  background: #f1f3f6;
+  color: #2d3748 !important;
+  border-radius: 8px;
+}
+
+/* Sidebar icon */
+.nav-link .me-2 {
+  font-size: 18px;
+  margin-right: 10px !important;
+}
+
+/* Sidebar text */
+.nav-link {
+  font-size: 15px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Remove default list style */
+.nav {
+  list-style: none;
+  padding-left: 0;
+}
+
+/* Sidebar container */
+.bg-white.border-end {
+  border-right: 1px solid #e5e7eb !important;
+}
+
+/* Statistic Cards */
+.stat-card {
+  background: #fff;
+  border-radius: 14px;
+  box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.04);
+  padding: 24px 20px 18px 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  min-height: 110px;
+  border: 1px solid #f0f1f2;
+}
+.stat-title {
+  font-size: 15px;
+  color: #7b809a;
+  font-weight: 500;
+  margin-bottom: 8px;
+}
+.stat-value {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #222b45;
+}
+
+/* Responsive for statistic cards */
+@media (max-width: 767px) {
+  .stat-card {
+    padding: 16px 10px;
+    min-height: 80px;
+  }
+  .stat-value {
+    font-size: 1.3rem;
+  }
+}
+
+/* Orders Table */
+.card .table {
+  border-radius: 12px;
+  overflow: hidden;
+  background: #fff;
+}
+.table thead th {
+  font-weight: 700;
+  color: #222b45;
+  background: #f6f8fa;
+  border-bottom: 1px solid #e5e7eb;
+  font-size: 15px;
+  vertical-align: middle;
+}
+.table tbody tr {
+  border-bottom: 1px solid #f0f1f2;
+  transition: background 0.2s;
+}
+.table tbody tr:hover {
+  background: #f6f8fa;
+}
+.table td,
+.table th {
+  vertical-align: middle;
+}
+
+/* Badge trạng thái */
+.badge {
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  padding: 6px 14px;
+  letter-spacing: 0.2px;
+}
+.badge.bg-warning {
+  background: #fff7e6 !important;
+  color: #b26a00 !important;
+}
+.badge.bg-info {
+  background: #e6f7ff !important;
+  color: #096dd9 !important;
+}
+.badge.bg-success {
+  background: #f6ffed !important;
+  color: #389e0d !important;
+}
+.badge.bg-danger {
+  background: #fff1f0 !important;
+  color: #cf1322 !important;
+}
+
+/* Nút thao tác nhỏ gọn */
+.btn-outline-primary,
+.btn-outline-secondary {
+  border-radius: 8px;
+  font-size: 13px;
+  padding: 4px 14px;
+  font-weight: 500;
+  transition: background 0.2s, color 0.2s;
+}
+.btn-outline-primary:hover {
+  background: #e6f4ff;
+  color: #1677ff;
+}
+.btn-outline-secondary:hover {
+  background: #f6f8fa;
+  color: #222b45;
+}
+
+/* Card bo góc, bóng nhẹ */
+.card {
+  border-radius: 14px;
+  box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.04);
+  border: 1px solid #f0f1f2;
+}
+
+/* Customer Table */
+.customer-table-wrapper {
+  background: #fff;
+  border-radius: 14px;
+  box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.04);
+  border: 1px solid #f0f1f2;
+  padding: 0;
+  overflow: hidden;
+}
+.customer-table thead th {
+  text-transform: uppercase;
+  font-size: 13px;
+  font-weight: 700;
+  color: #7b809a;
+  background: #fafbfc;
+  border-bottom: 1.5px solid #e5e7eb;
+  letter-spacing: 0.5px;
+}
+.customer-table tbody tr {
+  border-bottom: 1.5px solid #f0f1f2;
+  transition: background 0.2s;
+}
+.customer-table tbody tr:last-child {
+  border-bottom: none;
+}
+.customer-table td,
+.customer-table th {
+  vertical-align: middle;
+  font-size: 15px;
+  color: #222b45;
+  background: transparent;
+}
+
+/* Nút cập nhật tím nhạt */
+.btn-update-customer {
+  background: #f4f3ff;
+  color: #6c47ff;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  padding: 6px 18px;
+  transition: background 0.2s, color 0.2s;
+}
+.btn-update-customer:hover {
+  background: #ede9fe;
+  color: #4f3cc9;
+}
+
+/* Search box */
+.search-customer-box {
+  min-width: 240px;
+}
+.search-customer-input {
+  border-radius: 10px;
+  background: #fafbfc;
+  border: 1.5px solid #e5e7eb;
+  font-size: 15px;
+  padding-right: 38px;
+}
+.search-customer-input:focus {
+  box-shadow: 0 0 0 2px #e0e7ff;
+  border-color: #bdb4fe;
+}
+.search-customer-icon {
+  color: #bdb4fe;
+  font-size: 16px;
+  pointer-events: none;
+  right: 0.75rem;
+}
+
+/* Order Update Form */
+.order-update-wrapper {
+  max-width: 950px;
+  margin: 0 auto;
+  padding-top: 32px;
+}
+.order-update-form {
+  border-radius: 14px;
+  box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.04);
+  border: 1px solid #f0f1f2;
+  background: #fcfdff;
+}
+.order-input {
+  border-radius: 10px !important;
+  background: #fafbfc !important;
+  border: 1.5px solid #e5e7eb !important;
+  font-size: 15px;
+  padding: 10px 14px;
+}
+.order-input:focus {
+  box-shadow: 0 0 0 2px #e0e7ff;
+  border-color: #bdb4fe;
+}
+.order-status-select {
+  min-width: 100%;
+}
+.order-status-dot {
+  font-size: 18px;
+  left: 18px;
+  top: 50%;
+  transform: translateY(-50%);
+  pointer-events: none;
+}
+.order-status-select select {
+  padding-left: 38px !important;
+}
+
+.btn-cancel {
+  background: #f6f8fa;
+  color: #7b809a;
+  border: none;
+  border-radius: 8px;
+  font-size: 15px;
+  font-weight: 500;
+  padding: 8px 22px;
+  transition: background 0.2s, color 0.2s;
+}
+.btn-cancel:hover {
+  background: #ececec;
+  color: #222b45;
+}
+.btn-save {
+  background: #b4c8fa;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-size: 15px;
+  font-weight: 500;
+  padding: 8px 22px;
+  transition: background 0.2s, color 0.2s;
+}
+.btn-save:hover {
+  background: #7da6f7;
+  color: #fff;
+}
+
+/* Sidebar đa cấp */
+.sidebar-parent {
+  background: #f6f8fa !important;
+  color: #6c47ff !important;
+  font-weight: 600;
+  border-radius: 10px;
+  margin-bottom: 2px;
+}
+.sidebar-parent.active-menu {
+  background: #ede9fe !important;
+  color: #6c47ff !important;
+}
+.sidebar-children {
+  padding-left: 0.5rem;
+  margin-top: 2px;
+}
+.sidebar-child {
+  background: transparent !important;
+  color: #7b809a !important;
+  font-weight: 500;
+  border-radius: 8px;
+  margin-bottom: 2px;
+  transition: background 0.2s, color 0.2s;
+}
+.sidebar-child.active-menu {
+  background: #f4f3ff !important;
+  color: #6c47ff !important;
+  font-weight: 600;
+}
+.sidebar-child:hover {
+  background: #f6f8fa !important;
+  color: #6c47ff !important;
+}
+.sidebar-parent .ms-auto {
+  font-size: 16px;
+  color: #bdb4fe;
+}
+
+/* Product search input */
+.product-search-input {
+  border-radius: 10px;
+  background: #fafbfc;
+  border: 1.5px solid #e5e7eb;
+  font-size: 15px;
+  padding: 10px 14px;
+  min-width: 220px;
+}
+.product-search-input:focus {
+  box-shadow: 0 0 0 2px #e0e7ff;
+  border-color: #bdb4fe;
+}
+.product-search-card {
+  background: #fff;
+  border-radius: 14px;
+  box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.04);
+  border: 1px solid #f0f1f2;
+  margin-bottom: 18px;
+}
+
+/* Button thêm sản phẩm */
+.btn-add-product {
+  background: #6c47ff;
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  font-size: 15px;
+  font-weight: 500;
+  padding: 10px 22px;
+  transition: background 0.2s, color 0.2s;
+  box-shadow: 0 2px 8px 0 rgba(108, 71, 255, 0.08);
+}
+.btn-add-product:hover {
+  background: #4f3cc9;
+  color: #fff;
+}
+.btn-add-product svg {
+  font-size: 16px;
+}
