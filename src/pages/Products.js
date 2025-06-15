@@ -199,23 +199,6 @@ const Products = () => {
             &gt;
           </button>
         </div>
-        <div>
-          <select
-            className="form-select product-page-size"
-            style={{ width: 90 }}
-          >
-            <option>5 / page</option>
-            <option>10 / page</option>
-          </select>
-        </div>
-        <div className="d-flex align-items-center gap-1">
-          <span>Go to</span>
-          <input
-            className="form-control product-page-goto"
-            style={{ width: 60 }}
-          />
-          <span>Page</span>
-        </div>
       </div>
     </div>
   );
