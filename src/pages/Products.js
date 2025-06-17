@@ -72,7 +72,7 @@ const Products = () => {
     (p) =>
       (status === "" || p.status === status) &&
       (category === "" || p.category === category) &&
-      p.name.toLowerCase().includes(search.toLowerCase())
+      (p.name ? p.name.toLowerCase().includes(search.toLowerCase()) : false)
   );
 
   // Phân trang
