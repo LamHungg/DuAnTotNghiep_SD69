@@ -2,12 +2,6 @@ import React, { useEffect, useState } from "react";
 import { FaEdit, FaPlus } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 
-const categories = [
-  { value: "", label: "Tất cả danh mục" },
-  { value: "Nam", label: "Nam" },
-  { value: "Nữ", label: "Nữ" },
-];
-
 const statusOptions = [
   { value: "", label: "Tất cả" },
   { value: "Đang bán", label: "Đang bán" },
@@ -17,37 +11,73 @@ const statusOptions = [
 const productsData = [
   {
     id: 1,
-    code: "SP006",
-    name: "Áo Phông Nam Mùa Đông",
-    quantity: 70,
-    category: "Nam",
-    status: "Đang bán",
-    brand: "Chanel",
-    material: "Cotton",
-    sleeve: "Tay bồng",
-    collar: "Cổ thuyền",
-    createdAt: "2024-01-01T10:00:00Z",
-    variants: [
-      { color: "Red", size: "XL" },
-      { color: "Red", size: "L" },
-    ],
+    ma_san_pham: "SP001",
+    ten_san_pham: "Áo Thun Nam Basic",
+    ten_danh_muc: "Áo thun",
+    trang_thai: 1,
+    mo_ta: "Áo thun nam chất liệu cotton, thoáng mát.",
+    id_nguoi_tao: 1,
+    ngay_tao: "2024-01-01T10:00:00Z",
+    id_nguoi_cap_nhat: 2,
+    ngay_cap_nhat: "2024-01-05T10:00:00Z",
+    deleted_at: null,
+    id_nguoi_xoa: null,
   },
   {
     id: 2,
-    code: "SP005",
-    name: "Áo Phông Nữ Mùa Hè",
-    quantity: 62,
-    category: "Nữ",
-    status: "Đang bán",
-    brand: "Gucci",
-    material: "Polyester",
-    sleeve: "Tay ngắn",
-    collar: "Cổ tròn",
-    createdAt: "2024-01-02T11:00:00Z",
-    variants: [
-      { color: "Black", size: "M" },
-      { color: "Black", size: "L" },
-    ],
+    ma_san_pham: "SP002",
+    ten_san_pham: "Áo Sơ Mi Nữ Công Sở",
+    ten_danh_muc: "Áo sơ mi",
+    trang_thai: 0,
+    mo_ta: "Áo sơ mi nữ kiểu dáng công sở, vải lụa cao cấp.",
+    id_nguoi_tao: 2,
+    ngay_tao: "2024-01-02T11:00:00Z",
+    id_nguoi_cap_nhat: 2,
+    ngay_cap_nhat: "2024-01-06T11:00:00Z",
+    deleted_at: null,
+    id_nguoi_xoa: null,
+  },
+  {
+    id: 3,
+    ma_san_pham: "SP003",
+    ten_san_pham: "Áo Khoác Gió Unisex",
+    ten_danh_muc: "Áo khoác",
+    trang_thai: 1,
+    mo_ta: "Áo khoác gió phù hợp cả nam và nữ, chống nước nhẹ.",
+    id_nguoi_tao: 1,
+    ngay_tao: "2024-01-03T12:00:00Z",
+    id_nguoi_cap_nhat: 3,
+    ngay_cap_nhat: "2024-01-07T12:00:00Z",
+    deleted_at: null,
+    id_nguoi_xoa: null,
+  },
+  {
+    id: 4,
+    ma_san_pham: "SP004",
+    ten_san_pham: "Áo Polo Trẻ Em",
+    ten_danh_muc: "Áo polo",
+    trang_thai: 2,
+    mo_ta: "Áo polo cho trẻ em, nhiều màu sắc.",
+    id_nguoi_tao: 3,
+    ngay_tao: "2024-01-04T13:00:00Z",
+    id_nguoi_cap_nhat: 1,
+    ngay_cap_nhat: "2024-01-08T13:00:00Z",
+    deleted_at: null,
+    id_nguoi_xoa: null,
+  },
+  {
+    id: 5,
+    ma_san_pham: "SP005",
+    ten_san_pham: "Áo Hoodie Nỉ Dày",
+    ten_danh_muc: "Áo thun",
+    trang_thai: 3,
+    mo_ta: "Áo hoodie nỉ dày, giữ ấm tốt cho mùa đông.",
+    id_nguoi_tao: 2,
+    ngay_tao: "2024-01-05T14:00:00Z",
+    id_nguoi_cap_nhat: 2,
+    ngay_cap_nhat: "2024-01-09T14:00:00Z",
+    deleted_at: null,
+    id_nguoi_xoa: null,
   },
   // ... bạn có thể thêm dữ liệu mẫu khác nếu muốn
 ];
@@ -59,21 +89,56 @@ const Products = () => {
   const [status, setStatus] = useState("");
   const [category, setCategory] = useState("");
   const [search, setSearch] = useState("");
+  const [searchCode, setSearchCode] = useState("");
   const [page, setPage] = useState(1);
+  const [allCategories, setAllCategories] = useState([
+    { value: "", label: "Tất cả danh mục" },
+  ]);
   const navigate = useNavigate();
 
   useEffect(() => {
     const localProducts = JSON.parse(localStorage.getItem("products") || "[]");
-    setProducts([...productsData, ...localProducts]);
+    const allProducts = [...localProducts, ...productsData];
+    setProducts(allProducts);
+    // Lấy tất cả danh mục duy nhất từ dữ liệu
+    const categorySet = new Set();
+    allProducts.forEach((p) => {
+      if (p.ten_danh_muc && p.ten_danh_muc.trim() !== "") {
+        categorySet.add(p.ten_danh_muc);
+      }
+    });
+    setAllCategories([
+      { value: "", label: "Tất cả danh mục" },
+      ...Array.from(categorySet).map((cat) => ({ value: cat, label: cat })),
+    ]);
   }, []);
 
-  // Lọc sản phẩm theo trạng thái, danh mục, tên
-  const filteredProducts = products.filter(
+  // Lọc sản phẩm theo trạng thái, danh mục, mã sản phẩm, tên sản phẩm
+  let filteredProducts = products.filter(
     (p) =>
-      (status === "" || p.status === status) &&
-      (category === "" || p.category === category) &&
-      (p.name ? p.name.toLowerCase().includes(search.toLowerCase()) : false)
+      (status === "" ||
+        p.trang_thai === Number(status) ||
+        (status === "Đang bán" && p.trang_thai === 1) ||
+        (status === "Ngừng bán" && p.trang_thai === 0)) &&
+      (category === "" || p.ten_danh_muc === category) &&
+      (searchCode === "" ||
+        (p.ma_san_pham &&
+          p.ma_san_pham.toLowerCase().includes(searchCode.toLowerCase()))) &&
+      (search === "" ||
+        (p.ten_san_pham &&
+          p.ten_san_pham.toLowerCase().includes(search.toLowerCase())))
   );
+  // Nếu có lastSavedProductCode thì đưa sản phẩm đó lên đầu bảng (không tạo bản sao)
+  const lastSavedCode = localStorage.getItem("lastSavedProductCode");
+  if (lastSavedCode) {
+    const idx = filteredProducts.findIndex(
+      (p) => p.ma_san_pham === lastSavedCode
+    );
+    if (idx > 0) {
+      const [sp] = filteredProducts.splice(idx, 1);
+      filteredProducts.unshift(sp);
+    }
+  }
 
   // Phân trang
   const totalPages = Math.ceil(filteredProducts.length / PAGE_SIZE);
@@ -81,6 +146,17 @@ const Products = () => {
     (page - 1) * PAGE_SIZE,
     page * PAGE_SIZE
   );
+
+  // Xóa sản phẩm
+  const handleDelete = (id) => {
+    if (!window.confirm("Bạn có chắc chắn muốn xóa sản phẩm này?")) return;
+    // Xóa khỏi localStorage nếu là sản phẩm do người dùng thêm
+    let localProducts = JSON.parse(localStorage.getItem("products") || "[]");
+    localProducts = localProducts.filter((p) => p.id !== id);
+    localStorage.setItem("products", JSON.stringify(localProducts));
+    // Cập nhật lại danh sách
+    setProducts((prev) => prev.filter((p) => p.id !== id));
+  };
 
   return (
     <div>
@@ -90,7 +166,17 @@ const Products = () => {
       {/* Search, Add, Filter */}
       <div className="product-search-card mb-3 p-4">
         <div className="row g-3">
-          <div className="col-md-9">
+          <div className="col-md-6">
+            <label className="form-label mb-2">Mã sản phẩm</label>
+            <input
+              className="form-control product-search-input"
+              placeholder="Tìm kiếm theo mã sản phẩm..."
+              value={searchCode}
+              onChange={(e) => setSearchCode(e.target.value)}
+              style={{ height: 40 }}
+            />
+          </div>
+          <div className="col-md-6">
             <label className="form-label mb-2">Tên sản phẩm</label>
             <input
               className="form-control product-search-input"
@@ -100,7 +186,7 @@ const Products = () => {
               style={{ height: 40 }}
             />
           </div>
-          <div className="col-md-3 d-flex align-items-end justify-content-end">
+          <div className="col-md-3 d-flex align-items-end justify-content-end mt-3">
             <button
               type="button"
               className="btn btn-add-product d-flex align-items-center gap-2 w-100"
@@ -136,7 +222,7 @@ const Products = () => {
               value={category}
               onChange={(e) => setCategory(e.target.value)}
             >
-              {categories.map((opt) => (
+              {allCategories.map((opt) => (
                 <option key={opt.value} value={opt.value}>
                   {opt.label}
                 </option>
@@ -150,38 +236,42 @@ const Products = () => {
         <table className="table product-table align-middle mb-0">
           <thead>
             <tr>
-              <th>#</th>
-              <th>Tên</th>
+              <th>STT</th>
+              <th>Mã sản phẩm</th>
+              <th>Tên sản phẩm</th>
               <th>Danh mục</th>
-              <th>Thương hiệu</th>
-              <th>Chất liệu</th>
-              <th>Tay áo</th>
-              <th>Cổ áo</th>
-              <th>Biến thể</th>
-              <th>Ngày tạo</th>
+              <th>Trạng thái</th>
+              <th>Hành động</th>
             </tr>
           </thead>
           <tbody>
             {paginatedProducts.map((p, idx) => (
-              <tr key={(p.name || p.code) + idx}>
-                <td>{(page - 1) * PAGE_SIZE + idx + 1}</td>
-                <td>{p.name}</td>
-                <td>{p.category}</td>
-                <td>{p.brand}</td>
-                <td>{p.material}</td>
-                <td>{p.sleeve}</td>
-                <td>{p.collar}</td>
+              <tr key={p.id}>
+                <td>{idx + 1}</td>
+                <td>{p.ma_san_pham}</td>
+                <td>{p.ten_san_pham}</td>
+                <td>{p.ten_danh_muc}</td>
                 <td>
-                  {p.variants
-                    ? p.variants.map((v, i) => (
-                        <div key={i}>
-                          {v.color} - {v.size}
-                        </div>
-                      ))
-                    : ""}
+                  {p.trang_thai === 1 && "Đang bán"}
+                  {p.trang_thai === 0 && "Ngừng bán"}
+                  {p.trang_thai === 2 && "Ẩn"}
+                  {p.trang_thai === 3 && "Sắp ra mắt"}
                 </td>
                 <td>
-                  {p.createdAt ? new Date(p.createdAt).toLocaleString() : ""}
+                  <button
+                    className="btn btn-sm btn-primary me-2"
+                    onClick={() => navigate(`/products/edit/${p.id}`)}
+                    title="Sửa"
+                  >
+                    <FaEdit />
+                  </button>
+                  <button
+                    className="btn btn-sm btn-danger"
+                    onClick={() => handleDelete(p.id)}
+                    title="Xóa"
+                  >
+                    Xóa
+                  </button>
                 </td>
               </tr>
             ))}
