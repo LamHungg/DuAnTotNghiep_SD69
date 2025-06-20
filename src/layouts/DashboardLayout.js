@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { Outlet, NavLink } from "react-router-dom";
+import React, { useState, useEffect } from "react";
+import { Outlet, NavLink, useNavigate } from "react-router-dom";
 import {
   FaBoxOpen,
   FaTshirt,
@@ -16,34 +16,71 @@ import {
   FaHome,
   FaShoppingCart,
   FaPlus,
+  FaUserTie,
+  FaSignOutAlt,
+  FaRegClock,
 } from "react-icons/fa";
 
 const sidebarMenus = [
-  { label: "Trang chủ", icon: <FaHome />, to: "/" },
-  { label: "Thống Kê", icon: <FaChartBar />, to: "/stats" },
-  { label: "Bán Hàng Tại Quầy", icon: <FaBoxOpen />, to: "/pos" },
-  { label: "Trả hàng", icon: <FaRegHandPaper />, to: "/returns" },
+  { label: "Trang chủ", icon: <FaHome />, to: "/dashboard" },
+  { label: "Thống Kê", icon: <FaChartBar />, to: "/dashboard/stats" },
+  { label: "Bán Hàng Tại Quầy", icon: <FaBoxOpen />, to: "/dashboard/pos" },
+  { label: "Trả hàng", icon: <FaRegHandPaper />, to: "/dashboard/returns" },
   {
     label: "Quản Lý Sản Phẩm",
     icon: <FaTshirt />,
     children: [
-      { label: "Sản Phẩm", icon: <FaTshirt />, to: "/products" },
-      { label: "Danh Mục", icon: <FaThList />, to: "/categories" },
-      { label: "Màu Sắc", icon: <FaPalette />, to: "/colors" },
-      { label: "Kích Cỡ", icon: <FaRulerCombined />, to: "/sizes" },
-      { label: "Thương Hiệu", icon: <FaTrademark />, to: "/brands" },
-      { label: "Chất Liệu", icon: <FaTint />, to: "/materials" },
-      { label: "Kiểu Tay Áo", icon: <FaRegHandPaper />, to: "/sleeves" },
-      { label: "Kiểu Cổ Áo", icon: <FaRegCircle />, to: "/collars" },
+      { label: "Sản Phẩm", icon: <FaTshirt />, to: "/dashboard/products" },
+      { label: "Danh Mục", icon: <FaThList />, to: "/dashboard/categories" },
+      { label: "Màu Sắc", icon: <FaPalette />, to: "/dashboard/colors" },
+      { label: "Kích Cỡ", icon: <FaRulerCombined />, to: "/dashboard/sizes" },
+      { label: "Chất Liệu", icon: <FaTint />, to: "/dashboard/materials" },
     ],
   },
-  { label: "Quản Lý Đơn Hàng", icon: <FaShoppingCart />, to: "/orders" },
-  { label: "Quản Lý Khách Hàng", icon: <FaUsers />, to: "/customers" },
-  { label: "Cài đặt", icon: <FaCog />, to: "/settings" },
+  { label: "Quản Lý Đơn Hàng", icon: <FaShoppingCart />, to: "/dashboard/orders" },
+  { label: "Quản Lý Khách Hàng", icon: <FaUsers />, to: "/dashboard/customers" },
+  { label: "Quản Lý Account", icon: <FaUserTie />, to: "/dashboard/accounts" },
+  { label: "Cài đặt", icon: <FaCog />, to: "/dashboard/settings" },
 ];
+
+function Clock() {
+  const [time, setTime] = useState(new Date());
+  useEffect(() => {
+    const timer = setInterval(() => setTime(new Date()), 1000);
+    return () => clearInterval(timer);
+  }, []);
+  return (
+    <span style={{
+      display: 'inline-flex',
+      alignItems: 'center',
+      gap: 8,
+      background: '#f6f8fa',
+      borderRadius: 8,
+      padding: '4px 14px',
+      fontWeight: 500,
+      fontSize: 16,
+      color: '#333',
+      boxShadow: '0 1px 4px rgba(0,0,0,0.04)',
+      marginLeft: 18
+    }}>
+      <FaRegClock style={{ color: '#7c3aed', fontSize: 20 }} />
+      {time.toLocaleTimeString()}
+    </span>
+  );
+}
 
 const DashboardLayout = () => {
   const [openMenu, setOpenMenu] = useState("Quản Lý Sản Phẩm");
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    if (window.confirm("Bạn có chắc chắn muốn đăng xuất?")) {
+      localStorage.removeItem("currentUser");
+      localStorage.removeItem("isLoggedIn");
+      alert("Đăng xuất thành công!");
+      navigate("/login");
+    }
+  };
 
   return (
     <div
@@ -153,7 +190,20 @@ const DashboardLayout = () => {
           style={{ minHeight: 60 }}
         >
           <div className="container-fluid">
-            <span className="navbar-brand fw-bold">Admin Dashboard</span>
+            <span className="navbar-brand fw-bold d-flex align-items-center">
+              Admin Dashboard
+              <Clock />
+            </span>
+            <div className="d-flex align-items-center">
+              <button
+                onClick={handleLogout}
+                className="btn btn-outline-danger d-flex align-items-center gap-2"
+                style={{ fontSize: "14px" }}
+              >
+                <FaSignOutAlt />
+                Đăng xuất
+              </button>
+            </div>
           </div>
         </nav>
         <main className="p-4">

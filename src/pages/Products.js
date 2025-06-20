@@ -95,6 +95,8 @@ const Products = () => {
     { value: "", label: "Tất cả danh mục" },
   ]);
   const navigate = useNavigate();
+  const [expandedRow, setExpandedRow] = useState(null);
+  const [productDetails, setProductDetails] = useState([]);
 
   useEffect(() => {
     const localProducts = JSON.parse(localStorage.getItem("products") || "[]");
@@ -111,6 +113,9 @@ const Products = () => {
       { value: "", label: "Tất cả danh mục" },
       ...Array.from(categorySet).map((cat) => ({ value: cat, label: cat })),
     ]);
+    // Lấy chi tiết sản phẩm từ localStorage
+    const details = JSON.parse(localStorage.getItem("productDetails") || "[]");
+    setProductDetails(details);
   }, []);
 
   // Lọc sản phẩm theo trạng thái, danh mục, mã sản phẩm, tên sản phẩm
@@ -186,12 +191,27 @@ const Products = () => {
               style={{ height: 40 }}
             />
           </div>
+          <div className="col-md-6">
+            <label className="form-label mb-2">Danh mục sản phẩm</label>
+            <select
+              className="form-select product-category-select"
+              style={{ height: 40 }}
+              value={category}
+              onChange={(e) => setCategory(e.target.value)}
+            >
+              {allCategories.map((opt) => (
+                <option key={opt.value} value={opt.value}>
+                  {opt.label}
+                </option>
+              ))}
+            </select>
+          </div>
           <div className="col-md-3 d-flex align-items-end justify-content-end mt-3">
             <button
               type="button"
               className="btn btn-add-product d-flex align-items-center gap-2 w-100"
               style={{ height: 40 }}
-              onClick={() => navigate("/products/add")}
+              onClick={() => navigate("/dashboard/products/add")}
             >
               <FaPlus /> Thêm sản phẩm
             </button>
@@ -214,21 +234,6 @@ const Products = () => {
               ))}
             </div>
           </div>
-          <div className="col-md-6 mt-3">
-            <label className="form-label mb-2">Danh mục</label>
-            <select
-              className="form-select product-category-select"
-              style={{ maxWidth: 300 }}
-              value={category}
-              onChange={(e) => setCategory(e.target.value)}
-            >
-              {allCategories.map((opt) => (
-                <option key={opt.value} value={opt.value}>
-                  {opt.label}
-                </option>
-              ))}
-            </select>
-          </div>
         </div>
       </div>
       {/* Table */}
@@ -238,42 +243,121 @@ const Products = () => {
             <tr>
               <th>STT</th>
               <th>Mã sản phẩm</th>
-              <th>Tên sản phẩm</th>
-              <th>Danh mục</th>
+              <th>Tên</th>
+              <th>Giá bán</th>
               <th>Trạng thái</th>
               <th>Hành động</th>
             </tr>
           </thead>
           <tbody>
             {paginatedProducts.map((p, idx) => (
-              <tr key={p.id}>
-                <td>{idx + 1}</td>
-                <td>{p.ma_san_pham}</td>
-                <td>{p.ten_san_pham}</td>
-                <td>{p.ten_danh_muc}</td>
-                <td>
-                  {p.trang_thai === 1 && "Đang bán"}
-                  {p.trang_thai === 0 && "Ngừng bán"}
-                  {p.trang_thai === 2 && "Ẩn"}
-                  {p.trang_thai === 3 && "Sắp ra mắt"}
-                </td>
-                <td>
-                  <button
-                    className="btn btn-sm btn-primary me-2"
-                    onClick={() => navigate(`/products/edit/${p.id}`)}
-                    title="Sửa"
-                  >
-                    <FaEdit />
-                  </button>
-                  <button
-                    className="btn btn-sm btn-danger"
-                    onClick={() => handleDelete(p.id)}
-                    title="Xóa"
-                  >
-                    Xóa
-                  </button>
-                </td>
-              </tr>
+              <React.Fragment key={p.id}>
+                <tr
+                  style={{ cursor: "pointer" }}
+                  onClick={() => setExpandedRow(expandedRow === p.id ? null : p.id)}
+                >
+                  <td>{idx + 1}</td>
+                  <td>{p.ma_san_pham}</td>
+                  <td>{p.ten_san_pham}</td>
+                  <td>{p.gia_ban ? p.gia_ban.toLocaleString() : ''}</td>
+                  <td>
+                    {p.trang_thai === 1 && "Đang bán"}
+                    {p.trang_thai === 0 && "Ngừng bán"}
+                    {p.trang_thai === 2 && "Ẩn"}
+                    {p.trang_thai === 3 && "Sắp ra mắt"}
+                  </td>
+                  <td>
+                    <button
+                      className="btn btn-sm btn-primary me-2"
+                      onClick={e => { e.stopPropagation(); navigate(`/products/edit/${p.id}`); }}
+                      title="Sửa"
+                    >
+                      <FaEdit />
+                    </button>
+                    <button
+                      className="btn btn-sm btn-danger"
+                      onClick={e => { e.stopPropagation(); handleDelete(p.id); }}
+                      title="Xóa"
+                    >
+                      Xóa
+                    </button>
+                  </td>
+                </tr>
+                {expandedRow === p.id && (
+                  <tr>
+                    <td colSpan={6} style={{ background: "#f8f9fa" }}>
+                      <div style={{ padding: 16 }}>
+                        <b>Chi tiết sản phẩm:</b>
+                        <table className="table table-bordered mt-2 mb-0">
+                          <thead>
+                            <tr>
+                              <th>Mã sản phẩm</th>
+                              <th>Tên</th>
+                              <th>Danh mục</th>
+                              <th>Màu sắc</th>
+                              <th>Kích thước</th>
+                              <th>Chất liệu</th>
+                              <th>Giá nhập</th>
+                              <th>Giá bán</th>
+                              <th>Số lượng</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {productDetails.filter(d => d.id_san_pham === p.id).map((d, i) => (
+                              <React.Fragment key={d.id || i}>
+                                <tr>
+                                  <td>{p.ma_san_pham}</td>
+                                  <td>{p.ten_san_pham}</td>
+                                  <td>{p.ten_danh_muc}</td>
+                                  <td>{d.id_mau_sac}</td>
+                                  <td>{d.id_kich_co}</td>
+                                  <td>{d.id_chat_lieu}</td>
+                                  <td>{d.gia_nhap?.toLocaleString()}</td>
+                                  <td>{d.gia?.toLocaleString()}</td>
+                                  <td>{d.so_luong}</td>
+                                </tr>
+                                {/* Truy vết lịch sử tạo/sửa */}
+                                {(d.auditTrail && d.auditTrail.length > 0) && (
+                                  <tr>
+                                    <td colSpan={9} style={{ background: '#f3f4f6', padding: 0 }}>
+                                      <div style={{ padding: 8 }}>
+                                        <b>Lịch sử tạo/sửa:</b>
+                                        <table className="table table-sm table-bordered mb-0 mt-2">
+                                          <thead>
+                                            <tr>
+                                              <th>Người tạo</th>
+                                              <th>Thời gian tạo</th>
+                                              <th>Người sửa</th>
+                                              <th>Thời gian sửa</th>
+                                            </tr>
+                                          </thead>
+                                          <tbody>
+                                            {d.auditTrail.map((a, idx) => (
+                                              <tr key={idx}>
+                                                <td>{a.nguoi_tao || ''}</td>
+                                                <td>{a.thoi_gian_tao ? new Date(a.thoi_gian_tao).toLocaleString() : ''}</td>
+                                                <td>{a.nguoi_sua || ''}</td>
+                                                <td>{a.thoi_gian_sua ? new Date(a.thoi_gian_sua).toLocaleString() : ''}</td>
+                                              </tr>
+                                            ))}
+                                          </tbody>
+                                        </table>
+                                      </div>
+                                    </td>
+                                  </tr>
+                                )}
+                              </React.Fragment>
+                            ))}
+                            {productDetails.filter(d => d.id_san_pham === p.id).length === 0 && (
+                              <tr><td colSpan={9} style={{ textAlign: "center" }}>Không có chi tiết</td></tr>
+                            )}
+                          </tbody>
+                        </table>
+                      </div>
+                    </td>
+                  </tr>
+                )}
+              </React.Fragment>
             ))}
           </tbody>
         </table>

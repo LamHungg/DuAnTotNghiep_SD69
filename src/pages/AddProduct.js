@@ -105,8 +105,10 @@ const AddProduct = () => {
   // State cho form chính
   const [productName, setProductName] = useState(null); // {value, label}
   const [productNameOptions, setProductNameOptions] = useState([]);
+  const [newProductName, setNewProductName] = useState(""); // Tên sản phẩm mới
   const [category, setCategory] = useState("");
-  const [material, setMaterial] = useState(materials[0]);
+  const [material, setMaterial] = useState("");
+  const [materialOptions, setMaterialOptions] = useState([]); // Dữ liệu từ màn chất liệu
   const [sizes, setSizes] = useState([]); // array of {value, label}
   const [sizeOptions, setSizeOptions] = useState(
     defaultSizes.map((s) => ({ value: s, label: s }))
@@ -116,27 +118,9 @@ const AddProduct = () => {
   const [colorOptions, setColorOptions] = useState(
     defaultColors.map((c) => ({ value: c, label: c }))
   );
-  const [newColor, setNewColor] = useState("");
-  const [quantity, setQuantity] = useState(10);
-
-  // State cho validation errors
-  const [errors, setErrors] = useState({
-    productName: "",
-    category: "",
-    material: "",
-    sizes: "",
-    colors: "",
-    variants: {},
-  });
-
-  // State cho modal thêm nhanh
-  const [showModal, setShowModal] = useState(false);
-  const [quickForm, setQuickForm] = useState({ name: "", category: "" });
-  const [quickFormErrors, setQuickFormErrors] = useState({
-    name: "",
-    category: "",
-  });
-  const closeBtnRef = useRef();
+  const [quantity, setQuantity] = useState(0);
+  const [importPrice, setImportPrice] = useState(0); // Giá nhập
+  const [sellPrice, setSellPrice] = useState(0); // Giá bán
 
   // State cho bảng sản phẩm sinh ra
   const [productVariants, setProductVariants] = useState([]); // [{color, size, quantity, price, weight, ...}]
@@ -150,11 +134,40 @@ const AddProduct = () => {
   const [selectedGalleryImgs, setSelectedGalleryImgs] = useState([]); // mảng url ảnh được chọn trong modal
   const [uploadingGallery, setUploadingGallery] = useState(false);
 
+  const [newColor, setNewColor] = useState("");
+  
+  // State cho chi tiết sản phẩm
+  const [productDetails, setProductDetails] = useState([]); // Array of chi_tiet_san_pham
+  const [showProductDetails, setShowProductDetails] = useState(false);
+
+  // State cho validation errors
+  const [errors, setErrors] = useState({
+    productName: "",
+    newProductName: "",
+    category: "",
+    material: "",
+    sizes: "",
+    colors: "",
+    productDetails: "",
+  });
+
+  // State cho modal thêm nhanh
+  const [showModal, setShowModal] = useState(false);
+  const [quickForm, setQuickForm] = useState({ name: "", category: "" });
+  const [quickFormErrors, setQuickFormErrors] = useState({
+    name: "",
+    category: "",
+  });
+  const closeBtnRef = useRef();
+
   // State cho modal xác nhận lưu sản phẩm
   const [showConfirmModal, setShowConfirmModal] = useState(false);
 
   // State cho toast thông báo thành công
   const [showSuccessToast, setShowSuccessToast] = useState(false);
+
+  // State cho trạng thái hợp lệ của form
+  const [isFormValid, setIsFormValid] = useState(false);
 
   const navigate = useNavigate();
 
@@ -175,6 +188,33 @@ const AddProduct = () => {
       }
     });
     setProductNameOptions(uniqueNames);
+  }, []);
+
+  // Lấy dữ liệu chất liệu từ localStorage
+  useEffect(() => {
+    const savedMaterials = JSON.parse(localStorage.getItem("materials") || "[]");
+    const materialList = savedMaterials
+      .filter(m => m.trang_thai === 1) // Chỉ lấy chất liệu đang hoạt động
+      .map(m => m.ten_chat_lieu);
+    setMaterialOptions(materialList);
+  }, []);
+
+  // Lấy dữ liệu kích cỡ từ localStorage
+  useEffect(() => {
+    const savedSizes = JSON.parse(localStorage.getItem("sizes") || "[]");
+    const sizeList = savedSizes
+      .filter(s => s.trang_thai === 1) // Chỉ lấy kích cỡ đang hoạt động
+      .map(s => ({ value: s.ten_kich_co, label: s.ten_kich_co }));
+    setSizeOptions(sizeList);
+  }, []);
+
+  // Lấy dữ liệu màu sắc từ localStorage
+  useEffect(() => {
+    const savedColors = JSON.parse(localStorage.getItem("colors") || "[]");
+    const colorList = savedColors
+      .filter(c => c.trang_thai === 1) // Chỉ lấy màu sắc đang hoạt động
+      .map(c => ({ value: c.ten_mau_sac, label: c.ten_mau_sac }));
+    setColorOptions(colorList);
   }, []);
 
   // Xử lý CreatableSelect cho tên sản phẩm
@@ -226,6 +266,8 @@ const AddProduct = () => {
             color: color.value,
             size: size.value,
             quantity: quantity,
+            gia_ban: sellPrice || '',
+            gia_nhap: importPrice || '',
             price: 100000,
             weight: 60,
             material,
@@ -239,12 +281,22 @@ const AddProduct = () => {
       setShowVariants(false);
       setProductVariants([]);
     }
-  }, [productName, material, sizes, colors, quantity]);
+  }, [productName, material, sizes, colors, quantity, importPrice, sellPrice]);
 
   // Xử lý thay đổi số lượng, giá, cân nặng
   const handleVariantChange = (idx, field, value) => {
     setProductVariants((prev) =>
-      prev.map((v, i) => (i === idx ? { ...v, [field]: value } : v))
+      prev.map((v, i) =>
+        i === idx
+          ? {
+              ...v,
+              [field]:
+                field === "quantity" || field === "gia_nhap" || field === "gia_ban"
+                  ? Number(value)
+                  : value,
+            }
+          : v
+      )
     );
   };
 
@@ -297,10 +349,15 @@ const AddProduct = () => {
 
   // Group theo màu
   const groupByColor = (variants) => {
+    if (!variants || !Array.isArray(variants)) {
+      return {};
+    }
     const groups = {};
     variants.forEach((v) => {
-      if (!groups[v.color]) groups[v.color] = [];
-      groups[v.color].push(v);
+      if (v && v.color) {
+        if (!groups[v.color]) groups[v.color] = [];
+        groups[v.color].push(v);
+      }
     });
     return groups;
   };
@@ -353,20 +410,41 @@ const AddProduct = () => {
 
   const galleryFileInput = useRef();
 
-  // Validation rules
+  // Validate các biến thể sản phẩm
+  const validateVariants = (variants) => {
+    const errors = [];
+    variants.forEach((v, idx) => {
+      const err = {};
+      if (v.gia_ban !== undefined && v.gia_nhap !== undefined && v.gia_ban !== '' && v.gia_nhap !== '') {
+        if (Number(v.gia_ban) <= Number(v.gia_nhap)) {
+          err.gia_ban = 'Giá bán phải lớn hơn giá nhập';
+        }
+      }
+      errors.push(err);
+    });
+    return errors;
+  };
+
+  // Validate form (bổ sung validate cho variants)
   const validateForm = () => {
     const newErrors = {
       productName: "",
+      newProductName: "",
       category: "",
       material: "",
       sizes: "",
       colors: "",
-      variants: {},
+      variants: [],
     };
 
-    // Validate product name
+    // Validate danh mục sản phẩm
     if (!productName) {
-      newErrors.productName = "Vui lòng nhập tên sản phẩm";
+      newErrors.productName = "Vui lòng chọn danh mục sản phẩm";
+    }
+
+    // Validate tên sản phẩm
+    if (!newProductName.trim()) {
+      newErrors.newProductName = "Vui lòng nhập tên sản phẩm";
     }
 
     // Validate category
@@ -390,27 +468,22 @@ const AddProduct = () => {
     }
 
     // Validate variants
-    productVariants.forEach((variant, index) => {
-      const variantErrors = {};
-
-      if (variant.quantity <= 0) {
-        variantErrors.quantity = "Số lượng phải lớn hơn 0";
-      }
-
-      if (variant.price <= 0) {
-        variantErrors.price = "Giá phải lớn hơn 0";
-      }
-
-      if (Object.keys(variantErrors).length > 0) {
-        newErrors.variants[index] = variantErrors;
-      }
-    });
-
+    newErrors.variants = validateVariants(productVariants);
     setErrors(newErrors);
     return !Object.values(newErrors).some((error) =>
-      typeof error === "string" ? error : Object.keys(error).length > 0
+      Array.isArray(error)
+        ? error.some((e) => Object.keys(e).length > 0)
+        : typeof error === "string"
+        ? error
+        : Object.keys(error).length > 0
     );
   };
+
+  // Theo dõi thay đổi dữ liệu form để kiểm tra hợp lệ
+  useEffect(() => {
+    setIsFormValid(validateForm());
+    // eslint-disable-next-line
+  }, [productName, newProductName, category, material, sizes, colors, productVariants, productDetails, importPrice, sellPrice, quantity]);
 
   // Lưu sản phẩm vào localStorage và chuyển hướng (chỉ gọi khi xác nhận)
   const handleConfirmSave = () => {
@@ -418,7 +491,7 @@ const AddProduct = () => {
     const allProducts = [...products, ...productsData];
     let ma_san_pham = "";
     const found = allProducts.find(
-      (p) => p.ten_san_pham === productName?.value
+      (p) => p.ten_san_pham === newProductName
     );
     if (!found) {
       // Sinh mã không trùng
@@ -431,11 +504,12 @@ const AddProduct = () => {
             .padStart(6, "0");
         i++;
       } while (allProducts.some((p) => p.ma_san_pham === ma_san_pham));
+      
       // Lưu sản phẩm mới vào localStorage
       const sanPham = {
         id: Date.now(),
         ma_san_pham,
-        ten_san_pham: productName?.value,
+        ten_san_pham: newProductName,
         ten_danh_muc: category,
         mo_ta: "",
         trang_thai: 1,
@@ -448,9 +522,20 @@ const AddProduct = () => {
       };
       products.unshift(sanPham);
       localStorage.setItem("products", JSON.stringify(products));
+      
+      // Lưu chi tiết sản phẩm
+      const productDetailsToSave = productDetails.map(detail => ({
+        ...detail,
+        id_san_pham: sanPham.id
+      }));
+      
+      const existingDetails = JSON.parse(localStorage.getItem("productDetails") || "[]");
+      existingDetails.push(...productDetailsToSave);
+      localStorage.setItem("productDetails", JSON.stringify(existingDetails));
+      
       localStorage.setItem("lastSavedProductCode", ma_san_pham);
     } else {
-      // Nếu sản phẩm đã có trong localStorage thì đẩy lên đầu, nếu chỉ có trong productsData thì không thêm vào localStorage
+      // Nếu sản phẩm đã có trong localStorage thì đẩy lên đầu
       ma_san_pham = found.ma_san_pham;
       const idx = products.findIndex(
         (p) => p.ma_san_pham === found.ma_san_pham
@@ -460,14 +545,13 @@ const AddProduct = () => {
         products.unshift(sp);
         localStorage.setItem("products", JSON.stringify(products));
       }
-      // Lưu mã sản phẩm vừa thao tác để trang quản lý biết đẩy lên đầu
       localStorage.setItem("lastSavedProductCode", ma_san_pham);
     }
     setShowConfirmModal(false);
     setShowSuccessToast(true);
     setTimeout(() => {
       setShowSuccessToast(false);
-      navigate("/products");
+      navigate("/dashboard/products");
     }, 1500);
   };
 
@@ -478,6 +562,48 @@ const AddProduct = () => {
       return;
     }
     setShowConfirmModal(true);
+  };
+
+  // Tự động sinh chi tiết sản phẩm khi chọn đủ
+  useEffect(() => {
+    console.log("useEffect triggered:", { material, sizes, colors });
+    if (!material || sizes.length === 0 || colors.length === 0) {
+      console.log("Missing required fields, clearing productDetails");
+      setProductDetails([]);
+      return;
+    }
+    console.log("Creating product details...");
+    const details = [];
+    sizes.forEach(size => {
+      colors.forEach(color => {
+        details.push({
+          id: Date.now() + Math.random(),
+          id_san_pham: null,
+          id_kich_co: size.value,
+          id_mau_sac: color.value,
+          id_chat_lieu: material,
+          so_luong: 0,
+          gia: 0,
+          gia_nhap: 0,
+          id_nguoi_tao: 1,
+          ngay_tao: new Date().toISOString(),
+          id_nguoi_cap_nhat: null,
+          ngay_cap_nhat: null
+        });
+      });
+    });
+    console.log("Created details:", details);
+    setProductDetails(details);
+  }, [material, sizes, colors]);
+
+  // Cập nhật chi tiết sản phẩm
+  const updateProductDetail = (index, field, value) => {
+    const updatedDetails = [...productDetails];
+    updatedDetails[index] = {
+      ...updatedDetails[index],
+      [field]: field === 'so_luong' || field === 'gia' || field === 'gia_nhap' ? Number(value) : value
+    };
+    setProductDetails(updatedDetails);
   };
 
   return (
@@ -512,19 +638,32 @@ const AddProduct = () => {
         onSubmit={(e) => e.preventDefault()}
       >
         <div className="mb-3">
-          <label className="form-label fw-semibold">Tên sản phẩm</label>
+          <label className="form-label fw-semibold">Danh mục sản phẩm</label>
           <div className={errors.productName ? "is-invalid" : ""}>
             <CreatableSelect
               isClearable
               options={productNameOptions}
               value={productName}
               onChange={handleProductNameChange}
-              placeholder="Chọn hoặc nhập tên sản phẩm..."
+              placeholder="Chọn hoặc nhập danh mục sản phẩm..."
               classNamePrefix="select"
             />
           </div>
           {errors.productName && (
             <div className="invalid-feedback d-block">{errors.productName}</div>
+          )}
+        </div>
+        <div className="mb-3">
+          <label className="form-label fw-semibold">Tên sản phẩm</label>
+          <input
+            type="text"
+            className={`form-control ${errors.newProductName ? "is-invalid" : ""}`}
+            value={newProductName}
+            onChange={(e) => setNewProductName(e.target.value)}
+            placeholder="Nhập tên sản phẩm..."
+          />
+          {errors.newProductName && (
+            <div className="invalid-feedback d-block">{errors.newProductName}</div>
           )}
         </div>
         <div className="row g-3 mb-3">
@@ -536,7 +675,7 @@ const AddProduct = () => {
               onChange={(e) => setMaterial(e.target.value)}
             >
               <option value="">Chọn chất liệu...</option>
-              {materials.map((m) => (
+              {materialOptions.map((m) => (
                 <option key={m}>{m}</option>
               ))}
             </select>
@@ -548,16 +687,51 @@ const AddProduct = () => {
             <label className="form-label">Số lượng</label>
             <input
               type="number"
-              className="form-control"
-              min={1}
+              className={`form-control ${errors.quantity ? "is-invalid" : ""}`}
+              min={0}
               value={quantity}
               onChange={(e) => setQuantity(Number(e.target.value))}
             />
+            {errors.quantity && (
+              <div className="invalid-feedback d-block">{errors.quantity}</div>
+            )}
           </div>
         </div>
-        {/* Kích cỡ với react-select và nút Thêm */}
+        <div className="row g-3 mb-3">
+          <div className="col-md-6">
+            <label className="form-label">Giá nhập (VNĐ)</label>
+            <input
+              type="number"
+              className={`form-control ${errors.importPrice ? "is-invalid" : ""}`}
+              min={0}
+              step={1000}
+              value={importPrice}
+              onChange={(e) => setImportPrice(Number(e.target.value))}
+              placeholder="Nhập giá nhập..."
+            />
+            {errors.importPrice && (
+              <div className="invalid-feedback d-block">{errors.importPrice}</div>
+            )}
+          </div>
+          <div className="col-md-6">
+            <label className="form-label">Giá bán (VNĐ)</label>
+            <input
+              type="number"
+              className={`form-control ${errors.sellPrice ? "is-invalid" : ""}`}
+              min={0}
+              step={1000}
+              value={sellPrice}
+              onChange={(e) => setSellPrice(Number(e.target.value))}
+              placeholder="Nhập giá bán..."
+            />
+            {errors.sellPrice && (
+              <div className="invalid-feedback d-block">{errors.sellPrice}</div>
+            )}
+          </div>
+        </div>
+        {/* Kích cỡ với react-select */}
         <div className="row g-3 mb-3 align-items-end">
-          <div className="col-md-10">
+          <div className="col-md-12">
             <label className="form-label">Kích cỡ</label>
             <div className={errors.sizes ? "is-invalid" : ""}>
               <Select
@@ -567,39 +741,17 @@ const AddProduct = () => {
                 value={sizes}
                 onChange={setSizes}
                 classNamePrefix="select"
-                placeholder="Chọn hoặc nhập kích cỡ..."
+                placeholder="Chọn kích cỡ..."
               />
             </div>
             {errors.sizes && (
               <div className="invalid-feedback d-block">{errors.sizes}</div>
             )}
           </div>
-          <div className="col-md-2 d-flex align-items-end">
-            <input
-              type="text"
-              className="form-control me-2"
-              placeholder="Thêm kích cỡ"
-              value={newSize}
-              onChange={(e) => setNewSize(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") {
-                  e.preventDefault();
-                  handleAddSize();
-                }
-              }}
-            />
-            <button
-              type="button"
-              className="btn btn-outline-primary"
-              onClick={handleAddSize}
-            >
-              <FaPlus />
-            </button>
-          </div>
         </div>
-        {/* Màu sắc với react-select và nút Thêm */}
+        {/* Màu sắc với react-select */}
         <div className="row g-3 mb-3 align-items-end">
-          <div className="col-md-10">
+          <div className="col-md-12">
             <label className="form-label">Màu sắc</label>
             <div className={errors.colors ? "is-invalid" : ""}>
               <Select
@@ -609,49 +761,33 @@ const AddProduct = () => {
                 value={colors}
                 onChange={setColors}
                 classNamePrefix="select"
-                placeholder="Chọn hoặc nhập màu sắc..."
+                placeholder="Chọn màu sắc..."
               />
             </div>
             {errors.colors && (
               <div className="invalid-feedback d-block">{errors.colors}</div>
             )}
           </div>
-          <div className="col-md-2 d-flex align-items-end">
-            <input
-              type="text"
-              className="form-control me-2"
-              placeholder="Thêm màu sắc"
-              value={newColor}
-              onChange={(e) => setNewColor(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") {
-                  e.preventDefault();
-                  handleAddColor();
-                }
-              }}
-            />
-            <button
-              type="button"
-              className="btn btn-outline-primary"
-              onClick={handleAddColor}
-            >
-              <FaPlus />
-            </button>
-          </div>
         </div>
+        
+        {/* Nút tạo chi tiết sản phẩm */}
+        {/* Đã loại bỏ button tạo chi tiết sản phẩm để tránh lỗi và theo yêu cầu mới */}
+        {/* {errors.productDetails && (
+            <div className="text-danger mt-2">{errors.productDetails}</div>
+          )} */}
       </form>
 
       {/* Bảng sản phẩm cùng loại */}
-      {showVariants && (
+      {showVariants && productVariants && productVariants.length > 0 && (
         <div className="mt-5">
           <div className="bg-light p-3 rounded mb-3 fw-bold">
-            Danh sách các sản phẩm cùng loại
+Chi tiết sản phẩm
           </div>
           {Object.entries(groupByColor(productVariants)).map(
             ([color, items]) => (
               <div key={color} className="mb-4">
                 <div className="fw-bold bg-secondary text-white px-3 py-2 rounded-top">
-                  Các sản phẩm màu {color}
+                  
                 </div>
                 <table className="table table-bordered align-middle mb-0">
                   <thead>
@@ -669,11 +805,11 @@ const AddProduct = () => {
                     </tr>
                   </thead>
                   <tbody>
-                    {items.map((v, idx) => {
+                    {items && items.map((v, idx) => {
                       const globalIdx = productVariants.findIndex(
                         (pv) => pv.color === v.color && pv.size === v.size
                       );
-                      const variantErrors = errors.variants[globalIdx] || {};
+                      const variantErrors = errors.variants && errors.variants[globalIdx] ? errors.variants[globalIdx] : {};
                       return (
                         <React.Fragment key={v.color + v.size}>
                           <tr>
@@ -707,9 +843,9 @@ const AddProduct = () => {
                               <div className="position-relative">
                                 <input
                                   type="number"
-                                  className="form-control"
+                                  className={`form-control ${variantErrors.gia_ban ? "is-invalid" : ""}`}
                                   style={{ width: 100 }}
-                                  value={v.gia_ban || v.price}
+                                  value={v.gia_ban}
                                   min={0}
                                   onChange={(e) =>
                                     handleVariantChange(
@@ -719,6 +855,9 @@ const AddProduct = () => {
                                     )
                                   }
                                 />
+                                {variantErrors.gia_ban && (
+                                  <div className="invalid-feedback d-block">{variantErrors.gia_ban}</div>
+                                )}
                               </div>
                             </td>
                             <td>
@@ -727,7 +866,7 @@ const AddProduct = () => {
                                   type="number"
                                   className="form-control"
                                   style={{ width: 100 }}
-                                  value={v.gia_nhap || v.price}
+                                  value={v.gia_nhap}
                                   min={0}
                                   onChange={(e) =>
                                     handleVariantChange(
@@ -830,6 +969,7 @@ const AddProduct = () => {
           type="button"
           className="btn btn-primary px-4 fw-bold"
           onClick={handleSaveProduct}
+          disabled={!isFormValid}
         >
           Lưu sản phẩm
         </button>

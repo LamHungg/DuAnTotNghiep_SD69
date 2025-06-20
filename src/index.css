@@ -11,3 +11,11 @@ code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, "Courier New",
     monospace;
 }
+
+body, html, #root {
+  font-family: 'Inter', 'Roboto', 'Arial', sans-serif !important;
+}
+
+* {
+  font-family: inherit !important;
+}
