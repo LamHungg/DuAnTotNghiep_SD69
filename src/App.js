@@ -1,5 +1,10 @@
-import React, { useState, useEffect } from "react";
-import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
+import React from "react";
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route,
+  Navigate,
+} from "react-router-dom";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "./App.css";
 import AddProduct from "./pages/AddProduct";
@@ -22,6 +27,7 @@ import Categories from "./pages/Categories";
 import Colors from "./pages/Colors";
 import Sizes from "./pages/Sizes";
 import Materials from "./pages/Materials";
+import EditProduct from "./pages/EditProduct";
 
 // Components
 import ProtectedRoute from "./components/ProtectedRoute";
@@ -33,23 +39,30 @@ function App() {
       <Routes>
         {/* Route mặc định - chuyển hướng đến login */}
         <Route path="/" element={<Navigate to="/login" replace />} />
-        
+
         {/* Route đăng nhập - chỉ hiển thị khi chưa đăng nhập */}
-        <Route path="/login" element={
-          <PublicRoute>
-            <Login />
-          </PublicRoute>
-        } />
-        
+        <Route
+          path="/login"
+          element={
+            <PublicRoute>
+              <Login />
+            </PublicRoute>
+          }
+        />
+
         {/* Các route được bảo vệ - yêu cầu đăng nhập */}
-        <Route path="/dashboard" element={
-          <ProtectedRoute>
-            <DashboardLayout />
-          </ProtectedRoute>
-        }>
+        <Route
+          path="/dashboard"
+          element={
+            <ProtectedRoute>
+              <DashboardLayout />
+            </ProtectedRoute>
+          }
+        >
           <Route index element={<Dashboard />} />
           <Route path="products" element={<Products />} />
           <Route path="products/add" element={<AddProduct />} />
+          <Route path="products/edit/:productId" element={<EditProduct />} />
           <Route path="orders" element={<Orders />} />
           <Route path="customers" element={<Customers />} />
           <Route path="accounts" element={<Accounts />} />
@@ -61,13 +74,16 @@ function App() {
           <Route path="materials" element={<Materials />} />
           <Route path="settings" element={<Settings />} />
         </Route>
-        
+
         {/* Route cập nhật đơn hàng */}
-        <Route path="/orders/update" element={
-          <ProtectedRoute>
-            <OrderUpdate />
-          </ProtectedRoute>
-        } />
+        <Route
+          path="/orders/update"
+          element={
+            <ProtectedRoute>
+              <OrderUpdate />
+            </ProtectedRoute>
+          }
+        />
       </Routes>
     </Router>
   );

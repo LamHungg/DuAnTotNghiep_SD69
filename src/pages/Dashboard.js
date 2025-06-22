@@ -1,10 +1,4 @@
 import React from "react";
-import {
-  FaShoppingBag,
-  FaShoppingCart,
-  FaUsers,
-  FaDollarSign,
-} from "react-icons/fa";
 
 const Dashboard = () => {
   return (
@@ -61,28 +55,28 @@ const Dashboard = () => {
             <table className="table align-middle">
               <thead>
                 <tr>
-                  <th>Mã đơn hàng</th>
-                  <th>Mã khách hàng</th>
-                  <th>Số điện thoại</th>
-                  <th>Ngày đặt</th>
-                  <th>Trạng thái</th>
-                  <th>Số tiền</th>
-                  <th>Thao tác</th>
+                  <th className="text-center">Mã đơn hàng</th>
+                  <th className="text-center">Mã khách hàng</th>
+                  <th className="text-center">Số điện thoại</th>
+                  <th className="text-center">Ngày đặt</th>
+                  <th className="text-center">Trạng thái</th>
+                  <th className="text-center">Số tiền</th>
+                  <th className="text-center">Thao tác</th>
                 </tr>
               </thead>
               <tbody>
                 <tr>
-                  <td>ORD-2024-001</td>
-                  <td>John Smith</td>
-                  <td>+1 (555) 123-4567</td>
-                  <td>2024-01-20</td>
-                  <td>
+                  <td className="text-center">ORD-2024-001</td>
+                  <td className="text-center">John Smith</td>
+                  <td className="text-center">+1 (555) 123-4567</td>
+                  <td className="text-center">2024-01-20</td>
+                  <td className="text-center">
                     <span className="badge bg-warning text-dark">
                       Chờ xử lý
                     </span>
                   </td>
-                  <td>$299.99</td>
-                  <td>
+                  <td className="text-center">$299.99</td>
+                  <td className="text-center">
                     <button className="btn btn-sm btn-outline-primary me-2">
                       Xem
                     </button>
@@ -92,15 +86,15 @@ const Dashboard = () => {
                   </td>
                 </tr>
                 <tr>
-                  <td>ORD-2024-002</td>
-                  <td>Sarah Johnson</td>
-                  <td>+1 (555) 234-5678</td>
-                  <td>2024-01-20</td>
-                  <td>
+                  <td className="text-center">ORD-2024-002</td>
+                  <td className="text-center">Sarah Johnson</td>
+                  <td className="text-center">+1 (555) 234-5678</td>
+                  <td className="text-center">2024-01-20</td>
+                  <td className="text-center">
                     <span className="badge bg-info text-dark">Đang xử lý</span>
                   </td>
-                  <td>$149.99</td>
-                  <td>
+                  <td className="text-center">$149.99</td>
+                  <td className="text-center">
                     <button className="btn btn-sm btn-outline-primary me-2">
                       Xem
                     </button>
@@ -110,15 +104,15 @@ const Dashboard = () => {
                   </td>
                 </tr>
                 <tr>
-                  <td>ORD-2024-003</td>
-                  <td>Michael Brown</td>
-                  <td>+1 (555) 345-6789</td>
-                  <td>2024-01-19</td>
-                  <td>
+                  <td className="text-center">ORD-2024-003</td>
+                  <td className="text-center">Michael Brown</td>
+                  <td className="text-center">+1 (555) 345-6789</td>
+                  <td className="text-center">2024-01-19</td>
+                  <td className="text-center">
                     <span className="badge bg-success">Hoàn thành</span>
                   </td>
-                  <td>$499.99</td>
-                  <td>
+                  <td className="text-center">$499.99</td>
+                  <td className="text-center">
                     <button className="btn btn-sm btn-outline-primary me-2">
                       Xem
                     </button>
@@ -128,15 +122,15 @@ const Dashboard = () => {
                   </td>
                 </tr>
                 <tr>
-                  <td>ORD-2024-004</td>
-                  <td>Emma Davis</td>
-                  <td>+1 (555) 456-7890</td>
-                  <td>2024-01-19</td>
-                  <td>
+                  <td className="text-center">ORD-2024-004</td>
+                  <td className="text-center">Emma Davis</td>
+                  <td className="text-center">+1 (555) 456-7890</td>
+                  <td className="text-center">2024-01-19</td>
+                  <td className="text-center">
                     <span className="badge bg-danger">Đã hủy</span>
                   </td>
-                  <td>$89.99</td>
-                  <td>
+                  <td className="text-center">$89.99</td>
+                  <td className="text-center">
                     <button className="btn btn-sm btn-outline-primary me-2">
                       Xem
                     </button>

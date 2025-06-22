@@ -49,27 +49,27 @@ const Customers = () => {
         <table className="table customer-table align-middle mb-0">
           <thead>
             <tr>
-              <th>MÃ KHÁCH HÀNG</th>
-              <th>TÊN</th>
-              <th>SỐ ĐIỆN THOẠI</th>
-              <th>Email</th>
-              <th>Address</th>
-              <th>ĐƠN HÀNG ĐÃ NHẬN</th>
-              <th>ĐƠN HÀNG ĐÃ HOÀN</th>
-              <th>Actions</th>
+              <th className="text-center">MÃ KHÁCH HÀNG</th>
+              <th className="text-center">TÊN</th>
+              <th className="text-center">SỐ ĐIỆN THOẠI</th>
+              <th className="text-center">Email</th>
+              <th className="text-center">Address</th>
+              <th className="text-center">ĐƠN HÀNG ĐÃ NHẬN</th>
+              <th className="text-center">ĐƠN HÀNG ĐÃ HOÀN</th>
+              <th className="text-center">Actions</th>
             </tr>
           </thead>
           <tbody>
             {customers.map((cus) => (
               <tr key={cus.id}>
-                <td>{cus.id}</td>
-                <td>{cus.name}</td>
-                <td>{cus.phone}</td>
-                <td>{cus.email}</td>
-                <td>{cus.address}</td>
-                <td>{cus.orders}</td>
-                <td>{cus.completed}</td>
-                <td>
+                <td className="text-center">{cus.id}</td>
+                <td className="text-center">{cus.name}</td>
+                <td className="text-center">{cus.phone}</td>
+                <td className="text-center">{cus.email}</td>
+                <td className="text-center">{cus.address}</td>
+                <td className="text-center">{cus.orders}</td>
+                <td className="text-center">{cus.completed}</td>
+                <td className="text-center">
                   <button className="btn btn-update-customer">Cập nhật</button>
                 </td>
               </tr>

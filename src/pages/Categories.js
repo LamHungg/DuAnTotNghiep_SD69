@@ -12,26 +12,32 @@ const Categories = () => {
     setCategories(saved);
   }, []);
 
-  const getStatusText = (status) => (status === 1 ? "Hoạt động" : "Không hoạt động");
+  const getStatusText = (status) =>
+    status === 1 ? "Hoạt động" : "Không hoạt động";
   const getStatusBadgeStyle = (status) => ({
     padding: "4px 8px",
     borderRadius: "12px",
     fontSize: "12px",
     fontWeight: "600",
     backgroundColor: status === 1 ? "#d1fae5" : "#fee2e2",
-    color: status === 1 ? "#065f46" : "#991b1b"
+    color: status === 1 ? "#065f46" : "#991b1b",
   });
 
   const filteredCategories = categories.filter((cat) => {
-    const matchesSearch = cat.ten_danh_muc?.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesStatus = statusFilter === "" || cat.trang_thai === parseInt(statusFilter);
+    const matchesSearch = cat.ten_danh_muc
+      ?.toLowerCase()
+      .includes(searchTerm.toLowerCase());
+    const matchesStatus =
+      statusFilter === "" || cat.trang_thai === parseInt(statusFilter);
     return matchesSearch && matchesStatus;
   });
 
   const handleToggleStatus = (id) => {
-    setCategories(prev => {
-      const updated = prev.map(cat =>
-        cat.id === id ? { ...cat, trang_thai: cat.trang_thai === 1 ? 0 : 1 } : cat
+    setCategories((prev) => {
+      const updated = prev.map((cat) =>
+        cat.id === id
+          ? { ...cat, trang_thai: cat.trang_thai === 1 ? 0 : 1 }
+          : cat
       );
       localStorage.setItem("categories", JSON.stringify(updated));
       return updated;
@@ -46,12 +52,17 @@ const Categories = () => {
           type="text"
           placeholder="Tìm kiếm tên danh mục..."
           value={searchTerm}
-          onChange={e => setSearchTerm(e.target.value)}
-          style={{ padding: 8, borderRadius: 4, border: "1px solid #ddd", minWidth: 220 }}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          style={{
+            padding: 8,
+            borderRadius: 4,
+            border: "1px solid #ddd",
+            minWidth: 220,
+          }}
         />
         <select
           value={statusFilter}
-          onChange={e => setStatusFilter(e.target.value)}
+          onChange={(e) => setStatusFilter(e.target.value)}
           style={{ padding: 8, borderRadius: 4, border: "1px solid #ddd" }}
         >
           <option value="">Tất cả trạng thái</option>
@@ -59,38 +70,63 @@ const Categories = () => {
           <option value="0">Không hoạt động</option>
         </select>
       </div>
-      <div style={{ background: "#fff", borderRadius: 8, boxShadow: "0 2px 8px #f0f1f2", overflow: "hidden" }}>
+      <div
+        style={{
+          background: "#fff",
+          borderRadius: 8,
+          boxShadow: "0 2px 8px #f0f1f2",
+          overflow: "hidden",
+        }}
+      >
         <table style={{ width: "100%" }}>
           <thead>
             <tr style={{ background: "#f8f9fa" }}>
-              <th style={{ padding: 12, textAlign: "left" }}>ID</th>
-              <th style={{ padding: 12, textAlign: "left" }}>Tên danh mục</th>
-              <th style={{ padding: 12, textAlign: "left" }}>Trạng thái</th>
-              <th style={{ padding: 12, textAlign: "left" }}>Thao tác</th>
+              <th style={{ padding: 12, textAlign: "center" }}>ID</th>
+              <th style={{ padding: 12, textAlign: "center" }}>Tên danh mục</th>
+              <th style={{ padding: 12, textAlign: "center" }}>Trạng thái</th>
+              <th style={{ padding: 12, textAlign: "center" }}>Thao tác</th>
             </tr>
           </thead>
           <tbody>
             {filteredCategories.map((cat) => (
               <tr key={cat.id}>
-                <td style={{ padding: 12 }}>{cat.id}</td>
-                <td style={{ padding: 12 }}>{cat.ten_danh_muc}</td>
-                <td style={{ padding: 12 }}>
-                  <span style={getStatusBadgeStyle(cat.trang_thai)}>{getStatusText(cat.trang_thai)}</span>
+                <td style={{ padding: 12, textAlign: "center" }}>{cat.id}</td>
+                <td style={{ padding: 12, textAlign: "center" }}>
+                  {cat.ten_danh_muc}
                 </td>
-                <td style={{ padding: 12 }}>
+                <td style={{ padding: 12, textAlign: "center" }}>
+                  <span style={getStatusBadgeStyle(cat.trang_thai)}>
+                    {getStatusText(cat.trang_thai)}
+                  </span>
+                </td>
+                <td style={{ padding: 12, textAlign: "center" }}>
                   <button
-                    style={{ background: "none", border: "none", cursor: "pointer", fontSize: 20 }}
-                    title={cat.trang_thai === 1 ? "Tắt hoạt động" : "Bật hoạt động"}
+                    style={{
+                      background: "none",
+                      border: "none",
+                      cursor: "pointer",
+                      fontSize: 20,
+                    }}
+                    title={
+                      cat.trang_thai === 1 ? "Tắt hoạt động" : "Bật hoạt động"
+                    }
                     onClick={() => handleToggleStatus(cat.id)}
                   >
-                    {cat.trang_thai === 1 ? <FaToggleOn color="#10b981" /> : <FaToggleOff color="#6b7280" />}
+                    {cat.trang_thai === 1 ? (
+                      <FaToggleOn color="#10b981" />
+                    ) : (
+                      <FaToggleOff color="#6b7280" />
+                    )}
                   </button>
                 </td>
               </tr>
             ))}
             {filteredCategories.length === 0 && (
               <tr>
-                <td colSpan={4} style={{ textAlign: "center", padding: 32, color: "#888" }}>
+                <td
+                  colSpan={4}
+                  style={{ textAlign: "center", padding: 32, color: "#888" }}
+                >
                   Không có danh mục nào
                 </td>
               </tr>
@@ -102,4 +138,4 @@ const Categories = () => {
   );
 };
 
-export default Categories; 
+export default Categories;

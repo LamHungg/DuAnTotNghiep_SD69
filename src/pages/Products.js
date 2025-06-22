@@ -1,85 +1,14 @@
 import React, { useEffect, useState } from "react";
-import { FaEdit, FaPlus } from "react-icons/fa";
+import { FaEdit, FaPlus, FaSyncAlt, FaTrash } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
+import { productsData } from "../data/sampleData";
 
 const statusOptions = [
   { value: "", label: "Tất cả" },
-  { value: "Đang bán", label: "Đang bán" },
-  { value: "Ngừng bán", label: "Ngừng bán" },
-];
-
-const productsData = [
-  {
-    id: 1,
-    ma_san_pham: "SP001",
-    ten_san_pham: "Áo Thun Nam Basic",
-    ten_danh_muc: "Áo thun",
-    trang_thai: 1,
-    mo_ta: "Áo thun nam chất liệu cotton, thoáng mát.",
-    id_nguoi_tao: 1,
-    ngay_tao: "2024-01-01T10:00:00Z",
-    id_nguoi_cap_nhat: 2,
-    ngay_cap_nhat: "2024-01-05T10:00:00Z",
-    deleted_at: null,
-    id_nguoi_xoa: null,
-  },
-  {
-    id: 2,
-    ma_san_pham: "SP002",
-    ten_san_pham: "Áo Sơ Mi Nữ Công Sở",
-    ten_danh_muc: "Áo sơ mi",
-    trang_thai: 0,
-    mo_ta: "Áo sơ mi nữ kiểu dáng công sở, vải lụa cao cấp.",
-    id_nguoi_tao: 2,
-    ngay_tao: "2024-01-02T11:00:00Z",
-    id_nguoi_cap_nhat: 2,
-    ngay_cap_nhat: "2024-01-06T11:00:00Z",
-    deleted_at: null,
-    id_nguoi_xoa: null,
-  },
-  {
-    id: 3,
-    ma_san_pham: "SP003",
-    ten_san_pham: "Áo Khoác Gió Unisex",
-    ten_danh_muc: "Áo khoác",
-    trang_thai: 1,
-    mo_ta: "Áo khoác gió phù hợp cả nam và nữ, chống nước nhẹ.",
-    id_nguoi_tao: 1,
-    ngay_tao: "2024-01-03T12:00:00Z",
-    id_nguoi_cap_nhat: 3,
-    ngay_cap_nhat: "2024-01-07T12:00:00Z",
-    deleted_at: null,
-    id_nguoi_xoa: null,
-  },
-  {
-    id: 4,
-    ma_san_pham: "SP004",
-    ten_san_pham: "Áo Polo Trẻ Em",
-    ten_danh_muc: "Áo polo",
-    trang_thai: 2,
-    mo_ta: "Áo polo cho trẻ em, nhiều màu sắc.",
-    id_nguoi_tao: 3,
-    ngay_tao: "2024-01-04T13:00:00Z",
-    id_nguoi_cap_nhat: 1,
-    ngay_cap_nhat: "2024-01-08T13:00:00Z",
-    deleted_at: null,
-    id_nguoi_xoa: null,
-  },
-  {
-    id: 5,
-    ma_san_pham: "SP005",
-    ten_san_pham: "Áo Hoodie Nỉ Dày",
-    ten_danh_muc: "Áo thun",
-    trang_thai: 3,
-    mo_ta: "Áo hoodie nỉ dày, giữ ấm tốt cho mùa đông.",
-    id_nguoi_tao: 2,
-    ngay_tao: "2024-01-05T14:00:00Z",
-    id_nguoi_cap_nhat: 2,
-    ngay_cap_nhat: "2024-01-09T14:00:00Z",
-    deleted_at: null,
-    id_nguoi_xoa: null,
-  },
-  // ... bạn có thể thêm dữ liệu mẫu khác nếu muốn
+  { value: "1", label: "Đang bán" },
+  { value: "0", label: "Ngừng bán" },
+  { value: "3", label: "Sắp ra mắt" },
+  { value: "2", label: "Ẩn" },
 ];
 
 const PAGE_SIZE = 5;
@@ -100,8 +29,18 @@ const Products = () => {
 
   useEffect(() => {
     const localProducts = JSON.parse(localStorage.getItem("products") || "[]");
-    const allProducts = [...localProducts, ...productsData];
+
+    // Create a Set of IDs from localProducts for efficient lookup
+    const localProductIds = new Set(localProducts.map((p) => p.id));
+
+    // Combine localProducts with products from productsData that are not already in localProducts
+    const allProducts = [
+      ...localProducts,
+      ...productsData.filter((p_data) => !localProductIds.has(p_data.id)),
+    ];
+
     setProducts(allProducts);
+
     // Lấy tất cả danh mục duy nhất từ dữ liệu
     const categorySet = new Set();
     allProducts.forEach((p) => {
@@ -121,10 +60,7 @@ const Products = () => {
   // Lọc sản phẩm theo trạng thái, danh mục, mã sản phẩm, tên sản phẩm
   let filteredProducts = products.filter(
     (p) =>
-      (status === "" ||
-        p.trang_thai === Number(status) ||
-        (status === "Đang bán" && p.trang_thai === 1) ||
-        (status === "Ngừng bán" && p.trang_thai === 0)) &&
+      (status === "" || p.trang_thai === Number(status)) &&
       (category === "" || p.ten_danh_muc === category) &&
       (searchCode === "" ||
         (p.ma_san_pham &&
@@ -161,6 +97,48 @@ const Products = () => {
     localStorage.setItem("products", JSON.stringify(localProducts));
     // Cập nhật lại danh sách
     setProducts((prev) => prev.filter((p) => p.id !== id));
+  };
+
+  const handleToggleStatus = (productId) => {
+    const updatedProducts = products.map((p) => {
+      if (p.id === productId) {
+        let nextStatus;
+        switch (p.trang_thai) {
+          case 3: // Sắp ra mắt -> Đang bán
+            nextStatus = 1;
+            break;
+          case 1: // Đang bán -> Ngừng bán
+            nextStatus = 0;
+            break;
+          case 0: // Ngừng bán -> Ẩn
+            nextStatus = 2;
+            break;
+          case 2: // Ẩn -> Sắp ra mắt
+            nextStatus = 3;
+            break;
+          default:
+            nextStatus = 1; // Trạng thái mặc định nếu không xác định
+        }
+        return { ...p, trang_thai: nextStatus };
+      }
+      return p;
+    });
+    setProducts(updatedProducts);
+
+    // Cập nhật vào localStorage
+    const productToUpdate = updatedProducts.find((p) => p.id === productId);
+    let localProducts = JSON.parse(localStorage.getItem("products") || "[]");
+    const existingProductIndex = localProducts.findIndex(
+      (p) => p.id === productId
+    );
+
+    if (existingProductIndex > -1) {
+      localProducts[existingProductIndex] = productToUpdate;
+    } else {
+      // Nếu sản phẩm từ dữ liệu mẫu, thêm nó vào localStorage khi trạng thái thay đổi
+      localProducts.unshift(productToUpdate);
+    }
+    localStorage.setItem("products", JSON.stringify(localProducts));
   };
 
   return (
@@ -241,12 +219,12 @@ const Products = () => {
         <table className="table product-table align-middle mb-0">
           <thead>
             <tr>
-              <th>STT</th>
-              <th>Mã sản phẩm</th>
-              <th>Tên</th>
-              <th>Giá bán</th>
-              <th>Trạng thái</th>
-              <th>Hành động</th>
+              <th className="text-center">STT</th>
+              <th className="text-center">Mã sản phẩm</th>
+              <th className="text-center">Tên</th>
+              <th className="text-center">Danh mục</th>
+              <th className="text-center">Trạng thái</th>
+              <th className="text-center">Hành động</th>
             </tr>
           </thead>
           <tbody>
@@ -254,32 +232,50 @@ const Products = () => {
               <React.Fragment key={p.id}>
                 <tr
                   style={{ cursor: "pointer" }}
-                  onClick={() => setExpandedRow(expandedRow === p.id ? null : p.id)}
+                  onClick={() =>
+                    setExpandedRow(expandedRow === p.id ? null : p.id)
+                  }
                 >
-                  <td>{idx + 1}</td>
-                  <td>{p.ma_san_pham}</td>
-                  <td>{p.ten_san_pham}</td>
-                  <td>{p.gia_ban ? p.gia_ban.toLocaleString() : ''}</td>
-                  <td>
+                  <td className="text-center">{idx + 1}</td>
+                  <td className="text-center">{p.ma_san_pham}</td>
+                  <td className="text-center">{p.ten_san_pham}</td>
+                  <td className="text-center">{p.ten_danh_muc}</td>
+                  <td className="text-center">
                     {p.trang_thai === 1 && "Đang bán"}
                     {p.trang_thai === 0 && "Ngừng bán"}
                     {p.trang_thai === 2 && "Ẩn"}
                     {p.trang_thai === 3 && "Sắp ra mắt"}
                   </td>
-                  <td>
+                  <td className="text-center">
                     <button
-                      className="btn btn-sm btn-primary me-2"
-                      onClick={e => { e.stopPropagation(); navigate(`/products/edit/${p.id}`); }}
+                      className="btn btn-sm btn-link text-dark me-2"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleToggleStatus(p.id);
+                      }}
+                      title="Đổi trạng thái"
+                    >
+                      <FaSyncAlt />
+                    </button>
+                    <button
+                      className="btn btn-sm btn-link text-dark me-2"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        navigate(`/dashboard/products/edit/${p.id}`);
+                      }}
                       title="Sửa"
                     >
                       <FaEdit />
                     </button>
                     <button
-                      className="btn btn-sm btn-danger"
-                      onClick={e => { e.stopPropagation(); handleDelete(p.id); }}
+                      className="btn btn-sm btn-link text-danger"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleDelete(p.id);
+                      }}
                       title="Xóa"
                     >
-                      Xóa
+                      <FaTrash />
                     </button>
                   </td>
                 </tr>
@@ -291,65 +287,121 @@ const Products = () => {
                         <table className="table table-bordered mt-2 mb-0">
                           <thead>
                             <tr>
-                              <th>Mã sản phẩm</th>
-                              <th>Tên</th>
-                              <th>Danh mục</th>
-                              <th>Màu sắc</th>
-                              <th>Kích thước</th>
-                              <th>Chất liệu</th>
-                              <th>Giá nhập</th>
-                              <th>Giá bán</th>
-                              <th>Số lượng</th>
+                              <th className="text-center">Mã sản phẩm</th>
+                              <th className="text-center">Tên</th>
+                              <th className="text-center">Danh mục</th>
+                              <th className="text-center">Màu sắc</th>
+                              <th className="text-center">Kích thước</th>
+                              <th className="text-center">Chất liệu</th>
+                              <th className="text-center">Giá nhập</th>
+                              <th className="text-center">Giá bán</th>
+                              <th className="text-center">Số lượng</th>
                             </tr>
                           </thead>
                           <tbody>
-                            {productDetails.filter(d => d.id_san_pham === p.id).map((d, i) => (
-                              <React.Fragment key={d.id || i}>
-                                <tr>
-                                  <td>{p.ma_san_pham}</td>
-                                  <td>{p.ten_san_pham}</td>
-                                  <td>{p.ten_danh_muc}</td>
-                                  <td>{d.id_mau_sac}</td>
-                                  <td>{d.id_kich_co}</td>
-                                  <td>{d.id_chat_lieu}</td>
-                                  <td>{d.gia_nhap?.toLocaleString()}</td>
-                                  <td>{d.gia?.toLocaleString()}</td>
-                                  <td>{d.so_luong}</td>
-                                </tr>
-                                {/* Truy vết lịch sử tạo/sửa */}
-                                {(d.auditTrail && d.auditTrail.length > 0) && (
+                            {productDetails
+                              .filter((d) => d.id_san_pham === p.id)
+                              .map((d, i) => (
+                                <React.Fragment key={d.id || i}>
                                   <tr>
-                                    <td colSpan={9} style={{ background: '#f3f4f6', padding: 0 }}>
-                                      <div style={{ padding: 8 }}>
-                                        <b>Lịch sử tạo/sửa:</b>
-                                        <table className="table table-sm table-bordered mb-0 mt-2">
-                                          <thead>
-                                            <tr>
-                                              <th>Người tạo</th>
-                                              <th>Thời gian tạo</th>
-                                              <th>Người sửa</th>
-                                              <th>Thời gian sửa</th>
-                                            </tr>
-                                          </thead>
-                                          <tbody>
-                                            {d.auditTrail.map((a, idx) => (
-                                              <tr key={idx}>
-                                                <td>{a.nguoi_tao || ''}</td>
-                                                <td>{a.thoi_gian_tao ? new Date(a.thoi_gian_tao).toLocaleString() : ''}</td>
-                                                <td>{a.nguoi_sua || ''}</td>
-                                                <td>{a.thoi_gian_sua ? new Date(a.thoi_gian_sua).toLocaleString() : ''}</td>
-                                              </tr>
-                                            ))}
-                                          </tbody>
-                                        </table>
-                                      </div>
+                                    <td className="text-center">
+                                      {p.ma_san_pham}
+                                    </td>
+                                    <td className="text-center">
+                                      {p.ten_san_pham}
+                                    </td>
+                                    <td className="text-center">
+                                      {p.ten_danh_muc}
+                                    </td>
+                                    <td className="text-center">
+                                      {d.id_mau_sac}
+                                    </td>
+                                    <td className="text-center">
+                                      {d.id_kich_co}
+                                    </td>
+                                    <td className="text-center">
+                                      {d.id_chat_lieu}
+                                    </td>
+                                    <td className="text-center">
+                                      {d.gia_nhap?.toLocaleString()}
+                                    </td>
+                                    <td className="text-center">
+                                      {d.gia?.toLocaleString()}
+                                    </td>
+                                    <td className="text-center">
+                                      {d.so_luong}
                                     </td>
                                   </tr>
-                                )}
-                              </React.Fragment>
-                            ))}
-                            {productDetails.filter(d => d.id_san_pham === p.id).length === 0 && (
-                              <tr><td colSpan={9} style={{ textAlign: "center" }}>Không có chi tiết</td></tr>
+                                  {/* Truy vết lịch sử tạo/sửa */}
+                                  {d.auditTrail && d.auditTrail.length > 0 && (
+                                    <tr>
+                                      <td
+                                        colSpan={9}
+                                        style={{
+                                          background: "#f3f4f6",
+                                          padding: 0,
+                                        }}
+                                      >
+                                        <div style={{ padding: 8 }}>
+                                          <b>Lịch sử tạo/sửa:</b>
+                                          <table className="table table-sm table-bordered mb-0 mt-2">
+                                            <thead>
+                                              <tr>
+                                                <th className="text-center">
+                                                  Người tạo
+                                                </th>
+                                                <th className="text-center">
+                                                  Thời gian tạo
+                                                </th>
+                                                <th className="text-center">
+                                                  Người sửa
+                                                </th>
+                                                <th className="text-center">
+                                                  Thời gian sửa
+                                                </th>
+                                              </tr>
+                                            </thead>
+                                            <tbody>
+                                              {d.auditTrail.map((a, idx) => (
+                                                <tr key={idx}>
+                                                  <td className="text-center">
+                                                    {a.nguoi_tao || ""}
+                                                  </td>
+                                                  <td className="text-center">
+                                                    {a.thoi_gian_tao
+                                                      ? new Date(
+                                                          a.thoi_gian_tao
+                                                        ).toLocaleString()
+                                                      : ""}
+                                                  </td>
+                                                  <td className="text-center">
+                                                    {a.nguoi_sua || ""}
+                                                  </td>
+                                                  <td className="text-center">
+                                                    {a.thoi_gian_sua
+                                                      ? new Date(
+                                                          a.thoi_gian_sua
+                                                        ).toLocaleString()
+                                                      : ""}
+                                                  </td>
+                                                </tr>
+                                              ))}
+                                            </tbody>
+                                          </table>
+                                        </div>
+                                      </td>
+                                    </tr>
+                                  )}
+                                </React.Fragment>
+                              ))}
+                            {productDetails.filter(
+                              (d) => d.id_san_pham === p.id
+                            ).length === 0 && (
+                              <tr>
+                                <td colSpan={9} className="text-center">
+                                  Không có chi tiết
+                                </td>
+                              </tr>
                             )}
                           </tbody>
                         </table>

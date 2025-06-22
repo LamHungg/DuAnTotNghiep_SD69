@@ -3,21 +3,14 @@ import { useNavigate } from "react-router-dom";
 import { FaPlus, FaTrash, FaImage } from "react-icons/fa";
 import Select from "react-select";
 import CreatableSelect from "react-select/creatable";
+import { productsData } from "../data/sampleData";
 
-const brands = ["Chanel", "Gucci", "LV", "Hermes"];
-const materials = ["Cotton", "Polyester", "Linen", "Wool"];
-const categories = ["Áo thun", "Áo sơ mi", "Áo khoác", "Áo len"];
+// Dữ liệu mặc định để fallback nếu localStorage trống
+const defaultCategories = ["Áo thun", "Áo sơ mi", "Áo khoác", "Áo len"];
+const defaultMaterials = ["Cotton", "Polyester", "Linen", "Wool"];
 const defaultSizes = ["XS", "S", "M", "L", "XL", "XXL"];
 const defaultColors = ["Trắng", "Đen", "Xám", "Xanh", "Đỏ", "Vàng"];
-const defaultProductNames = [
-  {
-    value: "Áo Phông Nam Mùa Đông",
-    label: "Áo Phông Nam Mùa Đông",
-    category: "Áo thun",
-  },
-  { value: "Áo Polo Nam", label: "Áo Polo Nam", category: "Áo thun" },
-  { value: "Áo Sơ Mi Nam", label: "Áo Sơ Mi Nam", category: "Áo sơ mi" },
-];
+
 const defaultGallery = [
   "https://images.pexels.com/photos/532220/pexels-photo-532220.jpeg",
   "https://images.pexels.com/photos/2983464/pexels-photo-2983464.jpeg",
@@ -27,97 +20,19 @@ const defaultGallery = [
   "https://images.pexels.com/photos/532221/pexels-photo-532221.jpeg",
 ];
 
-// Dữ liệu mẫu sản phẩm giống Products.js
-const productsData = [
-  {
-    id: 1,
-    ma_san_pham: "SP001",
-    ten_san_pham: "Áo Thun Nam Basic",
-    ten_danh_muc: "Áo thun",
-    trang_thai: 1,
-    mo_ta: "Áo thun nam chất liệu cotton, thoáng mát.",
-    id_nguoi_tao: 1,
-    ngay_tao: "2024-01-01T10:00:00Z",
-    id_nguoi_cap_nhat: 2,
-    ngay_cap_nhat: "2024-01-05T10:00:00Z",
-    deleted_at: null,
-    id_nguoi_xoa: null,
-  },
-  {
-    id: 2,
-    ma_san_pham: "SP002",
-    ten_san_pham: "Áo Sơ Mi Nữ Công Sở",
-    ten_danh_muc: "Áo sơ mi",
-    trang_thai: 0,
-    mo_ta: "Áo sơ mi nữ kiểu dáng công sở, vải lụa cao cấp.",
-    id_nguoi_tao: 2,
-    ngay_tao: "2024-01-02T11:00:00Z",
-    id_nguoi_cap_nhat: 2,
-    ngay_cap_nhat: "2024-01-06T11:00:00Z",
-    deleted_at: null,
-    id_nguoi_xoa: null,
-  },
-  {
-    id: 3,
-    ma_san_pham: "SP003",
-    ten_san_pham: "Áo Khoác Gió Unisex",
-    ten_danh_muc: "Áo khoác",
-    trang_thai: 1,
-    mo_ta: "Áo khoác gió phù hợp cả nam và nữ, chống nước nhẹ.",
-    id_nguoi_tao: 1,
-    ngay_tao: "2024-01-03T12:00:00Z",
-    id_nguoi_cap_nhat: 3,
-    ngay_cap_nhat: "2024-01-07T12:00:00Z",
-    deleted_at: null,
-    id_nguoi_xoa: null,
-  },
-  {
-    id: 4,
-    ma_san_pham: "SP004",
-    ten_san_pham: "Áo Polo Trẻ Em",
-    ten_danh_muc: "Áo polo",
-    trang_thai: 2,
-    mo_ta: "Áo polo cho trẻ em, nhiều màu sắc.",
-    id_nguoi_tao: 3,
-    ngay_tao: "2024-01-04T13:00:00Z",
-    id_nguoi_cap_nhat: 1,
-    ngay_cap_nhat: "2024-01-08T13:00:00Z",
-    deleted_at: null,
-    id_nguoi_xoa: null,
-  },
-  {
-    id: 5,
-    ma_san_pham: "SP005",
-    ten_san_pham: "Áo Hoodie Nỉ Dày",
-    ten_danh_muc: "Áo thun",
-    trang_thai: 3,
-    mo_ta: "Áo hoodie nỉ dày, giữ ấm tốt cho mùa đông.",
-    id_nguoi_tao: 2,
-    ngay_tao: "2024-01-05T14:00:00Z",
-    id_nguoi_cap_nhat: 2,
-    ngay_cap_nhat: "2024-01-09T14:00:00Z",
-    deleted_at: null,
-    id_nguoi_xoa: null,
-  },
-];
-
 const AddProduct = () => {
   // State cho form chính
-  const [productName, setProductName] = useState(null); // {value, label}
+  const [productName, setProductName] = useState(null); // {value, label, category}
   const [productNameOptions, setProductNameOptions] = useState([]);
-  const [newProductName, setNewProductName] = useState(""); // Tên sản phẩm mới
   const [category, setCategory] = useState("");
+  const [categoryOptions, setCategoryOptions] = useState([]);
+  const [isNewProduct, setIsNewProduct] = useState(false);
   const [material, setMaterial] = useState("");
   const [materialOptions, setMaterialOptions] = useState([]); // Dữ liệu từ màn chất liệu
   const [sizes, setSizes] = useState([]); // array of {value, label}
-  const [sizeOptions, setSizeOptions] = useState(
-    defaultSizes.map((s) => ({ value: s, label: s }))
-  );
-  const [newSize, setNewSize] = useState("");
+  const [sizeOptions, setSizeOptions] = useState([]);
   const [colors, setColors] = useState([]); // array of {value, label}
-  const [colorOptions, setColorOptions] = useState(
-    defaultColors.map((c) => ({ value: c, label: c }))
-  );
+  const [colorOptions, setColorOptions] = useState([]);
   const [quantity, setQuantity] = useState(0);
   const [importPrice, setImportPrice] = useState(0); // Giá nhập
   const [sellPrice, setSellPrice] = useState(0); // Giá bán
@@ -134,21 +49,13 @@ const AddProduct = () => {
   const [selectedGalleryImgs, setSelectedGalleryImgs] = useState([]); // mảng url ảnh được chọn trong modal
   const [uploadingGallery, setUploadingGallery] = useState(false);
 
-  const [newColor, setNewColor] = useState("");
-  
-  // State cho chi tiết sản phẩm
-  const [productDetails, setProductDetails] = useState([]); // Array of chi_tiet_san_pham
-  const [showProductDetails, setShowProductDetails] = useState(false);
-
   // State cho validation errors
   const [errors, setErrors] = useState({
     productName: "",
-    newProductName: "",
     category: "",
     material: "",
     sizes: "",
     colors: "",
-    productDetails: "",
   });
 
   // State cho modal thêm nhanh
@@ -165,9 +72,6 @@ const AddProduct = () => {
 
   // State cho toast thông báo thành công
   const [showSuccessToast, setShowSuccessToast] = useState(false);
-
-  // State cho trạng thái hợp lệ của form
-  const [isFormValid, setIsFormValid] = useState(false);
 
   const navigate = useNavigate();
 
@@ -188,89 +92,88 @@ const AddProduct = () => {
       }
     });
     setProductNameOptions(uniqueNames);
-  }, []);
 
-  // Lấy dữ liệu chất liệu từ localStorage
-  useEffect(() => {
-    const savedMaterials = JSON.parse(localStorage.getItem("materials") || "[]");
-    const materialList = savedMaterials
-      .filter(m => m.trang_thai === 1) // Chỉ lấy chất liệu đang hoạt động
-      .map(m => m.ten_chat_lieu);
-    setMaterialOptions(materialList);
-  }, []);
+    // Load materials from localStorage or use default
+    const savedMaterials = JSON.parse(
+      localStorage.getItem("materials") || "[]"
+    );
+    const activeMaterials =
+      savedMaterials.length > 0
+        ? savedMaterials
+            .filter((m) => m.trang_thai === 1)
+            .map((m) => ({ value: m.ten_chat_lieu, label: m.ten_chat_lieu }))
+        : defaultMaterials.map((m) => ({ value: m, label: m }));
+    setMaterialOptions(activeMaterials);
 
-  // Lấy dữ liệu kích cỡ từ localStorage
-  useEffect(() => {
+    // Load categories from localStorage or use default
+    const savedCategories = JSON.parse(
+      localStorage.getItem("categories") || "[]"
+    );
+    const activeCategories =
+      savedCategories.length > 0
+        ? savedCategories
+            .filter((c) => c.trang_thai === 1)
+            .map((c) => ({ value: c.ten_danh_muc, label: c.ten_danh_muc }))
+        : defaultCategories.map((c) => ({ value: c, label: c }));
+    setCategoryOptions(activeCategories);
+
+    // Load sizes from localStorage or use default
     const savedSizes = JSON.parse(localStorage.getItem("sizes") || "[]");
-    const sizeList = savedSizes
-      .filter(s => s.trang_thai === 1) // Chỉ lấy kích cỡ đang hoạt động
-      .map(s => ({ value: s.ten_kich_co, label: s.ten_kich_co }));
-    setSizeOptions(sizeList);
-  }, []);
+    const activeSizes =
+      savedSizes.length > 0
+        ? savedSizes
+            .filter((s) => s.trang_thai === 1)
+            .map((s) => ({ value: s.ten_kich_co, label: s.ten_kich_co }))
+        : defaultSizes.map((s) => ({ value: s, label: s }));
+    setSizeOptions(activeSizes);
 
-  // Lấy dữ liệu màu sắc từ localStorage
-  useEffect(() => {
+    // Load colors from localStorage or use default
     const savedColors = JSON.parse(localStorage.getItem("colors") || "[]");
-    const colorList = savedColors
-      .filter(c => c.trang_thai === 1) // Chỉ lấy màu sắc đang hoạt động
-      .map(c => ({ value: c.ten_mau_sac, label: c.ten_mau_sac }));
-    setColorOptions(colorList);
+    const activeColors =
+      savedColors.length > 0
+        ? savedColors
+            .filter((c) => c.trang_thai === 1)
+            .map((c) => ({ value: c.ten_mau_sac, label: c.ten_mau_sac }))
+        : defaultColors.map((c) => ({ value: c, label: c }));
+    setColorOptions(activeColors);
   }, []);
 
-  // Xử lý CreatableSelect cho tên sản phẩm
-  const handleProductNameChange = (option) => {
+  const handleProductNameChange = (option, actionMeta) => {
     setProductName(option);
-    if (option && option.category) {
-      setCategory(option.category);
+    if (actionMeta.action === "create-option") {
+      setIsNewProduct(true);
+      setCategory(""); // Reset category for new product
+      setErrors((p) => ({ ...p, category: "" }));
+    } else if (option) {
+      setIsNewProduct(false);
+      setCategory(option.category || "");
+    } else {
+      setIsNewProduct(false);
+      setCategory("");
     }
+  };
+
+  // Đồng bộ form và validation
+  useEffect(() => {
+    // Logic để tạo các biến thể sản phẩm (productVariants)
     if (
-      option &&
-      !productNameOptions.some((opt) => opt.value === option.value)
+      productName &&
+      (isNewProduct ? category : true) &&
+      sizes.length > 0 &&
+      colors.length > 0
     ) {
-      setProductNameOptions([...productNameOptions, option]);
-    }
-  };
-
-  // Thêm kích cỡ mới vào danh sách
-  const handleAddSize = () => {
-    const val = newSize.trim().toUpperCase();
-    if (val && !sizeOptions.some((opt) => opt.value === val)) {
-      setSizeOptions([...sizeOptions, { value: val, label: val }]);
-      setSizes([...sizes, { value: val, label: val }]);
-      setNewSize("");
-    }
-  };
-
-  // Thêm màu mới vào danh sách
-  const handleAddColor = () => {
-    const val = newColor.trim();
-    if (
-      val &&
-      !colorOptions.some((opt) => opt.value.toLowerCase() === val.toLowerCase())
-    ) {
-      setColorOptions([...colorOptions, { value: val, label: val }]);
-      setColors([...colors, { value: val, label: val }]);
-      setNewColor("");
-    }
-  };
-
-  // Sinh bảng sản phẩm khi đủ trường
-  React.useEffect(() => {
-    if (productName && material && sizes.length > 0 && colors.length > 0) {
-      // Sinh các biến thể sản phẩm (mỗi màu - mỗi size là 1 dòng)
-      let variants = [];
+      const variants = [];
       colors.forEach((color) => {
         sizes.forEach((size) => {
           variants.push({
             name: productName.value,
+            category: category,
+            material: material,
             color: color.value,
             size: size.value,
             quantity: quantity,
-            gia_ban: sellPrice || '',
-            gia_nhap: importPrice || '',
-            price: 100000,
-            weight: 60,
-            material,
+            gia_nhap: importPrice,
+            gia_ban: sellPrice,
             images: [],
           });
         });
@@ -278,10 +181,20 @@ const AddProduct = () => {
       setProductVariants(variants);
       setShowVariants(true);
     } else {
-      setShowVariants(false);
       setProductVariants([]);
+      setShowVariants(false);
     }
-  }, [productName, material, sizes, colors, quantity, importPrice, sellPrice]);
+  }, [
+    productName,
+    isNewProduct,
+    category,
+    sizes,
+    colors,
+    material,
+    quantity,
+    importPrice,
+    sellPrice,
+  ]);
 
   // Xử lý thay đổi số lượng, giá, cân nặng
   const handleVariantChange = (idx, field, value) => {
@@ -291,7 +204,9 @@ const AddProduct = () => {
           ? {
               ...v,
               [field]:
-                field === "quantity" || field === "gia_nhap" || field === "gia_ban"
+                field === "quantity" ||
+                field === "gia_nhap" ||
+                field === "gia_ban"
                   ? Number(value)
                   : value,
             }
@@ -394,18 +309,27 @@ const AddProduct = () => {
       return;
     }
 
-    // Thêm sản phẩm mới vào danh sách chọn tên sản phẩm
-    const newOption = {
+    const newProductOption = {
       value: quickForm.name,
       label: quickForm.name,
       category: quickForm.category,
     };
-    setProductNameOptions((prev) => [...prev, newOption]);
-    setProductName(newOption);
-    setCategory(quickForm.category);
-    setShowModal(false);
+
+    // Add to options list if not already there
+    if (
+      !productNameOptions.some((opt) => opt.value === newProductOption.value)
+    ) {
+      setProductNameOptions((prev) => [...prev, newProductOption]);
+    }
+
+    // Select it in the main form
+    setProductName(newProductOption);
+    setIsNewProduct(false);
+    setCategory(newProductOption.category);
+
+    // Reset and close modal
     setQuickForm({ name: "", category: "" });
-    setQuickFormErrors({ name: "", category: "" });
+    setShowModal(false);
   };
 
   const galleryFileInput = useRef();
@@ -415,9 +339,14 @@ const AddProduct = () => {
     const errors = [];
     variants.forEach((v, idx) => {
       const err = {};
-      if (v.gia_ban !== undefined && v.gia_nhap !== undefined && v.gia_ban !== '' && v.gia_nhap !== '') {
+      if (
+        v.gia_ban !== undefined &&
+        v.gia_nhap !== undefined &&
+        v.gia_ban !== "" &&
+        v.gia_nhap !== ""
+      ) {
         if (Number(v.gia_ban) <= Number(v.gia_nhap)) {
-          err.gia_ban = 'Giá bán phải lớn hơn giá nhập';
+          err.gia_ban = "Giá bán phải lớn hơn giá nhập";
         }
       }
       errors.push(err);
@@ -429,7 +358,6 @@ const AddProduct = () => {
   const validateForm = () => {
     const newErrors = {
       productName: "",
-      newProductName: "",
       category: "",
       material: "",
       sizes: "",
@@ -437,32 +365,22 @@ const AddProduct = () => {
       variants: [],
     };
 
-    // Validate danh mục sản phẩm
     if (!productName) {
-      newErrors.productName = "Vui lòng chọn danh mục sản phẩm";
+      newErrors.productName = "Vui lòng chọn hoặc nhập tên sản phẩm";
     }
 
-    // Validate tên sản phẩm
-    if (!newProductName.trim()) {
-      newErrors.newProductName = "Vui lòng nhập tên sản phẩm";
+    if (isNewProduct && !category) {
+      newErrors.category = "Vui lòng chọn danh mục cho sản phẩm mới";
     }
 
-    // Validate category
-    if (!category) {
-      newErrors.category = "Vui lòng chọn danh mục";
-    }
-
-    // Validate material
     if (!material) {
       newErrors.material = "Vui lòng chọn chất liệu";
     }
 
-    // Validate sizes
     if (sizes.length === 0) {
       newErrors.sizes = "Vui lòng chọn ít nhất một kích cỡ";
     }
 
-    // Validate colors
     if (colors.length === 0) {
       newErrors.colors = "Vui lòng chọn ít nhất một màu sắc";
     }
@@ -479,74 +397,135 @@ const AddProduct = () => {
     );
   };
 
-  // Theo dõi thay đổi dữ liệu form để kiểm tra hợp lệ
-  useEffect(() => {
-    setIsFormValid(validateForm());
-    // eslint-disable-next-line
-  }, [productName, newProductName, category, material, sizes, colors, productVariants, productDetails, importPrice, sellPrice, quantity]);
-
-  // Lưu sản phẩm vào localStorage và chuyển hướng (chỉ gọi khi xác nhận)
   const handleConfirmSave = () => {
-    const products = JSON.parse(localStorage.getItem("products") || "[]");
-    const allProducts = [...products, ...productsData];
-    let ma_san_pham = "";
-    const found = allProducts.find(
-      (p) => p.ten_san_pham === newProductName
+    const localProducts = JSON.parse(localStorage.getItem("products") || "[]");
+    const allKnownProducts = [...localProducts, ...productsData];
+
+    const foundProduct = allKnownProducts.find(
+      (p) => p.ten_san_pham === productName.value
     );
-    if (!found) {
-      // Sinh mã không trùng
-      let i = 1;
-      do {
-        ma_san_pham =
-          "SP" +
-          Math.floor(Math.random() * 1000000)
-            .toString()
-            .padStart(6, "0");
-        i++;
-      } while (allProducts.some((p) => p.ma_san_pham === ma_san_pham));
-      
-      // Lưu sản phẩm mới vào localStorage
+
+    if (!foundProduct) {
+      // Find the max ID from all products (local storage + initial data)
+      const maxId = allKnownProducts.reduce(
+        (max, p) => (p.id > max ? p.id : max),
+        0
+      );
+      const newId = maxId + 1;
+
+      // Generate ma_san_pham based on the new ID
+      const ma_san_pham = "SP" + String(newId).padStart(3, "0");
+
       const sanPham = {
-        id: Date.now(),
+        id: newId, // The new auto-incrementing ID
         ma_san_pham,
-        ten_san_pham: newProductName,
+        ten_san_pham: productName.value,
         ten_danh_muc: category,
         mo_ta: "",
-        trang_thai: 1,
-        id_nguoi_tao: 1,
+        trang_thai: 3, // Mặc định là Sắp ra mắt
+        id_nguoi_tao: JSON.parse(localStorage.getItem("currentUser"))?.id || 1,
         ngay_tao: new Date().toISOString(),
         id_nguoi_cap_nhat: null,
         ngay_cap_nhat: null,
         deleted_at: null,
         id_nguoi_xoa: null,
       };
-      products.unshift(sanPham);
-      localStorage.setItem("products", JSON.stringify(products));
-      
-      // Lưu chi tiết sản phẩm
-      const productDetailsToSave = productDetails.map(detail => ({
-        ...detail,
-        id_san_pham: sanPham.id
-      }));
-      
-      const existingDetails = JSON.parse(localStorage.getItem("productDetails") || "[]");
-      existingDetails.push(...productDetailsToSave);
+
+      const updatedLocalProducts = [sanPham, ...localProducts];
+      localStorage.setItem("products", JSON.stringify(updatedLocalProducts));
+
+      // Lưu chi tiết sản phẩm (biến thể) với ID tự tăng
+      const existingDetails = JSON.parse(
+        localStorage.getItem("productDetails") || "[]"
+      );
+      let maxDetailId = existingDetails.reduce(
+        (max, d) => (d.id > max ? d.id : max),
+        0
+      );
+
+      const productVariantsToSave = productVariants.map((variant) => {
+        maxDetailId++;
+        return {
+          id: maxDetailId,
+          id_san_pham: sanPham.id,
+          id_kich_co: variant.size,
+          id_mau_sac: variant.color,
+          id_chat_lieu: variant.material,
+          so_luong: variant.quantity,
+          gia: variant.gia_ban,
+          gia_nhap: variant.gia_nhap,
+          images: variant.images,
+          id_nguoi_tao:
+            JSON.parse(localStorage.getItem("currentUser"))?.id || 1,
+          ngay_tao: new Date().toISOString(),
+          id_nguoi_cap_nhat: null,
+          ngay_cap_nhat: null,
+        };
+      });
+
+      existingDetails.push(...productVariantsToSave);
       localStorage.setItem("productDetails", JSON.stringify(existingDetails));
-      
+
       localStorage.setItem("lastSavedProductCode", ma_san_pham);
     } else {
-      // Nếu sản phẩm đã có trong localStorage thì đẩy lên đầu
-      ma_san_pham = found.ma_san_pham;
-      const idx = products.findIndex(
-        (p) => p.ma_san_pham === found.ma_san_pham
+      // Logic for adding variants to an EXISTING product
+      const sanPham = foundProduct;
+      const existingDetails = JSON.parse(
+        localStorage.getItem("productDetails") || "[]"
       );
-      if (idx !== -1) {
-        const [sp] = products.splice(idx, 1);
-        products.unshift(sp);
-        localStorage.setItem("products", JSON.stringify(products));
+      let maxDetailId = existingDetails.reduce(
+        (max, d) => (d.id > max ? d.id : max),
+        0
+      );
+
+      // Filter out variants that might already exist for this product, color, and size to avoid duplicates
+      const newProductVariantsToSave = productVariants
+        .filter(
+          (variant) =>
+            !existingDetails.some(
+              (detail) =>
+                detail.id_san_pham === sanPham.id &&
+                detail.id_mau_sac === variant.color &&
+                detail.id_kich_co === variant.size
+            )
+        )
+        .map((variant) => {
+          maxDetailId++;
+          return {
+            id: maxDetailId,
+            id_san_pham: sanPham.id,
+            id_kich_co: variant.size,
+            id_mau_sac: variant.color,
+            id_chat_lieu: variant.material,
+            so_luong: variant.quantity,
+            gia: variant.gia_ban,
+            gia_nhap: variant.gia_nhap,
+            images: variant.images,
+            id_nguoi_tao:
+              JSON.parse(localStorage.getItem("currentUser"))?.id || 1,
+            ngay_tao: new Date().toISOString(),
+            id_nguoi_cap_nhat: null,
+            ngay_cap_nhat: null,
+          };
+        });
+
+      if (newProductVariantsToSave.length > 0) {
+        existingDetails.push(...newProductVariantsToSave);
+        localStorage.setItem("productDetails", JSON.stringify(existingDetails));
       }
-      localStorage.setItem("lastSavedProductCode", ma_san_pham);
+
+      const localProductsToUpdate = [...localProducts];
+      const isInLocal = localProductsToUpdate.some((p) => p.id === sanPham.id);
+
+      if (!isInLocal) {
+        localProductsToUpdate.unshift(sanPham);
+        localStorage.setItem("products", JSON.stringify(localProductsToUpdate));
+      }
+
+      localStorage.setItem("lastSavedProductCode", sanPham.ma_san_pham);
     }
+
+    // Đóng modal xác nhận và hiện toast
     setShowConfirmModal(false);
     setShowSuccessToast(true);
     setTimeout(() => {
@@ -555,55 +534,11 @@ const AddProduct = () => {
     }, 1500);
   };
 
-  // Sửa lại handleSaveProduct: chỉ mở modal xác nhận nếu validate thành công
   const handleSaveProduct = (e) => {
     e.preventDefault();
-    if (!validateForm()) {
-      return;
+    if (validateForm()) {
+      setShowConfirmModal(true);
     }
-    setShowConfirmModal(true);
-  };
-
-  // Tự động sinh chi tiết sản phẩm khi chọn đủ
-  useEffect(() => {
-    console.log("useEffect triggered:", { material, sizes, colors });
-    if (!material || sizes.length === 0 || colors.length === 0) {
-      console.log("Missing required fields, clearing productDetails");
-      setProductDetails([]);
-      return;
-    }
-    console.log("Creating product details...");
-    const details = [];
-    sizes.forEach(size => {
-      colors.forEach(color => {
-        details.push({
-          id: Date.now() + Math.random(),
-          id_san_pham: null,
-          id_kich_co: size.value,
-          id_mau_sac: color.value,
-          id_chat_lieu: material,
-          so_luong: 0,
-          gia: 0,
-          gia_nhap: 0,
-          id_nguoi_tao: 1,
-          ngay_tao: new Date().toISOString(),
-          id_nguoi_cap_nhat: null,
-          ngay_cap_nhat: null
-        });
-      });
-    });
-    console.log("Created details:", details);
-    setProductDetails(details);
-  }, [material, sizes, colors]);
-
-  // Cập nhật chi tiết sản phẩm
-  const updateProductDetail = (index, field, value) => {
-    const updatedDetails = [...productDetails];
-    updatedDetails[index] = {
-      ...updatedDetails[index],
-      [field]: field === 'so_luong' || field === 'gia' || field === 'gia_nhap' ? Number(value) : value
-    };
-    setProductDetails(updatedDetails);
   };
 
   return (
@@ -638,47 +573,56 @@ const AddProduct = () => {
         onSubmit={(e) => e.preventDefault()}
       >
         <div className="mb-3">
-          <label className="form-label fw-semibold">Danh mục sản phẩm</label>
+          <label className="form-label fw-semibold">Tên sản phẩm</label>
           <div className={errors.productName ? "is-invalid" : ""}>
             <CreatableSelect
               isClearable
               options={productNameOptions}
               value={productName}
               onChange={handleProductNameChange}
-              placeholder="Chọn hoặc nhập danh mục sản phẩm..."
+              placeholder="Chọn hoặc nhập tên sản phẩm..."
               classNamePrefix="select"
+              formatCreateLabel={(inputValue) => `Thêm mới "${inputValue}"`}
             />
           </div>
           {errors.productName && (
             <div className="invalid-feedback d-block">{errors.productName}</div>
           )}
         </div>
-        <div className="mb-3">
-          <label className="form-label fw-semibold">Tên sản phẩm</label>
-          <input
-            type="text"
-            className={`form-control ${errors.newProductName ? "is-invalid" : ""}`}
-            value={newProductName}
-            onChange={(e) => setNewProductName(e.target.value)}
-            placeholder="Nhập tên sản phẩm..."
-          />
-          {errors.newProductName && (
-            <div className="invalid-feedback d-block">{errors.newProductName}</div>
-          )}
-        </div>
+
+        {isNewProduct && (
+          <div className="mb-3">
+            <label className="form-label fw-semibold">
+              Danh mục cho sản phẩm mới
+            </label>
+            <Select
+              options={categoryOptions}
+              value={categoryOptions.find((c) => c.value === category)}
+              onChange={(option) => setCategory(option.value)}
+              placeholder="Chọn danh mục..."
+              classNamePrefix="select"
+            />
+            {errors.category && (
+              <div className="text-danger mt-1" style={{ fontSize: "0.875em" }}>
+                {errors.category}
+              </div>
+            )}
+          </div>
+        )}
+
         <div className="row g-3 mb-3">
           <div className="col-md-6">
             <label className="form-label">Chất liệu</label>
-            <select
-              className={`form-select ${errors.material ? "is-invalid" : ""}`}
-              value={material}
-              onChange={(e) => setMaterial(e.target.value)}
-            >
-              <option value="">Chọn chất liệu...</option>
-              {materialOptions.map((m) => (
-                <option key={m}>{m}</option>
-              ))}
-            </select>
+            <div className={errors.material ? "is-invalid" : ""}>
+              <Select
+                options={materialOptions}
+                value={materialOptions.find((o) => o.value === material)}
+                onChange={(option) => setMaterial(option ? option.value : "")}
+                placeholder="Chọn chất liệu..."
+                classNamePrefix="select"
+                isClearable
+              />
+            </div>
             {errors.material && (
               <div className="invalid-feedback d-block">{errors.material}</div>
             )}
@@ -702,7 +646,9 @@ const AddProduct = () => {
             <label className="form-label">Giá nhập (VNĐ)</label>
             <input
               type="number"
-              className={`form-control ${errors.importPrice ? "is-invalid" : ""}`}
+              className={`form-control ${
+                errors.importPrice ? "is-invalid" : ""
+              }`}
               min={0}
               step={1000}
               value={importPrice}
@@ -710,7 +656,9 @@ const AddProduct = () => {
               placeholder="Nhập giá nhập..."
             />
             {errors.importPrice && (
-              <div className="invalid-feedback d-block">{errors.importPrice}</div>
+              <div className="invalid-feedback d-block">
+                {errors.importPrice}
+              </div>
             )}
           </div>
           <div className="col-md-6">
@@ -769,26 +717,18 @@ const AddProduct = () => {
             )}
           </div>
         </div>
-        
-        {/* Nút tạo chi tiết sản phẩm */}
-        {/* Đã loại bỏ button tạo chi tiết sản phẩm để tránh lỗi và theo yêu cầu mới */}
-        {/* {errors.productDetails && (
-            <div className="text-danger mt-2">{errors.productDetails}</div>
-          )} */}
       </form>
 
       {/* Bảng sản phẩm cùng loại */}
       {showVariants && productVariants && productVariants.length > 0 && (
         <div className="mt-5">
           <div className="bg-light p-3 rounded mb-3 fw-bold">
-Chi tiết sản phẩm
+            Chi tiết sản phẩm
           </div>
           {Object.entries(groupByColor(productVariants)).map(
             ([color, items]) => (
               <div key={color} className="mb-4">
-                <div className="fw-bold bg-secondary text-white px-3 py-2 rounded-top">
-                  
-                </div>
+                <div className="fw-bold bg-secondary text-white px-3 py-2 rounded-top"></div>
                 <table className="table table-bordered align-middle mb-0">
                   <thead>
                     <tr>
@@ -805,156 +745,162 @@ Chi tiết sản phẩm
                     </tr>
                   </thead>
                   <tbody>
-                    {items && items.map((v, idx) => {
-                      const globalIdx = productVariants.findIndex(
-                        (pv) => pv.color === v.color && pv.size === v.size
-                      );
-                      const variantErrors = errors.variants && errors.variants[globalIdx] ? errors.variants[globalIdx] : {};
-                      return (
-                        <React.Fragment key={v.color + v.size}>
-                          <tr>
-                            <td>{`${v.name} [${v.color} - ${v.size}]`}</td>
-                            <td>
-                              <div className="position-relative">
-                                <input
-                                  type="number"
-                                  className={`form-control ${
-                                    variantErrors.quantity ? "is-invalid" : ""
-                                  }`}
-                                  style={{ width: 70 }}
-                                  value={v.quantity}
-                                  min={0}
-                                  onChange={(e) =>
-                                    handleVariantChange(
-                                      globalIdx,
-                                      "quantity",
-                                      e.target.value
-                                    )
-                                  }
-                                />
-                                {variantErrors.quantity && (
-                                  <div className="invalid-feedback d-block">
-                                    {variantErrors.quantity}
-                                  </div>
-                                )}
-                              </div>
-                            </td>
-                            <td>
-                              <div className="position-relative">
-                                <input
-                                  type="number"
-                                  className={`form-control ${variantErrors.gia_ban ? "is-invalid" : ""}`}
-                                  style={{ width: 100 }}
-                                  value={v.gia_ban}
-                                  min={0}
-                                  onChange={(e) =>
-                                    handleVariantChange(
-                                      globalIdx,
-                                      "gia_ban",
-                                      e.target.value
-                                    )
-                                  }
-                                />
-                                {variantErrors.gia_ban && (
-                                  <div className="invalid-feedback d-block">{variantErrors.gia_ban}</div>
-                                )}
-                              </div>
-                            </td>
-                            <td>
-                              <div className="position-relative">
-                                <input
-                                  type="number"
-                                  className="form-control"
-                                  style={{ width: 100 }}
-                                  value={v.gia_nhap}
-                                  min={0}
-                                  onChange={(e) =>
-                                    handleVariantChange(
-                                      globalIdx,
-                                      "gia_nhap",
-                                      e.target.value
-                                    )
-                                  }
-                                />
-                              </div>
-                            </td>
-                            <td>
-                              {categories.includes(category) ? category : ""}
-                            </td>
-                            <td>{v.material}</td>
-                            <td>{v.color}</td>
-                            <td>{v.size}</td>
-                            <td>
-                              <button
-                                className="btn btn-danger btn-sm"
-                                onClick={() => handleDeleteVariant(globalIdx)}
-                              >
-                                <FaTrash />
-                              </button>
-                            </td>
-                            <td className="text-center">
-                              <span
-                                style={{
-                                  cursor: "pointer",
-                                  display: "inline-block",
-                                  minWidth: 48,
-                                }}
-                                onClick={() =>
-                                  openGalleryModal(v.color, v.size, v.images)
-                                }
-                              >
-                                <FaImage
-                                  style={{ fontSize: 20, color: "#888" }}
-                                />
-                                {v.images && v.images.length > 0 && (
-                                  <span
-                                    style={{
-                                      fontSize: 12,
-                                      marginLeft: 4,
-                                      color: "#7c3aed",
-                                    }}
-                                  >
-                                    ({v.images.length})
-                                  </span>
-                                )}
-                              </span>
-                            </td>
-                          </tr>
-                          {/* Hiển thị thumbnail ảnh bên dưới dòng sản phẩm */}
-                          {v.images && v.images.length > 0 && (
+                    {items &&
+                      items.map((v, idx) => {
+                        const globalIdx = productVariants.findIndex(
+                          (pv) => pv.color === v.color && pv.size === v.size
+                        );
+                        const variantErrors =
+                          errors.variants && errors.variants[globalIdx]
+                            ? errors.variants[globalIdx]
+                            : {};
+                        return (
+                          <React.Fragment key={v.color + v.size}>
                             <tr>
-                              <td colSpan={11}>
-                                <div
-                                  style={{
-                                    display: "flex",
-                                    gap: 16,
-                                    padding: "16px 0",
-                                    borderBottom: "1px solid #eee",
-                                    justifyContent: "center",
-                                    alignItems: "center",
-                                  }}
-                                >
-                                  {v.images.map((img, i) => (
-                                    <img
-                                      key={img + i}
-                                      src={img}
-                                      alt="Ảnh sản phẩm"
-                                      style={{
-                                        width: 100,
-                                        height: 100,
-                                        objectFit: "cover",
-                                        borderRadius: 8,
-                                        border: "1px solid #ccc",
-                                      }}
-                                    />
-                                  ))}
+                              <td>{`${v.name} [${v.color} - ${v.size}]`}</td>
+                              <td>
+                                <div className="position-relative">
+                                  <input
+                                    type="number"
+                                    className={`form-control ${
+                                      variantErrors.quantity ? "is-invalid" : ""
+                                    }`}
+                                    style={{ width: 70 }}
+                                    value={v.quantity}
+                                    min={0}
+                                    onChange={(e) =>
+                                      handleVariantChange(
+                                        globalIdx,
+                                        "quantity",
+                                        e.target.value
+                                      )
+                                    }
+                                  />
+                                  {variantErrors.quantity && (
+                                    <div className="invalid-feedback d-block">
+                                      {variantErrors.quantity}
+                                    </div>
+                                  )}
                                 </div>
                               </td>
+                              <td>
+                                <div className="position-relative">
+                                  <input
+                                    type="number"
+                                    className={`form-control ${
+                                      variantErrors.gia_ban ? "is-invalid" : ""
+                                    }`}
+                                    style={{ width: 100 }}
+                                    value={v.gia_ban}
+                                    min={0}
+                                    onChange={(e) =>
+                                      handleVariantChange(
+                                        globalIdx,
+                                        "gia_ban",
+                                        e.target.value
+                                      )
+                                    }
+                                  />
+                                  {variantErrors.gia_ban && (
+                                    <div className="invalid-feedback d-block">
+                                      {variantErrors.gia_ban}
+                                    </div>
+                                  )}
+                                </div>
+                              </td>
+                              <td>
+                                <div className="position-relative">
+                                  <input
+                                    type="number"
+                                    className="form-control"
+                                    style={{ width: 100 }}
+                                    value={v.gia_nhap}
+                                    min={0}
+                                    onChange={(e) =>
+                                      handleVariantChange(
+                                        globalIdx,
+                                        "gia_nhap",
+                                        e.target.value
+                                      )
+                                    }
+                                  />
+                                </div>
+                              </td>
+                              <td>{v.category}</td>
+                              <td>{v.material}</td>
+                              <td>{v.color}</td>
+                              <td>{v.size}</td>
+                              <td>
+                                <button
+                                  className="btn btn-danger btn-sm"
+                                  onClick={() => handleDeleteVariant(globalIdx)}
+                                >
+                                  <FaTrash />
+                                </button>
+                              </td>
+                              <td className="text-center">
+                                <span
+                                  style={{
+                                    cursor: "pointer",
+                                    display: "inline-block",
+                                    minWidth: 48,
+                                  }}
+                                  onClick={() =>
+                                    openGalleryModal(v.color, v.size, v.images)
+                                  }
+                                >
+                                  <FaImage
+                                    style={{ fontSize: 20, color: "#888" }}
+                                  />
+                                  {v.images && v.images.length > 0 && (
+                                    <span
+                                      style={{
+                                        fontSize: 12,
+                                        marginLeft: 4,
+                                        color: "#7c3aed",
+                                      }}
+                                    >
+                                      ({v.images.length})
+                                    </span>
+                                  )}
+                                </span>
+                              </td>
                             </tr>
-                          )}
-                        </React.Fragment>
-                      );
-                    })}
+                            {/* Hiển thị thumbnail ảnh bên dưới dòng sản phẩm */}
+                            {v.images && v.images.length > 0 && (
+                              <tr>
+                                <td colSpan={11}>
+                                  <div
+                                    style={{
+                                      display: "flex",
+                                      gap: 16,
+                                      padding: "16px 0",
+                                      borderBottom: "1px solid #eee",
+                                      justifyContent: "center",
+                                      alignItems: "center",
+                                    }}
+                                  >
+                                    {v.images.map((img, i) => (
+                                      <img
+                                        key={img + i}
+                                        src={img}
+                                        alt="Ảnh sản phẩm"
+                                        style={{
+                                          width: 100,
+                                          height: 100,
+                                          objectFit: "cover",
+                                          borderRadius: 8,
+                                          border: "1px solid #ccc",
+                                        }}
+                                      />
+                                    ))}
+                                  </div>
+                                </td>
+                              </tr>
+                            )}
+                          </React.Fragment>
+                        );
+                      })}
                   </tbody>
                 </table>
               </div>
@@ -969,7 +915,6 @@ Chi tiết sản phẩm
           type="button"
           className="btn btn-primary px-4 fw-bold"
           onClick={handleSaveProduct}
-          disabled={!isFormValid}
         >
           Lưu sản phẩm
         </button>
@@ -1173,9 +1118,9 @@ Chi tiết sản phẩm
                       onChange={handleQuickChange}
                     >
                       <option value="">Chọn danh mục...</option>
-                      {categories.map((cat) => (
-                        <option key={cat} value={cat}>
-                          {cat}
+                      {categoryOptions.map((cat) => (
+                        <option key={cat.value} value={cat.value}>
+                          {cat.label}
                         </option>
                       ))}
                     </select>
