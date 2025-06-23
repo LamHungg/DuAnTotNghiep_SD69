@@ -6,13 +6,29 @@ const ProtectedRoute = ({ children }) => {
   const isLoggedIn = localStorage.getItem("isLoggedIn") === "true";
   const currentUser = JSON.parse(localStorage.getItem("currentUser") || "null");
 
-  // Nếu chưa đăng nhập, chuyển hướng đến trang login
-  if (!isLoggedIn || !currentUser) {
+  // Kiểm tra chi tiết hơn về thông tin người dùng
+  const isValidUser =
+    currentUser &&
+    currentUser.tenDangNhap &&
+    currentUser.ma &&
+    currentUser.trangThai === true;
+
+  console.log("ProtectedRoute check:", {
+    isLoggedIn,
+    currentUser,
+    isValidUser,
+  });
+
+  // Nếu chưa đăng nhập hoặc thông tin user không hợp lệ, chuyển hướng đến trang login
+  if (!isLoggedIn || !isValidUser) {
+    // Xóa dữ liệu không hợp lệ khỏi localStorage
+    localStorage.removeItem("isLoggedIn");
+    localStorage.removeItem("currentUser");
     return <Navigate to="/login" replace />;
   }
 
-  // Nếu đã đăng nhập, hiển thị component con
+  // Nếu đã đăng nhập và thông tin hợp lệ, hiển thị component con
   return children;
 };
 
-export default ProtectedRoute; 
+export default ProtectedRoute;
