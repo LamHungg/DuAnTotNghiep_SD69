@@ -1,23 +1,29 @@
 import React, { useState, useEffect } from "react";
+import { FaUser, FaLock } from "react-icons/fa";
+import "./Login.css";
 import { useNavigate } from "react-router-dom";
 import authService from "../services/authService";
+import Toast from "../components/Toast";
 
 const Login = () => {
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
     tenDangNhap: "",
     matKhau: "",
+    remember: false,
   });
   const [errors, setErrors] = useState({});
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [toast, setToast] = useState({
+    visible: false,
+    type: "info",
+    message: "",
+  });
 
-  // Tạo dữ liệu demo khi component mount
   useEffect(() => {
     const employees = localStorage.getItem("employees");
     const admins = localStorage.getItem("admins");
-
-    // Nếu chưa có dữ liệu, tạo dữ liệu demo
     if (!employees) {
       const demoEmployees = [
         {
@@ -47,7 +53,6 @@ const Login = () => {
       ];
       localStorage.setItem("employees", JSON.stringify(demoEmployees));
     }
-
     if (!admins) {
       const demoAdmins = [
         {
@@ -68,386 +73,336 @@ const Login = () => {
   }, []);
 
   const handleChange = (e) => {
-    const { name, value } = e.target;
+    const { name, value, type, checked } = e.target;
     setFormData((prev) => ({
       ...prev,
-      [name]: value,
+      [name]: type === "checkbox" ? checked : value,
     }));
     if (errors[name]) {
-      setErrors((prev) => ({
-        ...prev,
-        [name]: "",
-      }));
+      setErrors((prev) => ({ ...prev, [name]: "" }));
     }
   };
 
   const validateForm = () => {
     const newErrors = {};
-
     if (!formData.tenDangNhap.trim()) {
       newErrors.tenDangNhap = "Tên đăng nhập không được để trống";
     }
-
     if (!formData.matKhau.trim()) {
       newErrors.matKhau = "Mật khẩu không được để trống";
     }
-
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
-    if (!validateForm()) {
-      return;
-    }
-
+    if (!validateForm()) return;
     setIsLoading(true);
-
     try {
-      console.log("Sending login request with data:", {
-        tenDangNhap: formData.tenDangNhap,
-        matKhau: formData.matKhau,
-      });
-
       const userData = await authService.login(
         formData.tenDangNhap,
         formData.matKhau
       );
-      console.log("Login response userData:", userData);
-
       if (userData && userData.trangThai) {
-        // Lưu thông tin user vào localStorage
         localStorage.setItem("currentUser", JSON.stringify(userData));
         localStorage.setItem("isLoggedIn", "true");
-
-        alert("Đăng nhập thành công!");
-
-        // Đảm bảo dữ liệu được lưu trước khi chuyển hướng
+        setToast({
+          visible: true,
+          type: "success",
+          message: "Đăng nhập thành công!",
+        });
         setTimeout(() => {
-          console.log("Navigating to dashboard...");
+          setToast((t) => ({ ...t, visible: false }));
           navigate("/dashboard", { replace: true });
-        }, 100);
+        }, 1500);
       } else {
-        alert("Tài khoản đã bị khóa hoặc không tồn tại!");
+        setToast({
+          visible: true,
+          type: "error",
+          message: "Sai tài khoản hoặc mật khẩu!",
+        });
+        setTimeout(() => setToast((t) => ({ ...t, visible: false })), 1500);
       }
     } catch (error) {
-      console.error("Login error details:", {
-        response: error.response?.data,
-        status: error.response?.status,
-        message: error.message,
+      setToast({
+        visible: true,
+        type: "error",
+        message: "Sai tài khoản hoặc mật khẩu!",
       });
-
-      if (error.response) {
-        // Lỗi từ server
-        alert(
-          error.response.data.message ||
-            "Tên đăng nhập hoặc mật khẩu không đúng!"
-        );
-      } else if (error.request) {
-        // Lỗi không thể kết nối đến server
-        alert("Không thể kết nối đến server. Vui lòng thử lại sau!");
-      } else {
-        // Lỗi khác
-        alert("Có lỗi xảy ra khi đăng nhập!");
-      }
+      setTimeout(() => setToast((t) => ({ ...t, visible: false })), 1500);
     } finally {
       setIsLoading(false);
     }
   };
 
-  // Modern and beautiful styles
-  const containerStyle = {
-    minHeight: "100vh",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    background:
-      "linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%)",
-    fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
-    position: "relative",
-    overflow: "hidden",
-  };
+  // Animated Starry sky (chi tiết hơn, nhiều lớp, có sao băng)
+  const Starry = () => (
+    <svg
+      className="starry"
+      width="100%"
+      height="100%"
+      style={{ position: "absolute", top: 0, left: 0, zIndex: 1 }}
+    >
+      {/* Lớp sao nhỏ */}
+      {[...Array(80)].map((_, i) => {
+        const cx = Math.random() * 100;
+        const cy = Math.random() * 35 + 2;
+        const r = Math.random() * 1.1 + 0.5;
+        const opacity = Math.random() * 0.4 + 0.3;
+        return (
+          <circle
+            key={i}
+            cx={`${cx}%`}
+            cy={`${cy}%`}
+            r={r}
+            fill="#fff"
+            opacity={opacity}
+          >
+            <animate
+              attributeName="opacity"
+              values={`${opacity};0.1;${opacity}`}
+              dur={`${Math.random() * 2 + 2}s`}
+              repeatCount="indefinite"
+              begin={`${Math.random()}s`}
+            />
+          </circle>
+        );
+      })}
+      {/* Lớp sao lớn hơn */}
+      {[...Array(20)].map((_, i) => {
+        const cx = Math.random() * 100;
+        const cy = Math.random() * 30 + 2;
+        const r = Math.random() * 2 + 1.2;
+        const opacity = Math.random() * 0.5 + 0.5;
+        return (
+          <circle
+            key={100 + i}
+            cx={`${cx}%`}
+            cy={`${cy}%`}
+            r={r}
+            fill="#fff"
+            opacity={opacity}
+          >
+            <animate
+              attributeName="opacity"
+              values={`${opacity};0.2;${opacity}`}
+              dur={`${Math.random() * 3 + 2}s`}
+              repeatCount="indefinite"
+              begin={`${Math.random()}s`}
+            />
+          </circle>
+        );
+      })}
+      {/* Sao băng */}
+      {[...Array(3)].map((_, i) => {
+        const x1 = Math.random() * 90 + 5;
+        const y1 = Math.random() * 25 + 2;
+        return (
+          <line
+            key={200 + i}
+            x1={`${x1}%`}
+            y1={`${y1}%`}
+            x2={`${x1 + 3}%`}
+            y2={`${y1 + 1}%`}
+            stroke="#fff"
+            strokeWidth="2"
+            strokeLinecap="round"
+            opacity="0.7"
+          >
+            <animate
+              attributeName="x1"
+              values={`${x1}%;${x1 + 10}%`}
+              dur="2.5s"
+              repeatCount="indefinite"
+              begin={`${i * 0.8}s`}
+            />
+            <animate
+              attributeName="x2"
+              values={`${x1 + 3}%;${x1 + 13}%`}
+              dur="2.5s"
+              repeatCount="indefinite"
+              begin={`${i * 0.8}s`}
+            />
+            <animate
+              attributeName="opacity"
+              values="0.7;0;0.7"
+              dur="2.5s"
+              repeatCount="indefinite"
+              begin={`${i * 0.8}s`}
+            />
+          </line>
+        );
+      })}
+    </svg>
+  );
 
-  const backgroundAnimationStyle = {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    background:
-      "linear-gradient(45deg, rgba(255,255,255,0.1) 25%, transparent 25%), linear-gradient(-45deg, rgba(255,255,255,0.1) 25%, transparent 25%), linear-gradient(45deg, transparent 75%, rgba(255,255,255,0.1) 75%), linear-gradient(-45deg, transparent 75%, rgba(255,255,255,0.1) 75%)",
-    backgroundSize: "20px 20px",
-    backgroundPosition: "0 0, 0 10px, 10px -10px, -10px 0px",
-    animation: "move 20s linear infinite",
-  };
-
-  const cardStyle = {
-    backgroundColor: "rgba(255, 255, 255, 0.95)",
-    backdropFilter: "blur(10px)",
-    borderRadius: "20px",
-    boxShadow: "0 25px 50px rgba(0, 0, 0, 0.15)",
-    padding: "50px",
-    width: "100%",
-    maxWidth: "450px",
-    textAlign: "center",
-    position: "relative",
-    zIndex: 1,
-    border: "1px solid rgba(255, 255, 255, 0.2)",
-  };
-
-  const logoStyle = {
-    fontSize: "4rem",
-    marginBottom: "20px",
-    background: "linear-gradient(45deg, #667eea, #764ba2)",
-    WebkitBackgroundClip: "text",
-    WebkitTextFillColor: "transparent",
-    backgroundClip: "text",
-  };
-
-  const brandStyle = {
-    fontSize: "2.5rem",
-    fontWeight: "bold",
-    color: "#333",
-    marginBottom: "5px",
-    letterSpacing: "2px",
-  };
-
-  const subtitleStyle = {
-    color: "#666",
-    marginBottom: "40px",
-    fontSize: "16px",
-    fontWeight: "300",
-  };
-
-  const formStyle = {
-    display: "flex",
-    flexDirection: "column",
-    gap: "25px",
-  };
-
-  const inputGroupStyle = {
-    position: "relative",
-  };
-
-  const inputStyle = {
-    width: "100%",
-    padding: "18px 20px",
-    border: "2px solid #e1e5e9",
-    borderRadius: "15px",
-    fontSize: "16px",
-    transition: "all 0.3s ease",
-    boxSizing: "border-box",
-    backgroundColor: "rgba(255, 255, 255, 0.9)",
-    outline: "none",
-  };
-
-  const inputFocusStyle = {
-    borderColor: "#667eea",
-    boxShadow: "0 0 0 3px rgba(102, 126, 234, 0.1)",
-    transform: "translateY(-2px)",
-  };
-
-  const errorInputStyle = {
-    ...inputStyle,
-    borderColor: "#ff6b6b",
-    boxShadow: "0 0 0 3px rgba(255, 107, 107, 0.1)",
-  };
-
-  const passwordInputStyle = {
-    ...inputStyle,
-    paddingRight: "60px",
-  };
-
-  const errorPasswordInputStyle = {
-    ...errorInputStyle,
-    paddingRight: "60px",
-  };
-
-  const passwordToggleStyle = {
-    position: "absolute",
-    right: "20px",
-    top: "50%",
-    transform: "translateY(-50%)",
-    backgroundColor: "transparent",
-    border: "none",
-    cursor: "pointer",
-    fontSize: "20px",
-    color: "#667eea",
-    transition: "all 0.3s ease",
-    padding: "5px",
-  };
-
-  const errorStyle = {
-    color: "#ff6b6b",
-    fontSize: "14px",
-    marginTop: "8px",
-    textAlign: "left",
-    fontWeight: "500",
-  };
-
-  const buttonStyle = {
-    background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
-    color: "white",
-    border: "none",
-    padding: "18px",
-    borderRadius: "15px",
-    fontSize: "18px",
-    fontWeight: "bold",
-    cursor: "pointer",
-    transition: "all 0.3s ease",
-    opacity: isLoading ? 0.7 : 1,
-    boxShadow: "0 10px 30px rgba(102, 126, 234, 0.3)",
-    position: "relative",
-    overflow: "hidden",
-  };
-
-  const buttonHoverStyle = {
-    transform: "translateY(-3px)",
-    boxShadow: "0 15px 40px rgba(102, 126, 234, 0.4)",
-  };
-
-  const demoStyle = {
-    marginTop: "30px",
-    padding: "20px",
-    backgroundColor: "rgba(102, 126, 234, 0.1)",
-    borderRadius: "15px",
-    fontSize: "14px",
-    color: "#667eea",
-    border: "1px solid rgba(102, 126, 234, 0.2)",
-  };
-
-  const demoTitleStyle = {
-    fontWeight: "bold",
-    marginBottom: "10px",
-    fontSize: "16px",
-  };
-
-  const demoAccountStyle = {
-    margin: "5px 0",
-    fontSize: "13px",
-  };
+  // Forest SVG (nhiều lớp cây, thêm sương mù)
+  const Forest = () => (
+    <svg
+      className="forest"
+      viewBox="0 0 1440 320"
+      preserveAspectRatio="none"
+      style={{
+        position: "absolute",
+        bottom: 0,
+        left: 0,
+        width: "100vw",
+        height: "38vh",
+        zIndex: 2,
+      }}
+    >
+      <defs>
+        <linearGradient id="treeGradient1" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor="#4b2e7a" />
+          <stop offset="100%" stopColor="#2d1850" />
+        </linearGradient>
+        <linearGradient id="treeGradient2" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor="#6e48aa" />
+          <stop offset="100%" stopColor="#3a2067" />
+        </linearGradient>
+        <radialGradient id="fog" cx="50%" cy="80%" r="60%">
+          <stop offset="0%" stopColor="#fff" stopOpacity="0.18" />
+          <stop offset="100%" stopColor="#fff" stopOpacity="0" />
+        </radialGradient>
+      </defs>
+      {/* Lớp cây xa */}
+      <path
+        d="M0,320 Q120,250 240,320 T480,320 T720,320 T960,320 T1200,320 T1440,320 V0 H0 Z"
+        fill="url(#treeGradient1)"
+      />
+      {/* Lớp cây gần hơn */}
+      <path
+        d="M0,320 Q80,260 160,320 T320,320 T480,320 T640,320 T800,320 T960,320 T1120,320 T1280,320 T1440,320 V80 Q1300,200 1200,320 T0,320 Z"
+        fill="url(#treeGradient2)"
+      />
+      {/* Thêm các cây nhỏ phía trước */}
+      {[...Array(22)].map((_, i) => {
+        const x = i * 65 + Math.random() * 25;
+        const treeHeight = 60 + Math.random() * 60;
+        return (
+          <g key={i}>
+            <rect
+              x={x}
+              y={320 - treeHeight}
+              width={10}
+              height={treeHeight}
+              fill="#23123a"
+              rx={3}
+            />
+            <polygon
+              points={`${x - 10},${320 - treeHeight + 10} ${x + 5},${
+                320 - treeHeight - 30
+              } ${x + 20},${320 - treeHeight + 10}`}
+              fill="#2d1850"
+            />
+          </g>
+        );
+      })}
+      {/* Sương mù */}
+      <ellipse cx="50%" cy="90%" rx="700" ry="40" fill="url(#fog)" />
+    </svg>
+  );
 
   return (
-    <div style={containerStyle}>
-      <div style={backgroundAnimationStyle}></div>
-      <div style={cardStyle}>
-        <div style={logoStyle}>👔</div>
-        <div style={brandStyle}>ZMEN</div>
-        <div style={subtitleStyle}>Admin Dashboard</div>
-
-        <form onSubmit={handleSubmit} style={formStyle}>
-          {/* Tên đăng nhập */}
-          <div style={inputGroupStyle}>
-            <input
-              type="text"
-              name="tenDangNhap"
-              value={formData.tenDangNhap}
-              onChange={handleChange}
-              style={errors.tenDangNhap ? errorInputStyle : inputStyle}
-              placeholder="Tên đăng nhập"
-              disabled={isLoading}
-              onFocus={(e) => {
-                if (!errors.tenDangNhap) {
-                  e.target.style.borderColor = "#667eea";
-                  e.target.style.boxShadow =
-                    "0 0 0 3px rgba(102, 126, 234, 0.1)";
-                  e.target.style.transform = "translateY(-2px)";
-                }
-              }}
-              onBlur={(e) => {
-                if (!errors.tenDangNhap) {
-                  e.target.style.borderColor = "#e1e5e9";
-                  e.target.style.boxShadow = "none";
-                  e.target.style.transform = "translateY(0)";
-                }
-              }}
-            />
-            {errors.tenDangNhap && (
-              <div style={errorStyle}>{errors.tenDangNhap}</div>
-            )}
-          </div>
-
-          {/* Mật khẩu */}
-          <div style={inputGroupStyle}>
-            <input
-              type={showPassword ? "text" : "password"}
-              name="matKhau"
-              value={formData.matKhau}
-              onChange={handleChange}
-              style={
-                errors.matKhau ? errorPasswordInputStyle : passwordInputStyle
-              }
-              placeholder="Mật khẩu"
-              disabled={isLoading}
-              onFocus={(e) => {
-                if (!errors.matKhau) {
-                  e.target.style.borderColor = "#667eea";
-                  e.target.style.boxShadow =
-                    "0 0 0 3px rgba(102, 126, 234, 0.1)";
-                  e.target.style.transform = "translateY(-2px)";
-                }
-              }}
-              onBlur={(e) => {
-                if (!errors.matKhau) {
-                  e.target.style.borderColor = "#e1e5e9";
-                  e.target.style.boxShadow = "none";
-                  e.target.style.transform = "translateY(0)";
-                }
-              }}
-            />
-            <button
-              type="button"
-              onClick={() => setShowPassword(!showPassword)}
-              style={passwordToggleStyle}
-              disabled={isLoading}
-              onMouseEnter={(e) => {
-                e.target.style.transform = "translateY(-50%) scale(1.1)";
-              }}
-              onMouseLeave={(e) => {
-                e.target.style.transform = "translateY(-50%) scale(1)";
-              }}
-            >
-              {showPassword ? "🙈" : "👁️"}
+    <div className="login-bg">
+      <Starry />
+      <Forest />
+      <div
+        style={{
+          minHeight: "100vh",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          position: "relative",
+          zIndex: 10,
+        }}
+      >
+        <div className="login-glass">
+          <div className="login-title">Login</div>
+          <form className="login-form" onSubmit={handleSubmit}>
+            <div className="input-group">
+              <span className="input-icon">
+                <FaUser />
+              </span>
+              <input
+                type="text"
+                name="tenDangNhap"
+                className="login-input"
+                placeholder="Username"
+                value={formData.tenDangNhap}
+                onChange={handleChange}
+                disabled={isLoading}
+                autoComplete="username"
+              />
+              {errors.tenDangNhap && (
+                <div
+                  style={{
+                    color: "#ff6b6b",
+                    fontSize: 13,
+                    marginTop: 4,
+                  }}
+                >
+                  {errors.tenDangNhap}
+                </div>
+              )}
+            </div>
+            <div className="input-group">
+              <span className="input-icon">
+                <FaLock />
+              </span>
+              <input
+                type={showPassword ? "text" : "password"}
+                name="matKhau"
+                className="login-input"
+                placeholder="Password"
+                value={formData.matKhau}
+                onChange={handleChange}
+                disabled={isLoading}
+                autoComplete="current-password"
+              />
+              <span
+                className="input-icon-right"
+                onClick={() => setShowPassword((v) => !v)}
+                style={{ userSelect: "none" }}
+              >
+                {showPassword ? "🙈" : "👁️"}
+              </span>
+              {errors.matKhau && (
+                <div
+                  style={{
+                    color: "#ff6b6b",
+                    fontSize: 13,
+                    marginTop: 4,
+                  }}
+                >
+                  {errors.matKhau}
+                </div>
+              )}
+            </div>
+            <div className="login-remember">
+              <input
+                type="checkbox"
+                id="remember"
+                name="remember"
+                checked={formData.remember}
+                onChange={handleChange}
+                disabled={isLoading}
+                style={{ accentColor: "#9d50bb" }}
+              />
+              <label htmlFor="remember">Remember me</label>
+            </div>
+            <button className="login-btn" type="submit" disabled={isLoading}>
+              {isLoading ? "Đang đăng nhập..." : "Login"}
             </button>
-            {errors.matKhau && <div style={errorStyle}>{errors.matKhau}</div>}
-          </div>
-
-          {/* Nút đăng nhập */}
-          <button
-            type="submit"
-            style={buttonStyle}
-            disabled={isLoading}
-            onMouseEnter={(e) => {
-              if (!isLoading) {
-                e.target.style.transform = "translateY(-3px)";
-                e.target.style.boxShadow =
-                  "0 15px 40px rgba(102, 126, 234, 0.4)";
-              }
-            }}
-            onMouseLeave={(e) => {
-              if (!isLoading) {
-                e.target.style.transform = "translateY(0)";
-                e.target.style.boxShadow =
-                  "0 10px 30px rgba(102, 126, 234, 0.3)";
-              }
-            }}
-          >
-            {isLoading ? "Đang đăng nhập..." : "Đăng nhập"}
-          </button>
-        </form>
-
-        {/* Demo accounts */}
-        <div style={demoStyle}>
-          <div style={demoTitleStyle}>Tài khoản demo:</div>
-          <div style={demoAccountStyle}>
-            <strong>Admin:</strong> admin / 123456
-          </div>
-          <div style={demoAccountStyle}>
-            <strong>Nhân viên:</strong> nv001 / 123456
-          </div>
+          </form>
         </div>
+        <Toast
+          type={toast.type}
+          message={toast.message}
+          visible={toast.visible}
+          onClose={() => setToast((t) => ({ ...t, visible: false }))}
+        />
       </div>
     </div>
   );

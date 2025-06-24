@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { FaSave, FaTimes, FaArrowLeft } from "react-icons/fa";
+import Toast from "../components/Toast";
 
 const AddAdmin = () => {
   const navigate = useNavigate();
@@ -12,22 +13,27 @@ const AddAdmin = () => {
     mat_khau: "",
     email: "",
     so_dien_thoai: "",
-    trang_thai: 1
+    trang_thai: 1,
   });
   const [errors, setErrors] = useState({});
   const [isLoading, setIsLoading] = useState(false);
+  const [toast, setToast] = useState({
+    visible: false,
+    type: "info",
+    message: "",
+  });
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      [name]: value
+      [name]: value,
     }));
     // Clear error when user starts typing
     if (errors[name]) {
-      setErrors(prev => ({
+      setErrors((prev) => ({
         ...prev,
-        [name]: ""
+        [name]: "",
       }));
     }
   };
@@ -76,10 +82,19 @@ const AddAdmin = () => {
         setIsLoading(true);
         // Xử lý lưu dữ liệu
         console.log("Dữ liệu admin:", formData);
-        alert("Thêm admin thành công!");
+        setToast({
+          visible: true,
+          type: "success",
+          message: "Thêm admin thành công!",
+        });
+        setTimeout(() => setToast((t) => ({ ...t, visible: false })), 1500);
         navigate("/dashboard/accounts");
       } catch (error) {
-        alert("Có lỗi xảy ra khi thêm admin!");
+        setToast({
+          visible: true,
+          type: "error",
+          message: "Có lỗi xảy ra khi thêm admin!",
+        });
         console.error("Add admin error:", error);
       } finally {
         setIsLoading(false);
@@ -98,12 +113,12 @@ const AddAdmin = () => {
     border: "1.5px solid #e5e7eb",
     fontSize: "15px",
     backgroundColor: "#fafbfc",
-    transition: "all 0.2s"
+    transition: "all 0.2s",
   };
 
   const errorInputStyle = {
     ...inputStyle,
-    borderColor: "#ef4444"
+    borderColor: "#ef4444",
   };
 
   const labelStyle = {
@@ -111,24 +126,26 @@ const AddAdmin = () => {
     marginBottom: "8px",
     fontSize: "14px",
     fontWeight: "600",
-    color: "#374151"
+    color: "#374151",
   };
 
   const errorStyle = {
     color: "#ef4444",
     fontSize: "12px",
-    marginTop: "4px"
+    marginTop: "4px",
   };
 
   return (
     <div style={{ maxWidth: "800px", margin: "0 auto", padding: "24px" }}>
       {/* Header */}
-      <div style={{ 
-        display: "flex", 
-        justifyContent: "space-between", 
-        alignItems: "center", 
-        marginBottom: "32px" 
-      }}>
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          marginBottom: "32px",
+        }}
+      >
         <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
           <button
             onClick={handleBack}
@@ -143,13 +160,15 @@ const AddAdmin = () => {
               cursor: "pointer",
               display: "flex",
               alignItems: "center",
-              gap: "8px"
+              gap: "8px",
             }}
           >
             <FaArrowLeft /> Quay lại
           </button>
           <div>
-            <h2 style={{ fontWeight: "700", margin: "0 0 8px 0" }}>Thêm Admin</h2>
+            <h2 style={{ fontWeight: "700", margin: "0 0 8px 0" }}>
+              Thêm Admin
+            </h2>
             <p style={{ margin: "0", color: "#6b7280" }}>
               Điền thông tin để tạo tài khoản admin mới
             </p>
@@ -158,13 +177,22 @@ const AddAdmin = () => {
       </div>
 
       {/* Form */}
-      <form onSubmit={handleSubmit} style={{
-        backgroundColor: "white",
-        borderRadius: "12px",
-        padding: "32px",
-        boxShadow: "0 2px 8px rgba(0,0,0,0.1)"
-      }}>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "24px" }}>
+      <form
+        onSubmit={handleSubmit}
+        style={{
+          backgroundColor: "white",
+          borderRadius: "12px",
+          padding: "32px",
+          boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
+        }}
+      >
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "1fr 1fr",
+            gap: "24px",
+          }}
+        >
           {/* Mã admin */}
           <div>
             <label style={labelStyle}>
@@ -210,7 +238,9 @@ const AddAdmin = () => {
               style={errors.ten_dang_nhap ? errorInputStyle : inputStyle}
               placeholder="Nhập tên đăng nhập..."
             />
-            {errors.ten_dang_nhap && <div style={errorStyle}>{errors.ten_dang_nhap}</div>}
+            {errors.ten_dang_nhap && (
+              <div style={errorStyle}>{errors.ten_dang_nhap}</div>
+            )}
           </div>
 
           {/* Email */}
@@ -242,19 +272,23 @@ const AddAdmin = () => {
               style={errors.so_dien_thoai ? errorInputStyle : inputStyle}
               placeholder="Nhập số điện thoại..."
             />
-            {errors.so_dien_thoai && <div style={errorStyle}>{errors.so_dien_thoai}</div>}
+            {errors.so_dien_thoai && (
+              <div style={errorStyle}>{errors.so_dien_thoai}</div>
+            )}
           </div>
         </div>
 
         {/* Buttons */}
-        <div style={{ 
-          display: "flex", 
-          gap: "12px", 
-          justifyContent: "flex-end", 
-          marginTop: "32px",
-          paddingTop: "24px",
-          borderTop: "1px solid #e5e7eb"
-        }}>
+        <div
+          style={{
+            display: "flex",
+            gap: "12px",
+            justifyContent: "flex-end",
+            marginTop: "32px",
+            paddingTop: "24px",
+            borderTop: "1px solid #e5e7eb",
+          }}
+        >
           <button
             type="button"
             onClick={handleBack}
@@ -269,7 +303,7 @@ const AddAdmin = () => {
               cursor: "pointer",
               display: "flex",
               alignItems: "center",
-              gap: "8px"
+              gap: "8px",
             }}
           >
             <FaTimes /> Hủy
@@ -287,15 +321,25 @@ const AddAdmin = () => {
               cursor: "pointer",
               display: "flex",
               alignItems: "center",
-              gap: "8px"
+              gap: "8px",
             }}
           >
             <FaSave /> Lưu
           </button>
         </div>
       </form>
+
+      {/* Toast Notification */}
+      {toast.visible && (
+        <Toast
+          type={toast.type}
+          message={toast.message}
+          visible={toast.visible}
+          onClose={() => setToast((t) => ({ ...t, visible: false }))}
+        />
+      )}
     </div>
   );
 };
 
-export default AddAdmin; 
+export default AddAdmin;

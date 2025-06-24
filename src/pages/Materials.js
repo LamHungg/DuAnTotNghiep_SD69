@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { FaToggleOn, FaToggleOff } from "react-icons/fa";
+import { sampleMaterials } from "../data/sampleData";
 
 const Materials = () => {
   const [materials, setMaterials] = useState([]);
@@ -9,12 +10,21 @@ const Materials = () => {
   const [showAddForm, setShowAddForm] = useState(false);
 
   useEffect(() => {
-    const savedMaterials = JSON.parse(
-      localStorage.getItem("materials") || "[]"
-    );
-    const allMaterials = savedMaterials.length > 0 ? savedMaterials : [];
-    setMaterials(allMaterials);
-    setFilteredMaterials(allMaterials);
+    let savedMaterials = [];
+    try {
+      savedMaterials = JSON.parse(localStorage.getItem("materials") || "[]");
+    } catch {
+      savedMaterials = [];
+    }
+    // Nếu không có dữ liệu hợp lệ thì lấy lại dữ liệu mẫu
+    if (!Array.isArray(savedMaterials) || savedMaterials.length === 0) {
+      localStorage.setItem("materials", JSON.stringify(sampleMaterials));
+      setMaterials(sampleMaterials);
+      setFilteredMaterials(sampleMaterials);
+    } else {
+      setMaterials(savedMaterials);
+      setFilteredMaterials(savedMaterials);
+    }
   }, []);
 
   useEffect(() => {

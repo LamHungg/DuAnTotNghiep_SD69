@@ -11,6 +11,7 @@ import {
   FaToggleOff,
   FaPlus,
 } from "react-icons/fa";
+import Toast from "../components/Toast";
 
 const Accounts = () => {
   const navigate = useNavigate();
@@ -21,6 +22,11 @@ const Accounts = () => {
   const [activeTab, setActiveTab] = useState("employees");
   const [statusFilter, setStatusFilter] = useState("");
   const [showPassword, setShowPassword] = useState({});
+  const [toast, setToast] = useState({
+    visible: false,
+    type: "info",
+    message: "",
+  });
 
   // Fetch danh sách tài khoản
   const fetchAccounts = async () => {
@@ -61,10 +67,20 @@ const Accounts = () => {
   const handleStatusUpdate = async (id, currentStatus) => {
     try {
       await nguoiDungService.updateStatus(id, !currentStatus);
+      setToast({
+        visible: true,
+        type: "success",
+        message: "Cập nhật trạng thái thành công!",
+      });
       // Refresh danh sách sau khi cập nhật
       fetchAccounts();
     } catch (err) {
-      alert("Không thể cập nhật trạng thái tài khoản. Vui lòng thử lại sau!");
+      setToast({
+        visible: true,
+        type: "error",
+        message:
+          "Không thể cập nhật trạng thái tài khoản. Vui lòng thử lại sau!",
+      });
       console.error("Error updating account status:", err);
     }
   };
@@ -74,10 +90,19 @@ const Accounts = () => {
     if (window.confirm("Bạn có chắc chắn muốn xóa tài khoản này?")) {
       try {
         await nguoiDungService.deleteNguoiDung(id);
+        setToast({
+          visible: true,
+          type: "success",
+          message: "Xóa tài khoản thành công!",
+        });
         // Refresh danh sách sau khi xóa
         fetchAccounts();
       } catch (err) {
-        alert("Không thể xóa tài khoản. Vui lòng thử lại sau!");
+        setToast({
+          visible: true,
+          type: "error",
+          message: "Không thể xóa tài khoản. Vui lòng thử lại sau!",
+        });
         console.error("Error deleting account:", err);
       }
     }
@@ -244,6 +269,15 @@ const Accounts = () => {
           </tbody>
         </table>
       </div>
+
+      {toast.visible && (
+        <Toast
+          type={toast.type}
+          message={toast.message}
+          visible={toast.visible}
+          onClose={() => setToast((t) => ({ ...t, visible: false }))}
+        />
+      )}
     </div>
   );
 };

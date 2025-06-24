@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import Toast from "../components/Toast";
 
 const Settings = () => {
   const navigate = useNavigate();
@@ -12,7 +13,7 @@ const Settings = () => {
     mat_khau: "",
     email: "",
     so_dien_thoai: "",
-    trang_thai: 1
+    trang_thai: 1,
   });
   const [errors, setErrors] = useState({});
   const [isLoading, setIsLoading] = useState(false);
@@ -20,6 +21,11 @@ const Settings = () => {
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [toast, setToast] = useState({
+    visible: false,
+    type: "info",
+    message: "",
+  });
 
   // Lấy thông tin user hiện tại khi component mount
   useEffect(() => {
@@ -34,22 +40,22 @@ const Settings = () => {
         mat_khau: user.mat_khau || "",
         email: user.email || "",
         so_dien_thoai: user.so_dien_thoai || "",
-        trang_thai: user.trang_thai || 1
+        trang_thai: user.trang_thai || 1,
       });
     }
   }, []);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      [name]: value
+      [name]: value,
     }));
     // Clear error when user starts typing
     if (errors[name]) {
-      setErrors(prev => ({
+      setErrors((prev) => ({
         ...prev,
-        [name]: ""
+        [name]: "",
       }));
     }
   };
@@ -93,7 +99,7 @@ const Settings = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     if (!validateForm()) {
       return;
     }
@@ -117,7 +123,7 @@ const Settings = () => {
       let updated = false;
 
       // Tìm và cập nhật trong employees
-      const updatedEmployees = employees.map(emp => {
+      const updatedEmployees = employees.map((emp) => {
         if (emp.ten_dang_nhap === currentUser.ten_dang_nhap) {
           updated = true;
           return { ...emp, ...updatedData };
@@ -126,7 +132,7 @@ const Settings = () => {
       });
 
       // Tìm và cập nhật trong admins
-      const updatedAdmins = admins.map(admin => {
+      const updatedAdmins = admins.map((admin) => {
         if (admin.ten_dang_nhap === currentUser.ten_dang_nhap) {
           updated = true;
           return { ...admin, ...updatedData };
@@ -138,22 +144,36 @@ const Settings = () => {
         // Lưu lại vào localStorage
         localStorage.setItem("employees", JSON.stringify(updatedEmployees));
         localStorage.setItem("admins", JSON.stringify(updatedAdmins));
-        
+
         // Cập nhật currentUser
         const updatedUser = { ...currentUser, ...updatedData };
         localStorage.setItem("currentUser", JSON.stringify(updatedUser));
         setCurrentUser(updatedUser);
-        
-        alert("Cập nhật thông tin thành công!");
-        
+
+        setToast({
+          visible: true,
+          type: "success",
+          message: "Cập nhật thông tin thành công!",
+        });
+        setTimeout(() => setToast((t) => ({ ...t, visible: false })), 1500);
+
         // Reset form mật khẩu
         setNewPassword("");
         setConfirmPassword("");
       } else {
-        alert("Không tìm thấy tài khoản để cập nhật!");
+        setToast({
+          visible: true,
+          type: "error",
+          message: "Không tìm thấy tài khoản để cập nhật!",
+        });
+        setTimeout(() => setToast((t) => ({ ...t, visible: false })), 1500);
       }
     } catch (error) {
-      alert("Có lỗi xảy ra khi cập nhật thông tin!");
+      setToast({
+        visible: true,
+        type: "error",
+        message: "Có lỗi xảy ra khi cập nhật thông tin!",
+      });
       console.error("Update error:", error);
     } finally {
       setIsLoading(false);
@@ -169,21 +189,21 @@ const Settings = () => {
     maxWidth: "800px",
     margin: "0 auto",
     padding: "20px",
-    fontFamily: "Arial, sans-serif"
+    fontFamily: "Arial, sans-serif",
   };
 
   const headerStyle = {
     display: "flex",
     alignItems: "center",
     gap: "15px",
-    marginBottom: "30px"
+    marginBottom: "30px",
   };
 
   const titleStyle = {
     fontSize: "24px",
     fontWeight: "bold",
     color: "#333",
-    margin: 0
+    margin: 0,
   };
 
   const cardStyle = {
@@ -192,7 +212,7 @@ const Settings = () => {
     boxShadow: "0 2px 8px rgba(0, 0, 0, 0.1)",
     padding: "30px",
     marginBottom: "20px",
-    border: "1px solid #e0e0e0"
+    border: "1px solid #e0e0e0",
   };
 
   const sectionTitleStyle = {
@@ -202,31 +222,31 @@ const Settings = () => {
     marginBottom: "20px",
     display: "flex",
     alignItems: "center",
-    gap: "10px"
+    gap: "10px",
   };
 
   const formStyle = {
     display: "flex",
     flexDirection: "column",
-    gap: "20px"
+    gap: "20px",
   };
 
   const rowStyle = {
     display: "grid",
     gridTemplateColumns: "1fr 1fr",
-    gap: "20px"
+    gap: "20px",
   };
 
   const inputGroupStyle = {
     display: "flex",
     flexDirection: "column",
-    gap: "8px"
+    gap: "8px",
   };
 
   const labelStyle = {
     fontSize: "14px",
     fontWeight: "500",
-    color: "#555"
+    color: "#555",
   };
 
   const inputStyle = {
@@ -234,22 +254,22 @@ const Settings = () => {
     border: "1px solid #ddd",
     borderRadius: "4px",
     fontSize: "14px",
-    outline: "none"
+    outline: "none",
   };
 
   const errorInputStyle = {
     ...inputStyle,
-    borderColor: "#ff4444"
+    borderColor: "#ff4444",
   };
 
   const passwordInputStyle = {
     ...inputStyle,
-    paddingRight: "50px"
+    paddingRight: "50px",
   };
 
   const errorPasswordInputStyle = {
     ...errorInputStyle,
-    paddingRight: "50px"
+    paddingRight: "50px",
   };
 
   const passwordToggleStyle = {
@@ -261,13 +281,13 @@ const Settings = () => {
     border: "none",
     cursor: "pointer",
     fontSize: "16px",
-    color: "#007bff"
+    color: "#007bff",
   };
 
   const errorStyle = {
     color: "#ff4444",
     fontSize: "12px",
-    marginTop: "4px"
+    marginTop: "4px",
   };
 
   const buttonStyle = {
@@ -282,7 +302,7 @@ const Settings = () => {
     opacity: isLoading ? 0.7 : 1,
     display: "flex",
     alignItems: "center",
-    gap: "8px"
+    gap: "8px",
   };
 
   const backButtonStyle = {
@@ -295,7 +315,7 @@ const Settings = () => {
     cursor: "pointer",
     display: "flex",
     alignItems: "center",
-    gap: "6px"
+    gap: "6px",
   };
 
   const infoStyle = {
@@ -305,7 +325,7 @@ const Settings = () => {
     fontSize: "14px",
     color: "#1976d2",
     marginBottom: "20px",
-    border: "1px solid #bbdefb"
+    border: "1px solid #bbdefb",
   };
 
   if (!currentUser) {
@@ -330,10 +350,8 @@ const Settings = () => {
 
       {/* Thông tin tài khoản */}
       <div style={cardStyle}>
-        <div style={sectionTitleStyle}>
-          👤 Thông tin cá nhân
-        </div>
-        
+        <div style={sectionTitleStyle}>👤 Thông tin cá nhân</div>
+
         <form onSubmit={handleSubmit} style={formStyle}>
           <div style={rowStyle}>
             {/* Mã */}
@@ -395,7 +413,9 @@ const Settings = () => {
                 style={errors.ten_dang_nhap ? errorInputStyle : inputStyle}
                 placeholder="Nhập tên đăng nhập..."
               />
-              {errors.ten_dang_nhap && <div style={errorStyle}>{errors.ten_dang_nhap}</div>}
+              {errors.ten_dang_nhap && (
+                <div style={errorStyle}>{errors.ten_dang_nhap}</div>
+              )}
             </div>
           </div>
 
@@ -429,7 +449,9 @@ const Settings = () => {
                 style={errors.so_dien_thoai ? errorInputStyle : inputStyle}
                 placeholder="Nhập số điện thoại..."
               />
-              {errors.so_dien_thoai && <div style={errorStyle}>{errors.so_dien_thoai}</div>}
+              {errors.so_dien_thoai && (
+                <div style={errorStyle}>{errors.so_dien_thoai}</div>
+              )}
             </div>
           </div>
 
@@ -455,9 +477,7 @@ const Settings = () => {
           </div>
 
           {/* Mật khẩu mới */}
-          <div style={sectionTitleStyle}>
-            🔒 Đổi mật khẩu (tùy chọn)
-          </div>
+          <div style={sectionTitleStyle}>🔒 Đổi mật khẩu (tùy chọn)</div>
 
           <div style={rowStyle}>
             {/* Mật khẩu mới */}
@@ -468,7 +488,11 @@ const Settings = () => {
                   type={showNewPassword ? "text" : "password"}
                   value={newPassword}
                   onChange={(e) => setNewPassword(e.target.value)}
-                  style={errors.newPassword ? errorPasswordInputStyle : passwordInputStyle}
+                  style={
+                    errors.newPassword
+                      ? errorPasswordInputStyle
+                      : passwordInputStyle
+                  }
                   placeholder="Nhập mật khẩu mới..."
                 />
                 <button
@@ -479,7 +503,9 @@ const Settings = () => {
                   {showNewPassword ? "🙈" : "👁️"}
                 </button>
               </div>
-              {errors.newPassword && <div style={errorStyle}>{errors.newPassword}</div>}
+              {errors.newPassword && (
+                <div style={errorStyle}>{errors.newPassword}</div>
+              )}
             </div>
 
             {/* Xác nhận mật khẩu */}
@@ -492,24 +518,38 @@ const Settings = () => {
                 style={errors.confirmPassword ? errorInputStyle : inputStyle}
                 placeholder="Nhập lại mật khẩu mới..."
               />
-              {errors.confirmPassword && <div style={errorStyle}>{errors.confirmPassword}</div>}
+              {errors.confirmPassword && (
+                <div style={errorStyle}>{errors.confirmPassword}</div>
+              )}
             </div>
           </div>
 
           {/* Nút cập nhật */}
-          <div style={{ display: "flex", justifyContent: "center", marginTop: "20px" }}>
-            <button
-              type="submit"
-              style={buttonStyle}
-              disabled={isLoading}
-            >
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "center",
+              marginTop: "20px",
+            }}
+          >
+            <button type="submit" style={buttonStyle} disabled={isLoading}>
               💾 {isLoading ? "Đang cập nhật..." : "Cập nhật thông tin"}
             </button>
           </div>
         </form>
       </div>
+
+      {/* Toast notification */}
+      {toast.visible && (
+        <Toast
+          type={toast.type}
+          message={toast.message}
+          visible={toast.visible}
+          onClose={() => setToast((t) => ({ ...t, visible: false }))}
+        />
+      )}
     </div>
   );
 };
 
-export default Settings; 
+export default Settings;

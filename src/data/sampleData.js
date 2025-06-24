@@ -77,8 +77,27 @@ export const productDetailsData = [
 
 export const sampleCategories = ["Áo thun", "Áo sơ mi", "Áo khoác", "Áo polo"];
 
-export const sampleColors = ["Trắng", "Đen", "Xám", "Xanh", "Đỏ", "Vàng"];
+export const sampleColors = [
+  { id: 1, ten_mau_sac: "Trắng", trang_thai: 1 },
+  { id: 2, ten_mau_sac: "Đen", trang_thai: 1 },
+  { id: 3, ten_mau_sac: "Xám", trang_thai: 1 },
+  { id: 4, ten_mau_sac: "Xanh", trang_thai: 1 },
+  { id: 5, ten_mau_sac: "Đỏ", trang_thai: 1 },
+  { id: 6, ten_mau_sac: "Vàng", trang_thai: 1 },
+];
 
-export const sampleSizes = ["XS", "S", "M", "L", "XL", "XXL"];
+export const sampleSizes = [
+  { id: 1, ten_kich_co: "XS", trang_thai: 1 },
+  { id: 2, ten_kich_co: "S", trang_thai: 1 },
+  { id: 3, ten_kich_co: "M", trang_thai: 1 },
+  { id: 4, ten_kich_co: "L", trang_thai: 1 },
+  { id: 5, ten_kich_co: "XL", trang_thai: 1 },
+  { id: 6, ten_kich_co: "XXL", trang_thai: 1 },
+];
 
-export const sampleMaterials = ["Cotton", "Polyester", "Linen", "Wool"];
+export const sampleMaterials = [
+  { id: 1, ten_chat_lieu: "Cotton", trang_thai: 1 },
+  { id: 2, ten_chat_lieu: "Polyester", trang_thai: 1 },
+  { id: 3, ten_chat_lieu: "Linen", trang_thai: 1 },
+  { id: 4, ten_chat_lieu: "Wool", trang_thai: 1 },
+];

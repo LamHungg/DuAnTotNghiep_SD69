@@ -332,12 +332,21 @@ const Sizes = () => {
               <td style={{ ...tdStyle, textAlign: "center" }}>
                 <button
                   onClick={() => handleToggleStatus(size.id)}
-                  style={toggleButtonStyle(size.trang_thai === 1)}
+                  style={{
+                    background: "none",
+                    border: "none",
+                    cursor: "pointer",
+                    padding: 0,
+                  }}
                   title={
                     size.trang_thai === 1 ? "Tắt hoạt động" : "Bật hoạt động"
                   }
                 >
-                  {size.trang_thai === 1 ? <FaToggleOn /> : <FaToggleOff />}
+                  {size.trang_thai === 1 ? (
+                    <FaToggleOn style={{ color: "#10b981", fontSize: 32 }} />
+                  ) : (
+                    <FaToggleOff style={{ color: "#d1d5db", fontSize: 32 }} />
+                  )}
                 </button>
               </td>
             </tr>

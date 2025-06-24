@@ -8,6 +8,7 @@ import {
   FaArrowLeft,
 } from "react-icons/fa";
 import nguoiDungService from "../services/nguoiDungService";
+import Toast from "../components/Toast";
 
 const AddEmployee = () => {
   const navigate = useNavigate();
@@ -21,6 +22,11 @@ const AddEmployee = () => {
   });
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState({});
+  const [toast, setToast] = useState({
+    visible: false,
+    type: "info",
+    message: "",
+  });
 
   const validateForm = () => {
     const newErrors = {};
@@ -83,7 +89,12 @@ const AddEmployee = () => {
       // Kiểm tra xem người dùng đã đăng nhập chưa
       const currentUser = JSON.parse(localStorage.getItem("currentUser"));
       if (!currentUser) {
-        alert("Vui lòng đăng nhập lại để thực hiện chức năng này!");
+        setToast({
+          visible: true,
+          type: "error",
+          message: "Vui lòng đăng nhập lại để thực hiện chức năng này!",
+        });
+        setTimeout(() => setToast((t) => ({ ...t, visible: false })), 1500);
         navigate("/login");
         return;
       }
@@ -98,18 +109,38 @@ const AddEmployee = () => {
       const response = await nguoiDungService.createNguoiDung(employeeData);
       console.log("Server response:", response);
 
-      alert("Thêm nhân viên thành công!");
+      setToast({
+        visible: true,
+        type: "success",
+        message: "Thêm nhân viên thành công!",
+      });
+      setTimeout(() => setToast((t) => ({ ...t, visible: false })), 1500);
       navigate("/dashboard/accounts");
     } catch (error) {
       console.error("Error details:", error.response || error);
 
       if (error.response?.status === 401) {
-        alert("Phiên làm việc đã hết hạn. Vui lòng đăng nhập lại!");
+        setToast({
+          visible: true,
+          type: "error",
+          message: "Phiên làm việc đã hết hạn. Vui lòng đăng nhập lại!",
+        });
+        setTimeout(() => setToast((t) => ({ ...t, visible: false })), 1500);
         navigate("/login");
       } else if (error.response?.data?.message) {
-        alert(error.response.data.message);
+        setToast({
+          visible: true,
+          type: "error",
+          message: error.response.data.message,
+        });
+        setTimeout(() => setToast((t) => ({ ...t, visible: false })), 1500);
       } else {
-        alert("Có lỗi xảy ra khi thêm nhân viên. Vui lòng thử lại!");
+        setToast({
+          visible: true,
+          type: "error",
+          message: "Có lỗi xảy ra khi thêm nhân viên. Vui lòng thử lại!",
+        });
+        setTimeout(() => setToast((t) => ({ ...t, visible: false })), 1500);
       }
     } finally {
       setLoading(false);
@@ -339,6 +370,15 @@ const AddEmployee = () => {
           </button>
         </div>
       </form>
+
+      {toast.visible && (
+        <Toast
+          type={toast.type}
+          message={toast.message}
+          visible={toast.visible}
+          onClose={() => setToast((t) => ({ ...t, visible: false }))}
+        />
+      )}
     </div>
   );
 };

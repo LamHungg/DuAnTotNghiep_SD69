@@ -20,6 +20,7 @@ import {
   FaSignOutAlt,
   FaRegClock,
 } from "react-icons/fa";
+import Toast from "../components/Toast";
 
 const sidebarMenus = [
   { label: "Trang chủ", icon: <FaHome />, to: "/dashboard" },
@@ -37,8 +38,16 @@ const sidebarMenus = [
       { label: "Chất Liệu", icon: <FaTint />, to: "/dashboard/materials" },
     ],
   },
-  { label: "Quản Lý Đơn Hàng", icon: <FaShoppingCart />, to: "/dashboard/orders" },
-  { label: "Quản Lý Khách Hàng", icon: <FaUsers />, to: "/dashboard/customers" },
+  {
+    label: "Quản Lý Đơn Hàng",
+    icon: <FaShoppingCart />,
+    to: "/dashboard/orders",
+  },
+  {
+    label: "Quản Lý Khách Hàng",
+    icon: <FaUsers />,
+    to: "/dashboard/customers",
+  },
   { label: "Quản Lý Account", icon: <FaUserTie />, to: "/dashboard/accounts" },
   { label: "Cài đặt", icon: <FaCog />, to: "/dashboard/settings" },
 ];
@@ -50,20 +59,22 @@ function Clock() {
     return () => clearInterval(timer);
   }, []);
   return (
-    <span style={{
-      display: 'inline-flex',
-      alignItems: 'center',
-      gap: 8,
-      background: '#f6f8fa',
-      borderRadius: 8,
-      padding: '4px 14px',
-      fontWeight: 500,
-      fontSize: 16,
-      color: '#333',
-      boxShadow: '0 1px 4px rgba(0,0,0,0.04)',
-      marginLeft: 18
-    }}>
-      <FaRegClock style={{ color: '#7c3aed', fontSize: 20 }} />
+    <span
+      style={{
+        display: "inline-flex",
+        alignItems: "center",
+        gap: 8,
+        background: "#f6f8fa",
+        borderRadius: 8,
+        padding: "4px 14px",
+        fontWeight: 500,
+        fontSize: 16,
+        color: "#333",
+        boxShadow: "0 1px 4px rgba(0,0,0,0.04)",
+        marginLeft: 18,
+      }}
+    >
+      <FaRegClock style={{ color: "#7c3aed", fontSize: 20 }} />
       {time.toLocaleTimeString()}
     </span>
   );
@@ -71,15 +82,31 @@ function Clock() {
 
 const DashboardLayout = () => {
   const [openMenu, setOpenMenu] = useState("Quản Lý Sản Phẩm");
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
+  const [toast, setToast] = useState({
+    visible: false,
+    type: "success",
+    message: "",
+  });
   const navigate = useNavigate();
 
   const handleLogout = () => {
-    if (window.confirm("Bạn có chắc chắn muốn đăng xuất?")) {
-      localStorage.removeItem("currentUser");
-      localStorage.removeItem("isLoggedIn");
-      alert("Đăng xuất thành công!");
+    setShowLogoutModal(true);
+  };
+
+  const confirmLogout = () => {
+    localStorage.removeItem("currentUser");
+    localStorage.removeItem("isLoggedIn");
+    setShowLogoutModal(false);
+    setToast({
+      visible: true,
+      type: "success",
+      message: "Đăng xuất thành công!",
+    });
+    setTimeout(() => {
+      setToast((t) => ({ ...t, visible: false }));
       navigate("/login");
-    }
+    }, 1200);
   };
 
   return (
@@ -210,6 +237,104 @@ const DashboardLayout = () => {
           <Outlet />
         </main>
       </div>
+      {showLogoutModal && (
+        <div
+          style={{
+            position: "fixed",
+            top: 0,
+            left: 0,
+            width: "100vw",
+            height: "100vh",
+            background: "rgba(0,0,0,0.25)",
+            zIndex: 9999,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          <div
+            style={{
+              background: "#fff",
+              borderRadius: 16,
+              minWidth: 340,
+              boxShadow: "0 8px 32px 0 rgba(31,38,135,0.18)",
+              padding: "32px 32px 24px 32px",
+              textAlign: "center",
+              position: "relative",
+            }}
+          >
+            <div
+              style={{
+                fontSize: 32,
+                color: "#f59e42",
+                marginBottom: 12,
+              }}
+            >
+              ⚠️
+            </div>
+            <div
+              style={{
+                fontWeight: 600,
+                fontSize: 20,
+                marginBottom: 8,
+              }}
+            >
+              Xác nhận đăng xuất
+            </div>
+            <div
+              style={{
+                color: "#444",
+                marginBottom: 24,
+              }}
+            >
+              Bạn có chắc chắn muốn đăng xuất?
+            </div>
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "center",
+                gap: 16,
+              }}
+            >
+              <button
+                className="btn btn-secondary"
+                style={{
+                  borderRadius: 8,
+                  minWidth: 90,
+                  fontWeight: 500,
+                  background: "#f5f5f5",
+                  color: "#444",
+                  border: "none",
+                }}
+                onClick={() => setShowLogoutModal(false)}
+              >
+                Hủy
+              </button>
+              <button
+                className="btn btn-danger"
+                style={{
+                  borderRadius: 8,
+                  minWidth: 90,
+                  fontWeight: 600,
+                  background: "#d32f2f",
+                  border: "none",
+                }}
+                onClick={confirmLogout}
+              >
+                Đăng xuất
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {toast.visible && (
+        <Toast
+          type={toast.type}
+          message={toast.message}
+          visible={toast.visible}
+          onClose={() => setToast((t) => ({ ...t, visible: false }))}
+        />
+      )}
     </div>
   );
 };

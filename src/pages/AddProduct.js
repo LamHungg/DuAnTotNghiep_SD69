@@ -1155,26 +1155,70 @@ const AddProduct = () => {
       {showConfirmModal && (
         <div
           className="modal fade show"
-          style={{ display: "block", background: "rgba(0,0,0,0.2)" }}
+          style={{
+            display: "block",
+            background: "rgba(0,0,0,0.25)",
+            zIndex: 9999,
+          }}
           tabIndex="-1"
         >
           <div className="modal-dialog modal-dialog-centered">
-            <div className="modal-content">
-              <div className="modal-header border-0 pb-0">
+            <div
+              className="modal-content"
+              style={{
+                borderRadius: 16,
+                boxShadow: "0 8px 32px 0 rgba(31,38,135,0.18)",
+                border: "none",
+                minWidth: 380,
+              }}
+            >
+              <div
+                className="modal-header border-0 pb-0"
+                style={{ alignItems: "center", background: "transparent" }}
+              >
                 <span
-                  style={{ fontSize: 22, color: "#f59e42", marginRight: 8 }}
+                  style={{
+                    fontSize: 28,
+                    color: "#f59e42",
+                    marginRight: 10,
+                    marginLeft: 4,
+                    lineHeight: 1,
+                  }}
                 >
                   <b>!</b>
                 </span>
-                <h5 className="modal-title fw-bold">Xác nhận</h5>
+                <h5
+                  className="modal-title fw-bold"
+                  style={{ fontSize: 20, color: "#222", flex: 1 }}
+                >
+                  Xác nhận
+                </h5>
               </div>
-              <div className="modal-body">
-                <div>Xác nhận thêm sản phẩm?</div>
+              <div
+                className="modal-body"
+                style={{ fontSize: 17, color: "#333", paddingTop: 8 }}
+              >
+                <div style={{ marginLeft: 32 }}>Xác nhận thêm sản phẩm?</div>
               </div>
-              <div className="modal-footer border-0 pt-0">
+              <div
+                className="modal-footer border-0 pt-0"
+                style={{
+                  justifyContent: "flex-end",
+                  background: "transparent",
+                }}
+              >
                 <button
                   type="button"
                   className="btn btn-secondary"
+                  style={{
+                    borderRadius: 8,
+                    minWidth: 80,
+                    fontWeight: 500,
+                    marginRight: 8,
+                    background: "#f5f5f5",
+                    color: "#444",
+                    border: "none",
+                  }}
                   onClick={() => setShowConfirmModal(false)}
                 >
                   Hủy
@@ -1182,7 +1226,14 @@ const AddProduct = () => {
                 <button
                   type="button"
                   className="btn btn-primary"
-                  style={{ minWidth: 80, fontWeight: 600 }}
+                  style={{
+                    borderRadius: 8,
+                    minWidth: 90,
+                    fontWeight: 600,
+                    background: "#1976d2",
+                    border: "none",
+                    boxShadow: "0 2px 8px rgba(25,118,210,0.08)",
+                  }}
                   onClick={handleConfirmSave}
                 >
                   Xác nhận

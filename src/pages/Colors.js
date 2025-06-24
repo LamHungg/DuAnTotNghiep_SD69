@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { FaToggleOn, FaToggleOff } from "react-icons/fa";
+import Toast from "../components/Toast";
+import { sampleColors, sampleMaterials } from "../data/sampleData";
 
 const Colors = () => {
   const [colors, setColors] = useState([]);
@@ -12,12 +14,28 @@ const Colors = () => {
     trang_thai: 1,
   });
   const [newColorError, setNewColorError] = useState("");
+  const [toast, setToast] = useState({
+    visible: false,
+    type: "info",
+    message: "",
+  });
 
   useEffect(() => {
-    const savedColors = JSON.parse(localStorage.getItem("colors") || "[]");
-    const allColors = savedColors.length > 0 ? savedColors : [];
-    setColors(allColors);
-    setFilteredColors(allColors);
+    let savedColors = [];
+    try {
+      savedColors = JSON.parse(localStorage.getItem("colors") || "[]");
+    } catch {
+      savedColors = [];
+    }
+    // Nếu không có dữ liệu hợp lệ thì lấy lại dữ liệu mẫu
+    if (!Array.isArray(savedColors) || savedColors.length === 0) {
+      localStorage.setItem("colors", JSON.stringify(sampleColors));
+      setColors(sampleColors);
+      setFilteredColors(sampleColors);
+    } else {
+      setColors(savedColors);
+      setFilteredColors(savedColors);
+    }
   }, []);
 
   useEffect(() => {
@@ -78,7 +96,12 @@ const Colors = () => {
       setShowAddForm(false);
       setNewColorError("");
 
-      alert("Thêm màu sắc thành công!");
+      setToast({
+        visible: true,
+        type: "success",
+        message: "Thêm màu sắc thành công!",
+      });
+      setTimeout(() => setToast((t) => ({ ...t, visible: false })), 1500);
     }
   };
 
@@ -98,7 +121,12 @@ const Colors = () => {
 
     const color = colors.find((c) => c.id === id);
     const statusText = color.trang_thai === 1 ? "tắt" : "bật";
-    alert(`Đã ${statusText} trạng thái màu "${color.ten_mau_sac}"!`);
+    setToast({
+      visible: true,
+      type: "info",
+      message: `Đã ${statusText} trạng thái màu "${color.ten_mau_sac}"!`,
+    });
+    setTimeout(() => setToast((t) => ({ ...t, visible: false })), 1500);
   };
 
   const getStatusText = (status) => {
@@ -364,6 +392,15 @@ const Colors = () => {
         <div style={{ textAlign: "center", padding: "40px", color: "#666" }}>
           Không tìm thấy màu sắc nào
         </div>
+      )}
+
+      {toast.visible && (
+        <Toast
+          type={toast.type}
+          message={toast.message}
+          visible={toast.visible}
+          onClose={() => setToast((t) => ({ ...t, visible: false }))}
+        />
       )}
     </div>
   );
