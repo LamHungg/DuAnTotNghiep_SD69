@@ -1,19 +1,20 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import Toast from "../components/Toast";
+import nguoiDungService from "../services/nguoiDungService";
 
 const Settings = () => {
   const navigate = useNavigate();
   const [currentUser, setCurrentUser] = useState(null);
   const [formData, setFormData] = useState({
     ma: "",
-    chuc_vu: "",
-    ho_ten: "",
-    ten_dang_nhap: "",
-    mat_khau: "",
+    chucVu: "",
+    hoTen: "",
+    tenDangNhap: "",
+    matKhau: "",
     email: "",
-    so_dien_thoai: "",
-    trang_thai: 1,
+    soDienThoai: "",
+    trangThai: 1,
   });
   const [errors, setErrors] = useState({});
   const [isLoading, setIsLoading] = useState(false);
@@ -34,13 +35,13 @@ const Settings = () => {
       setCurrentUser(user);
       setFormData({
         ma: user.ma || "",
-        chuc_vu: user.chuc_vu || "",
-        ho_ten: user.ho_ten || "",
-        ten_dang_nhap: user.ten_dang_nhap || "",
-        mat_khau: user.mat_khau || "",
+        chucVu: user.chucVu || "",
+        hoTen: user.hoTen || "",
+        tenDangNhap: user.tenDangNhap || "",
+        matKhau: user.matKhau || "",
         email: user.email || "",
-        so_dien_thoai: user.so_dien_thoai || "",
-        trang_thai: user.trang_thai || 1,
+        soDienThoai: user.soDienThoai || "",
+        trangThai: user.trangThai || 1,
       });
     }
   }, []);
@@ -63,12 +64,12 @@ const Settings = () => {
   const validateForm = () => {
     const newErrors = {};
 
-    if (!formData.ho_ten.trim()) {
-      newErrors.ho_ten = "Họ tên không được để trống";
+    if (!formData.hoTen.trim()) {
+      newErrors.hoTen = "Họ tên không được để trống";
     }
 
-    if (!formData.ten_dang_nhap.trim()) {
-      newErrors.ten_dang_nhap = "Tên đăng nhập không được để trống";
+    if (!formData.tenDangNhap.trim()) {
+      newErrors.tenDangNhap = "Tên đăng nhập không được để trống";
     }
 
     if (!formData.email.trim()) {
@@ -77,10 +78,10 @@ const Settings = () => {
       newErrors.email = "Email không hợp lệ";
     }
 
-    if (!formData.so_dien_thoai.trim()) {
-      newErrors.so_dien_thoai = "Số điện thoại không được để trống";
-    } else if (!/^[0-9]{10,11}$/.test(formData.so_dien_thoai)) {
-      newErrors.so_dien_thoai = "Số điện thoại không hợp lệ";
+    if (!formData.soDienThoai.trim()) {
+      newErrors.soDienThoai = "Số điện thoại không được để trống";
+    } else if (!/^[0-9]{10,11}$/.test(formData.soDienThoai)) {
+      newErrors.soDienThoai = "Số điện thoại không hợp lệ";
     }
 
     // Validate mật khẩu mới nếu có nhập
@@ -107,67 +108,31 @@ const Settings = () => {
     setIsLoading(true);
 
     try {
-      // Cập nhật mật khẩu nếu có nhập mật khẩu mới
+      // Lấy id user từ currentUser
+      const userId = currentUser?.id;
+      if (!userId) throw new Error("Không tìm thấy ID người dùng!");
+
+      // Cập nhật mật khẩu: nếu không nhập mới thì giữ mật khẩu cũ
       const updatedData = { ...formData };
-      if (newPassword.trim()) {
-        updatedData.mat_khau = newPassword;
-      }
+      updatedData.matKhau = newPassword.trim() ? newPassword : currentUser?.matKhau || formData.matKhau;
+      updatedData.ngayCapNhat = new Date().toISOString();
 
-      // Cập nhật ngày cập nhật
-      updatedData.ngay_cap_nhat = new Date().toISOString();
+      // Gọi API cập nhật
+      const updatedUser = await nguoiDungService.updateNguoiDung(userId, updatedData);
 
-      // Cập nhật trong localStorage
-      const employees = JSON.parse(localStorage.getItem("employees") || "[]");
-      const admins = JSON.parse(localStorage.getItem("admins") || "[]");
+      // Cập nhật lại currentUser trong localStorage
+      localStorage.setItem("currentUser", JSON.stringify(updatedUser));
+      setCurrentUser(updatedUser);
 
-      let updated = false;
-
-      // Tìm và cập nhật trong employees
-      const updatedEmployees = employees.map((emp) => {
-        if (emp.ten_dang_nhap === currentUser.ten_dang_nhap) {
-          updated = true;
-          return { ...emp, ...updatedData };
-        }
-        return emp;
+      setToast({
+        visible: true,
+        type: "success",
+        message: "Cập nhật thông tin thành công!",
       });
+      setTimeout(() => setToast((t) => ({ ...t, visible: false })), 1500);
 
-      // Tìm và cập nhật trong admins
-      const updatedAdmins = admins.map((admin) => {
-        if (admin.ten_dang_nhap === currentUser.ten_dang_nhap) {
-          updated = true;
-          return { ...admin, ...updatedData };
-        }
-        return admin;
-      });
-
-      if (updated) {
-        // Lưu lại vào localStorage
-        localStorage.setItem("employees", JSON.stringify(updatedEmployees));
-        localStorage.setItem("admins", JSON.stringify(updatedAdmins));
-
-        // Cập nhật currentUser
-        const updatedUser = { ...currentUser, ...updatedData };
-        localStorage.setItem("currentUser", JSON.stringify(updatedUser));
-        setCurrentUser(updatedUser);
-
-        setToast({
-          visible: true,
-          type: "success",
-          message: "Cập nhật thông tin thành công!",
-        });
-        setTimeout(() => setToast((t) => ({ ...t, visible: false })), 1500);
-
-        // Reset form mật khẩu
-        setNewPassword("");
-        setConfirmPassword("");
-      } else {
-        setToast({
-          visible: true,
-          type: "error",
-          message: "Không tìm thấy tài khoản để cập nhật!",
-        });
-        setTimeout(() => setToast((t) => ({ ...t, visible: false })), 1500);
-      }
+      setNewPassword("");
+      setConfirmPassword("");
     } catch (error) {
       setToast({
         visible: true,
@@ -373,8 +338,8 @@ const Settings = () => {
               <label style={labelStyle}>Chức vụ</label>
               <input
                 type="text"
-                name="chuc_vu"
-                value={formData.chuc_vu}
+                name="chucVu"
+                value={formData.chucVu}
                 onChange={handleChange}
                 style={inputStyle}
                 disabled
@@ -391,13 +356,13 @@ const Settings = () => {
               </label>
               <input
                 type="text"
-                name="ho_ten"
-                value={formData.ho_ten}
+                name="hoTen"
+                value={formData.hoTen}
                 onChange={handleChange}
-                style={errors.ho_ten ? errorInputStyle : inputStyle}
+                style={errors.hoTen ? errorInputStyle : inputStyle}
                 placeholder="Nhập họ tên..."
               />
-              {errors.ho_ten && <div style={errorStyle}>{errors.ho_ten}</div>}
+              {errors.hoTen && <div style={errorStyle}>{errors.hoTen}</div>}
             </div>
 
             {/* Tên đăng nhập */}
@@ -407,14 +372,14 @@ const Settings = () => {
               </label>
               <input
                 type="text"
-                name="ten_dang_nhap"
-                value={formData.ten_dang_nhap}
+                name="tenDangNhap"
+                value={formData.tenDangNhap}
                 onChange={handleChange}
-                style={errors.ten_dang_nhap ? errorInputStyle : inputStyle}
+                style={errors.tenDangNhap ? errorInputStyle : inputStyle}
                 placeholder="Nhập tên đăng nhập..."
               />
-              {errors.ten_dang_nhap && (
-                <div style={errorStyle}>{errors.ten_dang_nhap}</div>
+              {errors.tenDangNhap && (
+                <div style={errorStyle}>{errors.tenDangNhap}</div>
               )}
             </div>
           </div>
@@ -443,36 +408,15 @@ const Settings = () => {
               </label>
               <input
                 type="tel"
-                name="so_dien_thoai"
-                value={formData.so_dien_thoai}
+                name="soDienThoai"
+                value={formData.soDienThoai}
                 onChange={handleChange}
-                style={errors.so_dien_thoai ? errorInputStyle : inputStyle}
+                style={errors.soDienThoai ? errorInputStyle : inputStyle}
                 placeholder="Nhập số điện thoại..."
               />
-              {errors.so_dien_thoai && (
-                <div style={errorStyle}>{errors.so_dien_thoai}</div>
+              {errors.soDienThoai && (
+                <div style={errorStyle}>{errors.soDienThoai}</div>
               )}
-            </div>
-          </div>
-
-          {/* Mật khẩu hiện tại */}
-          <div style={inputGroupStyle}>
-            <label style={labelStyle}>Mật khẩu hiện tại</label>
-            <div style={{ position: "relative" }}>
-              <input
-                type={showPassword ? "text" : "password"}
-                value={formData.mat_khau}
-                style={passwordInputStyle}
-                disabled
-                placeholder="Mật khẩu hiện tại"
-              />
-              <button
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                style={passwordToggleStyle}
-              >
-                {showPassword ? "🙈" : "👁️"}
-              </button>
             </div>
           </div>
 

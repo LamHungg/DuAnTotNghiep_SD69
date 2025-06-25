@@ -18,7 +18,7 @@ const AddEmployee = () => {
     matKhau: "",
     email: "",
     soDienThoai: "",
-    chucVu: "Nhân viên",
+    chucVu: "NHANVIEN",
   });
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState({});
@@ -27,6 +27,7 @@ const AddEmployee = () => {
     type: "info",
     message: "",
   });
+  const [showPassword, setShowPassword] = useState(false);
 
   const validateForm = () => {
     const newErrors = {};
@@ -149,12 +150,15 @@ const AddEmployee = () => {
 
   const inputStyle = {
     width: "100%",
-    padding: "12px 16px",
-    borderRadius: "8px",
+    padding: "14px 18px",
+    borderRadius: "10px",
     border: "1.5px solid #e5e7eb",
-    fontSize: "15px",
+    fontSize: "16px",
     backgroundColor: "#fafbfc",
     transition: "all 0.2s",
+    fontFamily: "Roboto, Arial, sans-serif",
+    outline: "none",
+    boxSizing: "border-box",
   };
 
   const errorInputStyle = {
@@ -162,12 +166,18 @@ const AddEmployee = () => {
     borderColor: "#ef4444",
   };
 
+  const inputFocusStyle = {
+    borderColor: "#007bff",
+    boxShadow: "0 0 0 2px #c7e0ff",
+  };
+
   const labelStyle = {
     display: "block",
     marginBottom: "8px",
-    fontSize: "14px",
+    fontSize: "15px",
     fontWeight: "600",
     color: "#374151",
+    fontFamily: "Roboto, Arial, sans-serif",
   };
 
   const errorStyle = {
@@ -176,8 +186,32 @@ const AddEmployee = () => {
     marginTop: "4px",
   };
 
+  const buttonStyle = {
+    background: "linear-gradient(90deg,#007bff,#00c6ff)",
+    color: "white",
+    border: "none",
+    padding: "14px 32px",
+    borderRadius: "8px",
+    fontSize: "17px",
+    fontWeight: "700",
+    cursor: loading ? "not-allowed" : "pointer",
+    opacity: loading ? 0.7 : 1,
+    display: "flex",
+    alignItems: "center",
+    gap: "10px",
+    marginTop: "16px",
+    fontFamily: "Roboto, Arial, sans-serif",
+    boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
+    transition: "background 0.2s, box-shadow 0.2s",
+  };
+
+  const buttonHoverStyle = {
+    background: "linear-gradient(90deg,#0056b3,#00aaff)",
+    boxShadow: "0 4px 16px rgba(0,123,255,0.12)",
+  };
+
   return (
-    <div style={{ maxWidth: "800px", margin: "0 auto", padding: "24px" }}>
+    <div style={{ maxWidth: "800px", margin: "0 auto", padding: "24px", fontFamily: "Roboto, Arial, sans-serif" }}>
       {/* Header */}
       <div
         style={{
@@ -202,15 +236,16 @@ const AddEmployee = () => {
               display: "flex",
               alignItems: "center",
               gap: "8px",
+              fontFamily: "Roboto, Arial, sans-serif",
             }}
           >
             <FaArrowLeft /> Quay lại
           </button>
           <div>
-            <h2 style={{ fontWeight: "700", margin: "0 0 8px 0" }}>
+            <h2 style={{ fontWeight: "700", margin: "0 0 8px 0", fontFamily: "Roboto, Arial, sans-serif" }}>
               Thêm Nhân Viên
             </h2>
-            <p style={{ margin: "0", color: "#6b7280" }}>
+            <p style={{ margin: "0", color: "#6b7280", fontFamily: "Roboto, Arial, sans-serif" }}>
               Điền thông tin để tạo tài khoản nhân viên mới
             </p>
           </div>
@@ -222,16 +257,18 @@ const AddEmployee = () => {
         onSubmit={handleSubmit}
         style={{
           backgroundColor: "white",
-          borderRadius: "12px",
-          padding: "32px",
-          boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
+          borderRadius: "16px",
+          padding: "36px 24px",
+          boxShadow: "0 4px 24px rgba(0,0,0,0.10)",
+          fontFamily: "Roboto, Arial, sans-serif",
         }}
       >
         <div
           style={{
             display: "grid",
             gridTemplateColumns: "1fr 1fr",
-            gap: "24px",
+            gap: "28px",
+            maxWidth: "100%",
           }}
         >
           {/* Họ tên */}
@@ -263,24 +300,40 @@ const AddEmployee = () => {
               style={errors.tenDangNhap ? errorInputStyle : inputStyle}
               placeholder="Nhập tên đăng nhập..."
             />
-            {errors.tenDangNhap && (
-              <div style={errorStyle}>{errors.tenDangNhap}</div>
-            )}
+            {errors.tenDangNhap && <div style={errorStyle}>{errors.tenDangNhap}</div>}
           </div>
 
           {/* Mật khẩu */}
-          <div>
+          <div style={{ position: "relative" }}>
             <label style={labelStyle}>
               Mật khẩu <span style={{ color: "#ef4444" }}>*</span>
             </label>
             <input
-              type="password"
+              type={showPassword ? "text" : "password"}
               name="matKhau"
               value={formData.matKhau}
               onChange={handleChange}
               style={errors.matKhau ? errorInputStyle : inputStyle}
               placeholder="Nhập mật khẩu..."
             />
+            <button
+              type="button"
+              onClick={() => setShowPassword(v => !v)}
+              style={{
+                position: "absolute",
+                right: "16px",
+                top: "50%",
+                transform: "translateY(-50%)",
+                background: "none",
+                border: "none",
+                cursor: "pointer",
+                color: "#007bff",
+                fontSize: "18px",
+              }}
+              tabIndex={-1}
+            >
+              {showPassword ? <FaEyeSlash /> : <FaEye />}
+            </button>
             {errors.matKhau && <div style={errorStyle}>{errors.matKhau}</div>}
           </div>
 
@@ -306,67 +359,31 @@ const AddEmployee = () => {
               Số điện thoại <span style={{ color: "#ef4444" }}>*</span>
             </label>
             <input
-              type="tel"
+              type="text"
               name="soDienThoai"
               value={formData.soDienThoai}
               onChange={handleChange}
               style={errors.soDienThoai ? errorInputStyle : inputStyle}
               placeholder="Nhập số điện thoại..."
             />
-            {errors.soDienThoai && (
-              <div style={errorStyle}>{errors.soDienThoai}</div>
-            )}
+            {errors.soDienThoai && <div style={errorStyle}>{errors.soDienThoai}</div>}
           </div>
         </div>
 
-        {/* Buttons */}
-        <div
-          style={{
-            display: "flex",
-            gap: "12px",
-            justifyContent: "flex-end",
-            marginTop: "32px",
-            paddingTop: "24px",
-            borderTop: "1px solid #e5e7eb",
-          }}
-        >
-          <button
-            type="button"
-            onClick={() => navigate("/dashboard/accounts")}
-            style={{
-              padding: "12px 24px",
-              border: "1px solid #d1d5db",
-              borderRadius: "8px",
-              backgroundColor: "white",
-              color: "#374151",
-              fontSize: "14px",
-              fontWeight: "600",
-              cursor: "pointer",
-              display: "flex",
-              alignItems: "center",
-              gap: "8px",
-            }}
-          >
-            <FaTimes /> Hủy
-          </button>
+        <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 32 }}>
           <button
             type="submit"
-            style={{
-              padding: "12px 24px",
-              border: "none",
-              borderRadius: "8px",
-              backgroundColor: "#7c3aed",
-              color: "white",
-              fontSize: "14px",
-              fontWeight: "600",
-              cursor: "pointer",
-              display: "flex",
-              alignItems: "center",
-              gap: "8px",
-            }}
+            style={buttonStyle}
+            onMouseOver={e => e.currentTarget.style.background = buttonHoverStyle.background}
+            onMouseOut={e => e.currentTarget.style.background = buttonStyle.background}
             disabled={loading}
           >
-            {loading ? "Đang xử lý..." : "Thêm nhân viên"}
+            {loading ? (
+              <span className="spinner" style={{ width: 20, height: 20, border: "3px solid #fff", borderTop: "3px solid #007bff", borderRadius: "50%", display: "inline-block", animation: "spin 1s linear infinite" }} />
+            ) : (
+              <FaSave />
+            )}
+            Lưu
           </button>
         </div>
       </form>
@@ -379,6 +396,21 @@ const AddEmployee = () => {
           onClose={() => setToast((t) => ({ ...t, visible: false }))}
         />
       )}
+
+      <style>{`
+        @media (max-width: 700px) {
+          form > div {
+            grid-template-columns: 1fr !important;
+          }
+        }
+        .spinner {
+          animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
+        }
+      `}</style>
     </div>
   );
 };

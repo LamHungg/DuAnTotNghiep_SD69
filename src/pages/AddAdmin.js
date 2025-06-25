@@ -1,19 +1,18 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { FaSave, FaTimes, FaArrowLeft } from "react-icons/fa";
+import { FaSave, FaTimes, FaArrowLeft, FaEye, FaEyeSlash } from "react-icons/fa";
 import Toast from "../components/Toast";
+import nguoiDungService from "../services/nguoiDungService";
 
 const AddAdmin = () => {
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
-    ma: "",
-    chuc_vu: "Admin",
-    ho_ten: "",
-    ten_dang_nhap: "",
-    mat_khau: "",
+    hoTen: "",
+    tenDangNhap: "",
+    matKhau: "",
     email: "",
-    so_dien_thoai: "",
-    trang_thai: 1,
+    soDienThoai: "",
+    chucVu: "ADMIN",
   });
   const [errors, setErrors] = useState({});
   const [isLoading, setIsLoading] = useState(false);
@@ -22,6 +21,7 @@ const AddAdmin = () => {
     type: "info",
     message: "",
   });
+  const [showPassword, setShowPassword] = useState(false);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -41,22 +41,18 @@ const AddAdmin = () => {
   const validateForm = () => {
     const newErrors = {};
 
-    if (!formData.ma.trim()) {
-      newErrors.ma = "Mã admin không được để trống";
+    if (!formData.hoTen.trim()) {
+      newErrors.hoTen = "Họ tên không được để trống";
     }
 
-    if (!formData.ho_ten.trim()) {
-      newErrors.ho_ten = "Họ tên không được để trống";
+    if (!formData.tenDangNhap.trim()) {
+      newErrors.tenDangNhap = "Tên đăng nhập không được để trống";
     }
 
-    if (!formData.ten_dang_nhap.trim()) {
-      newErrors.ten_dang_nhap = "Tên đăng nhập không được để trống";
-    }
-
-    if (!formData.mat_khau.trim()) {
-      newErrors.mat_khau = "Mật khẩu không được để trống";
-    } else if (formData.mat_khau.length < 6) {
-      newErrors.mat_khau = "Mật khẩu phải có ít nhất 6 ký tự";
+    if (!formData.matKhau.trim()) {
+      newErrors.matKhau = "Mật khẩu không được để trống";
+    } else if (formData.matKhau.length < 6) {
+      newErrors.matKhau = "Mật khẩu phải có ít nhất 6 ký tự";
     }
 
     if (!formData.email.trim()) {
@@ -65,10 +61,10 @@ const AddAdmin = () => {
       newErrors.email = "Email không hợp lệ";
     }
 
-    if (!formData.so_dien_thoai.trim()) {
-      newErrors.so_dien_thoai = "Số điện thoại không được để trống";
-    } else if (!/^[0-9]{10,11}$/.test(formData.so_dien_thoai)) {
-      newErrors.so_dien_thoai = "Số điện thoại không hợp lệ";
+    if (!formData.soDienThoai.trim()) {
+      newErrors.soDienThoai = "Số điện thoại không được để trống";
+    } else if (!/^[0-9]{10,11}$/.test(formData.soDienThoai)) {
+      newErrors.soDienThoai = "Số điện thoại không hợp lệ";
     }
 
     setErrors(newErrors);
@@ -80,22 +76,70 @@ const AddAdmin = () => {
     if (validateForm()) {
       try {
         setIsLoading(true);
-        // Xử lý lưu dữ liệu
-        console.log("Dữ liệu admin:", formData);
+        
+        // Kiểm tra xem người dùng đã đăng nhập chưa
+        const currentUser = JSON.parse(localStorage.getItem("currentUser"));
+        if (!currentUser) {
+          setToast({
+            visible: true,
+            type: "error",
+            message: "Vui lòng đăng nhập lại để thực hiện chức năng này!",
+          });
+          setTimeout(() => setToast((t) => ({ ...t, visible: false })), 1500);
+          navigate("/login");
+          return;
+        }
+        
+        // Thêm chuc_vu = "ADMIN" vào dữ liệu
+        const adminData = {
+          ...formData,
+          trangThai: true,
+        };
+        
+        console.log("Sending admin data:", adminData);
+        
+        // Gọi API để tạo admin mới
+        const response = await nguoiDungService.createAdmin(adminData);
+        console.log("Server response:", response);
+        
         setToast({
           visible: true,
           type: "success",
           message: "Thêm admin thành công!",
         });
-        setTimeout(() => setToast((t) => ({ ...t, visible: false })), 1500);
-        navigate("/dashboard/accounts");
+        
+        // Chuyển về trang danh sách sau 1.5 giây
+        setTimeout(() => {
+          setToast((t) => ({ ...t, visible: false }));
+          navigate("/dashboard/accounts");
+        }, 1500);
+        
       } catch (error) {
-        setToast({
-          visible: true,
-          type: "error",
-          message: "Có lỗi xảy ra khi thêm admin!",
-        });
         console.error("Add admin error:", error);
+        
+        if (error.response?.status === 401) {
+          setToast({
+            visible: true,
+            type: "error",
+            message: "Phiên làm việc đã hết hạn. Vui lòng đăng nhập lại!",
+          });
+          setTimeout(() => setToast((t) => ({ ...t, visible: false })), 1500);
+          navigate("/login");
+        } else if (error.response?.data?.message) {
+          setToast({
+            visible: true,
+            type: "error",
+            message: error.response.data.message,
+          });
+          setTimeout(() => setToast((t) => ({ ...t, visible: false })), 1500);
+        } else {
+          setToast({
+            visible: true,
+            type: "error",
+            message: "Có lỗi xảy ra khi thêm admin. Vui lòng thử lại!",
+          });
+          setTimeout(() => setToast((t) => ({ ...t, visible: false })), 1500);
+        }
       } finally {
         setIsLoading(false);
       }
@@ -108,12 +152,15 @@ const AddAdmin = () => {
 
   const inputStyle = {
     width: "100%",
-    padding: "12px 16px",
-    borderRadius: "8px",
+    padding: "14px 18px",
+    borderRadius: "10px",
     border: "1.5px solid #e5e7eb",
-    fontSize: "15px",
+    fontSize: "16px",
     backgroundColor: "#fafbfc",
     transition: "all 0.2s",
+    fontFamily: "Roboto, Arial, sans-serif",
+    outline: "none",
+    boxSizing: "border-box",
   };
 
   const errorInputStyle = {
@@ -121,12 +168,18 @@ const AddAdmin = () => {
     borderColor: "#ef4444",
   };
 
+  const inputFocusStyle = {
+    borderColor: "#007bff",
+    boxShadow: "0 0 0 2px #c7e0ff",
+  };
+
   const labelStyle = {
     display: "block",
     marginBottom: "8px",
-    fontSize: "14px",
+    fontSize: "15px",
     fontWeight: "600",
     color: "#374151",
+    fontFamily: "Roboto, Arial, sans-serif",
   };
 
   const errorStyle = {
@@ -135,8 +188,32 @@ const AddAdmin = () => {
     marginTop: "4px",
   };
 
+  const buttonStyle = {
+    background: "linear-gradient(90deg,#007bff,#00c6ff)",
+    color: "white",
+    border: "none",
+    padding: "14px 32px",
+    borderRadius: "8px",
+    fontSize: "17px",
+    fontWeight: "700",
+    cursor: isLoading ? "not-allowed" : "pointer",
+    opacity: isLoading ? 0.7 : 1,
+    display: "flex",
+    alignItems: "center",
+    gap: "10px",
+    marginTop: "16px",
+    fontFamily: "Roboto, Arial, sans-serif",
+    boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
+    transition: "background 0.2s, box-shadow 0.2s",
+  };
+
+  const buttonHoverStyle = {
+    background: "linear-gradient(90deg,#0056b3,#00aaff)",
+    boxShadow: "0 4px 16px rgba(0,123,255,0.12)",
+  };
+
   return (
-    <div style={{ maxWidth: "800px", margin: "0 auto", padding: "24px" }}>
+    <div style={{ maxWidth: "800px", margin: "0 auto", padding: "24px", fontFamily: "Roboto, Arial, sans-serif" }}>
       {/* Header */}
       <div
         style={{
@@ -161,15 +238,16 @@ const AddAdmin = () => {
               display: "flex",
               alignItems: "center",
               gap: "8px",
+              fontFamily: "Roboto, Arial, sans-serif",
             }}
           >
             <FaArrowLeft /> Quay lại
           </button>
           <div>
-            <h2 style={{ fontWeight: "700", margin: "0 0 8px 0" }}>
+            <h2 style={{ fontWeight: "700", margin: "0 0 8px 0", fontFamily: "Roboto, Arial, sans-serif" }}>
               Thêm Admin
             </h2>
-            <p style={{ margin: "0", color: "#6b7280" }}>
+            <p style={{ margin: "0", color: "#6b7280", fontFamily: "Roboto, Arial, sans-serif" }}>
               Điền thông tin để tạo tài khoản admin mới
             </p>
           </div>
@@ -181,34 +259,20 @@ const AddAdmin = () => {
         onSubmit={handleSubmit}
         style={{
           backgroundColor: "white",
-          borderRadius: "12px",
-          padding: "32px",
-          boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
+          borderRadius: "16px",
+          padding: "36px 24px",
+          boxShadow: "0 4px 24px rgba(0,0,0,0.10)",
+          fontFamily: "Roboto, Arial, sans-serif",
         }}
       >
         <div
           style={{
             display: "grid",
             gridTemplateColumns: "1fr 1fr",
-            gap: "24px",
+            gap: "28px",
+            maxWidth: "100%",
           }}
         >
-          {/* Mã admin */}
-          <div>
-            <label style={labelStyle}>
-              Mã admin <span style={{ color: "#ef4444" }}>*</span>
-            </label>
-            <input
-              type="text"
-              name="ma"
-              value={formData.ma}
-              onChange={handleChange}
-              style={errors.ma ? errorInputStyle : inputStyle}
-              placeholder="Nhập mã admin..."
-            />
-            {errors.ma && <div style={errorStyle}>{errors.ma}</div>}
-          </div>
-
           {/* Họ tên */}
           <div>
             <label style={labelStyle}>
@@ -216,13 +280,13 @@ const AddAdmin = () => {
             </label>
             <input
               type="text"
-              name="ho_ten"
-              value={formData.ho_ten}
+              name="hoTen"
+              value={formData.hoTen}
               onChange={handleChange}
-              style={errors.ho_ten ? errorInputStyle : inputStyle}
+              style={errors.hoTen ? errorInputStyle : inputStyle}
               placeholder="Nhập họ tên..."
             />
-            {errors.ho_ten && <div style={errorStyle}>{errors.ho_ten}</div>}
+            {errors.hoTen && <div style={errorStyle}>{errors.hoTen}</div>}
           </div>
 
           {/* Tên đăng nhập */}
@@ -232,15 +296,47 @@ const AddAdmin = () => {
             </label>
             <input
               type="text"
-              name="ten_dang_nhap"
-              value={formData.ten_dang_nhap}
+              name="tenDangNhap"
+              value={formData.tenDangNhap}
               onChange={handleChange}
-              style={errors.ten_dang_nhap ? errorInputStyle : inputStyle}
+              style={errors.tenDangNhap ? errorInputStyle : inputStyle}
               placeholder="Nhập tên đăng nhập..."
             />
-            {errors.ten_dang_nhap && (
-              <div style={errorStyle}>{errors.ten_dang_nhap}</div>
-            )}
+            {errors.tenDangNhap && <div style={errorStyle}>{errors.tenDangNhap}</div>}
+          </div>
+
+          {/* Mật khẩu */}
+          <div style={{ position: "relative" }}>
+            <label style={labelStyle}>
+              Mật khẩu <span style={{ color: "#ef4444" }}>*</span>
+            </label>
+            <input
+              type={showPassword ? "text" : "password"}
+              name="matKhau"
+              value={formData.matKhau}
+              onChange={handleChange}
+              style={errors.matKhau ? errorInputStyle : inputStyle}
+              placeholder="Nhập mật khẩu..."
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword(v => !v)}
+              style={{
+                position: "absolute",
+                right: "16px",
+                top: "50%",
+                transform: "translateY(-50%)",
+                background: "none",
+                border: "none",
+                cursor: "pointer",
+                color: "#007bff",
+                fontSize: "18px",
+              }}
+              tabIndex={-1}
+            >
+              {showPassword ? <FaEyeSlash /> : <FaEye />}
+            </button>
+            {errors.matKhau && <div style={errorStyle}>{errors.matKhau}</div>}
           </div>
 
           {/* Email */}
@@ -265,66 +361,31 @@ const AddAdmin = () => {
               Số điện thoại <span style={{ color: "#ef4444" }}>*</span>
             </label>
             <input
-              type="tel"
-              name="so_dien_thoai"
-              value={formData.so_dien_thoai}
+              type="text"
+              name="soDienThoai"
+              value={formData.soDienThoai}
               onChange={handleChange}
-              style={errors.so_dien_thoai ? errorInputStyle : inputStyle}
+              style={errors.soDienThoai ? errorInputStyle : inputStyle}
               placeholder="Nhập số điện thoại..."
             />
-            {errors.so_dien_thoai && (
-              <div style={errorStyle}>{errors.so_dien_thoai}</div>
-            )}
+            {errors.soDienThoai && <div style={errorStyle}>{errors.soDienThoai}</div>}
           </div>
         </div>
 
-        {/* Buttons */}
-        <div
-          style={{
-            display: "flex",
-            gap: "12px",
-            justifyContent: "flex-end",
-            marginTop: "32px",
-            paddingTop: "24px",
-            borderTop: "1px solid #e5e7eb",
-          }}
-        >
-          <button
-            type="button"
-            onClick={handleBack}
-            style={{
-              padding: "12px 24px",
-              border: "1px solid #d1d5db",
-              borderRadius: "8px",
-              backgroundColor: "white",
-              color: "#374151",
-              fontSize: "14px",
-              fontWeight: "600",
-              cursor: "pointer",
-              display: "flex",
-              alignItems: "center",
-              gap: "8px",
-            }}
-          >
-            <FaTimes /> Hủy
-          </button>
+        <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 32 }}>
           <button
             type="submit"
-            style={{
-              padding: "12px 24px",
-              border: "none",
-              borderRadius: "8px",
-              backgroundColor: "#7c3aed",
-              color: "white",
-              fontSize: "14px",
-              fontWeight: "600",
-              cursor: "pointer",
-              display: "flex",
-              alignItems: "center",
-              gap: "8px",
-            }}
+            style={buttonStyle}
+            onMouseOver={e => e.currentTarget.style.background = buttonHoverStyle.background}
+            onMouseOut={e => e.currentTarget.style.background = buttonStyle.background}
+            disabled={isLoading}
           >
-            <FaSave /> Lưu
+            {isLoading ? (
+              <span className="spinner" style={{ width: 20, height: 20, border: "3px solid #fff", borderTop: "3px solid #007bff", borderRadius: "50%", display: "inline-block", animation: "spin 1s linear infinite" }} />
+            ) : (
+              <FaSave />
+            )}
+            Lưu
           </button>
         </div>
       </form>
@@ -338,6 +399,21 @@ const AddAdmin = () => {
           onClose={() => setToast((t) => ({ ...t, visible: false }))}
         />
       )}
+
+      <style>{`
+        @media (max-width: 700px) {
+          form > div {
+            grid-template-columns: 1fr !important;
+          }
+        }
+        .spinner {
+          animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
+        }
+      `}</style>
     </div>
   );
 };

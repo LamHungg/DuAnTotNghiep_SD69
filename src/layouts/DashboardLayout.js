@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Outlet, NavLink, useNavigate } from "react-router-dom";
+import { Outlet, NavLink, useNavigate, useLocation } from "react-router-dom";
 import {
   FaBoxOpen,
   FaTshirt,
@@ -26,7 +26,6 @@ const sidebarMenus = [
   { label: "Trang chủ", icon: <FaHome />, to: "/dashboard" },
   { label: "Thống Kê", icon: <FaChartBar />, to: "/dashboard/stats" },
   { label: "Bán Hàng Tại Quầy", icon: <FaBoxOpen />, to: "/dashboard/pos" },
-  { label: "Trả hàng", icon: <FaRegHandPaper />, to: "/dashboard/returns" },
   {
     label: "Quản Lý Sản Phẩm",
     icon: <FaTshirt />,
@@ -81,7 +80,7 @@ function Clock() {
 }
 
 const DashboardLayout = () => {
-  const [openMenu, setOpenMenu] = useState("Quản Lý Sản Phẩm");
+  const [openMenu, setOpenMenu] = useState("");
   const [showLogoutModal, setShowLogoutModal] = useState(false);
   const [toast, setToast] = useState({
     visible: false,
@@ -89,6 +88,7 @@ const DashboardLayout = () => {
     message: "",
   });
   const navigate = useNavigate();
+  const location = useLocation();
 
   const handleLogout = () => {
     setShowLogoutModal(true);
@@ -150,7 +150,7 @@ const DashboardLayout = () => {
                     <>
                       <div
                         className={`nav-link d-flex align-items-center w-100 px-3 py-2 mb-1 rounded-2 sidebar-parent ${
-                          openMenu === item.label
+                          item.children.some(child => location.pathname.startsWith(child.to))
                             ? "active-menu"
                             : "text-secondary"
                         }`}
