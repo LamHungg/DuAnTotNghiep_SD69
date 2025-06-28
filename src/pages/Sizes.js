@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { FaToggleOn, FaToggleOff, FaPlus, FaSearch } from "react-icons/fa";
 import { sampleSizes } from "../data/sampleData";
+import Toast from "../components/Toast";
 
 const Sizes = () => {
   const [sizes, setSizes] = useState([]);
@@ -11,6 +12,11 @@ const Sizes = () => {
   const [newSizeName, setNewSizeName] = useState("");
   const [newSizeError, setNewSizeError] = useState("");
   const [sizeType, setSizeType] = useState("Kích cỡ số");
+  const [toast, setToast] = useState({
+    visible: false,
+    type: "info",
+    message: "",
+  });
 
   useEffect(() => {
     const savedSizes = JSON.parse(localStorage.getItem("sizes") || "[]");
@@ -59,11 +65,13 @@ const Sizes = () => {
     localStorage.setItem("sizes", JSON.stringify(updatedSizes));
 
     const size = sizes.find((s) => s.id === id);
-    const statusText =
-      size.trang_thai === 1 ? "Ngừng hoạt động" : "Đang hoạt động";
-    alert(
-      `Đã chuyển trạng thái kích cỡ "${size.ten_kich_co}" thành "${statusText}"!`
-    );
+    const statusText = size.trang_thai === 1 ? "tắt" : "bật";
+    setToast({
+      visible: true,
+      type: "info",
+      message: `Đã ${statusText} trạng thái kích cỡ "${size.ten_kich_co}"!`,
+    });
+    setTimeout(() => setToast((t) => ({ ...t, visible: false })), 1500);
   };
 
   const getStatusText = (status) => {
@@ -358,6 +366,15 @@ const Sizes = () => {
         <div style={{ textAlign: "center", padding: "40px", color: "#666" }}>
           Không tìm thấy kích cỡ nào
         </div>
+      )}
+
+      {toast.visible && (
+        <Toast
+          type={toast.type}
+          message={toast.message}
+          visible={toast.visible}
+          onClose={() => setToast((t) => ({ ...t, visible: false }))}
+        />
       )}
     </div>
   );

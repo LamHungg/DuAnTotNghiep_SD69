@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { FaToggleOn, FaToggleOff } from "react-icons/fa";
 import { sampleMaterials } from "../data/sampleData";
+import Toast from "../components/Toast";
 
 const Materials = () => {
   const [materials, setMaterials] = useState([]);
@@ -8,6 +9,11 @@ const Materials = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
   const [showAddForm, setShowAddForm] = useState(false);
+  const [toast, setToast] = useState({
+    visible: false,
+    type: "info",
+    message: "",
+  });
 
   useEffect(() => {
     let savedMaterials = [];
@@ -66,6 +72,15 @@ const Materials = () => {
     });
     setMaterials(updatedMaterials);
     localStorage.setItem("materials", JSON.stringify(updatedMaterials));
+
+    const material = materials.find((m) => m.id === id);
+    const statusText = material.trang_thai === 1 ? "tắt" : "bật";
+    setToast({
+      visible: true,
+      type: "info",
+      message: `Đã ${statusText} trạng thái chất liệu "${material.ten_chat_lieu}"!`,
+    });
+    setTimeout(() => setToast((t) => ({ ...t, visible: false })), 1500);
   };
 
   const handleAddMaterial = (e) => {
@@ -255,6 +270,15 @@ const Materials = () => {
         <div style={{ textAlign: "center", padding: "40px", color: "#666" }}>
           Không tìm thấy chất liệu nào
         </div>
+      )}
+
+      {toast.visible && (
+        <Toast
+          type={toast.type}
+          message={toast.message}
+          visible={toast.visible}
+          onClose={() => setToast((t) => ({ ...t, visible: false }))}
+        />
       )}
     </div>
   );

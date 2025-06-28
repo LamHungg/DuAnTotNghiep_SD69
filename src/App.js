@@ -28,6 +28,8 @@ import Colors from "./pages/Colors";
 import Sizes from "./pages/Sizes";
 import Materials from "./pages/Materials";
 import EditProduct from "./pages/EditProduct";
+import Vouchers from "./pages/Vouchers";
+import Statistics from "./pages/Statistics";
 
 // Components
 import ProtectedRoute from "./components/ProtectedRoute";
@@ -60,6 +62,7 @@ function App() {
           }
         >
           <Route index element={<Dashboard />} />
+          <Route path="stats" element={<Statistics />} />
           <Route path="products" element={<Products />} />
           <Route path="products/add" element={<AddProduct />} />
           <Route path="products/edit/:productId" element={<EditProduct />} />
@@ -73,6 +76,7 @@ function App() {
           <Route path="sizes" element={<Sizes />} />
           <Route path="materials" element={<Materials />} />
           <Route path="settings" element={<Settings />} />
+          <Route path="vouchers" element={<Vouchers />} />
         </Route>
 
         {/* Route cập nhật đơn hàng */}

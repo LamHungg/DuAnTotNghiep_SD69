@@ -19,6 +19,7 @@ import {
   FaUserTie,
   FaSignOutAlt,
   FaRegClock,
+  FaGift,
 } from "react-icons/fa";
 import Toast from "../components/Toast";
 
@@ -48,6 +49,11 @@ const sidebarMenus = [
     to: "/dashboard/customers",
   },
   { label: "Quản Lý Account", icon: <FaUserTie />, to: "/dashboard/accounts" },
+  {
+    label: "Quản Lý Voucher",
+    icon: <FaGift />,
+    to: "/dashboard/vouchers",
+  },
   { label: "Cài đặt", icon: <FaCog />, to: "/dashboard/settings" },
 ];
 
@@ -121,26 +127,38 @@ const DashboardLayout = () => {
           width: 260,
           minHeight: "100vh",
           boxShadow: "2px 0 8px #f0f1f2",
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          justifyContent: "center",
         }}
       >
-        <div className="d-flex flex-column align-items-start p-3 h-100">
-          <div className="mb-4 w-100 d-flex align-items-center gap-2">
-            <div
+        <div className="d-flex flex-column align-items-center p-3 h-100 w-100">
+          <div
+            style={{
+              width: 110,
+              height: 110,
+              background: "#fff",
+              borderRadius: 24,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              boxShadow: "0 4px 16px rgba(0,0,0,0.08)",
+              border: "1.5px solid #eee",
+              margin: "auto",
+            }}
+            className="mb-4"
+          >
+            <img
+              src="/logo.png"
+              alt="logo"
               style={{
-                width: 38,
-                height: 38,
-                background: "#f1f3f6",
-                borderRadius: 8,
+                width: 90,
+                height: 90,
+                objectFit: "contain",
+                display: "block",
               }}
-              className="d-flex align-items-center justify-content-center me-2"
-            >
-              <img
-                src="/logo192.png"
-                alt="logo"
-                style={{ width: 28, height: 28 }}
-              />
-            </div>
-            <span style={{ fontWeight: 700, fontSize: 18 }}>ZMEN</span>
+            />
           </div>
           <nav className="flex-grow-1 w-100">
             <ul className="nav flex-column w-100">
@@ -150,7 +168,9 @@ const DashboardLayout = () => {
                     <>
                       <div
                         className={`nav-link d-flex align-items-center w-100 px-3 py-2 mb-1 rounded-2 sidebar-parent ${
-                          item.children.some(child => location.pathname.startsWith(child.to))
+                          item.children.some((child) =>
+                            location.pathname.startsWith(child.to)
+                          )
                             ? "active-menu"
                             : "text-secondary"
                         }`}
