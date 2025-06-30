@@ -6,7 +6,7 @@ import {
   demoKhachHangChiTieu,
 } from "../data/demoStatistics";
 
-const API_URL = "http://localhost:8081/zmen";
+const API_URL = "http://localhost:8080/zmen";
 
 // Helper function để check API có khả dụng không
 const isApiAvailable = async () => {

@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const API_URL = "http://localhost:8081/zmen/khach-hang";
+const API_URL = "http://localhost:8080/zmen/khach-hang";
 
 const axiosInstance = axios.create({
   baseURL: API_URL,
@@ -10,7 +10,7 @@ const axiosInstance = axios.create({
 axiosInstance.interceptors.request.use(
   async (config) => {
     try {
-      await axios.get("http://localhost:8081/api/auth/check-session", {
+      await axios.get("http://localhost:8080/api/auth/check-session", {
         withCredentials: true,
       });
     } catch (error) {

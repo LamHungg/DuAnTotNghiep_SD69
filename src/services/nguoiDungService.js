@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const API_URL = "http://localhost:8081/api/nguoi-dung";
+const API_URL = "http://localhost:8080/api/nguoi-dung";
 
 // Tạo axios instance với cấu hình mặc định
 const axiosInstance = axios.create({
@@ -13,7 +13,7 @@ axiosInstance.interceptors.request.use(
   async (config) => {
     // Kiểm tra session trước khi gửi request
     try {
-      await axios.get("http://localhost:8081/api/auth/check-session", {
+      await axios.get("http://localhost:8080/api/auth/check-session", {
         withCredentials: true,
       });
     } catch (error) {
