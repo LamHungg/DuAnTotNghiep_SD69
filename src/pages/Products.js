@@ -17,8 +17,7 @@ const Products = () => {
   const [products, setProducts] = useState([]);
   const [status, setStatus] = useState("");
   const [category, setCategory] = useState("");
-  const [search, setSearch] = useState("");
-  const [searchCode, setSearchCode] = useState("");
+  const [searchText, setSearchText] = useState("");
   const [page, setPage] = useState(1);
   const [allCategories, setAllCategories] = useState([
     { value: "", label: "Tất cả danh mục" },
@@ -62,12 +61,10 @@ const Products = () => {
     (p) =>
       (status === "" || p.trang_thai === Number(status)) &&
       (category === "" || p.ten_danh_muc === category) &&
-      (searchCode === "" ||
-        (p.ma_san_pham &&
-          p.ma_san_pham.toLowerCase().includes(searchCode.toLowerCase()))) &&
-      (search === "" ||
-        (p.ten_san_pham &&
-          p.ten_san_pham.toLowerCase().includes(search.toLowerCase())))
+      (searchText === "" ||
+        (p.ma_san_pham && p.ma_san_pham.toLowerCase().includes(searchText.toLowerCase())) ||
+        (p.ten_san_pham && p.ten_san_pham.toLowerCase().includes(searchText.toLowerCase()))
+      )
   );
   // Nếu có lastSavedProductCode thì đưa sản phẩm đó lên đầu bảng (không tạo bản sao)
   const lastSavedCode = localStorage.getItem("lastSavedProductCode");
@@ -150,22 +147,12 @@ const Products = () => {
       <div className="product-search-card mb-3 p-4">
         <div className="row g-3">
           <div className="col-md-6">
-            <label className="form-label mb-2">Mã sản phẩm</label>
+            <label className="form-label mb-2">Tìm kiếm sản phẩm</label>
             <input
               className="form-control product-search-input"
-              placeholder="Tìm kiếm theo mã sản phẩm..."
-              value={searchCode}
-              onChange={(e) => setSearchCode(e.target.value)}
-              style={{ height: 40 }}
-            />
-          </div>
-          <div className="col-md-6">
-            <label className="form-label mb-2">Tên sản phẩm</label>
-            <input
-              className="form-control product-search-input"
-              placeholder="Tìm kiếm sản phẩm theo tên..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Tìm kiếm theo mã hoặc tên sản phẩm..."
+              value={searchText}
+              onChange={(e) => setSearchText(e.target.value)}
               style={{ height: 40 }}
             />
           </div>

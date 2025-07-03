@@ -17,7 +17,3 @@ code {
 body, html, #root {
   font-family: 'Roboto', Arial, sans-serif;
 }
-
-* {
-  font-family: inherit !important;
-}
