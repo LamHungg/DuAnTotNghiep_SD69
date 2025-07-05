@@ -46,18 +46,44 @@ const Orders = () => {
   const [showDetail, setShowDetail] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [showHistory, setShowHistory] = useState(false);
+  const [selectedTab, setSelectedTab] = useState("TẤT CẢ");
+  const statusTabs = [
+    { label: "TẤT CẢ", value: "TẤT CẢ" },
+    { label: "CHỜ THÊM SẢN PHẨM", value: "Chờ thêm sản phẩm" },
+    { label: "CHỜ XÁC NHẬN", value: "Chờ xác nhận" },
+    { label: "ĐÃ XÁC NHẬN", value: "Đã xác nhận" },
+    { label: "ĐANG GIAO", value: ["Đang giao hàng", "Đang giao"] },
+    { label: "ĐÃ GIAO", value: ["Giao hàng thành công", "Đã giao"] },
+    { label: "HOÀN THÀNH", value: "Hoàn thành" },
+  ];
 
   const trangThaiList = Array.from(new Set(orders.map(o => o.tenTrangThai).filter(Boolean)));
   const hinhThucList = Array.from(new Set(orders.map(o => o.hinhThucDonHang).filter(Boolean)));
 
-  const filteredOrders = orders.filter(order => {
+  const countByTab = (tabValue) => {
+    if (tabValue === "TẤT CẢ") return orders.length;
+    if (Array.isArray(tabValue)) {
+      return orders.filter(o => tabValue.map(v => v.toLowerCase()).includes((o.tenTrangThai || "").toLowerCase())).length;
+    }
+    return orders.filter(o => (o.tenTrangThai || "").toLowerCase() === tabValue.toLowerCase()).length;
+  };
+  const ordersByTab = selectedTab === "TẤT CẢ"
+    ? orders
+    : (() => {
+        const tab = statusTabs.find(t => t.label === selectedTab);
+        if (!tab) return orders;
+        if (Array.isArray(tab.value)) {
+          return orders.filter(o => tab.value.map(v => v.toLowerCase()).includes((o.tenTrangThai || "").toLowerCase()));
+        }
+        return orders.filter(o => (o.tenTrangThai || "").toLowerCase() === tab.value.toLowerCase());
+      })();
+  const filteredOrders = ordersByTab.filter(order => {
     const matchMaDonHang = filterMaDonHang === "" || order.maDonHang?.toLowerCase().includes(filterMaDonHang.toLowerCase());
     const matchTenKhachHang = filterTenKhachHang === "" || order.tenKhachHang?.toLowerCase().includes(filterTenKhachHang.toLowerCase());
-    const matchTrangThai = filterTrangThai === "" || order.tenTrangThai === filterTrangThai;
     const matchHinhThuc = filterHinhThuc === "" || order.hinhThucDonHang === filterHinhThuc;
     const matchDateFrom = filterDateFrom === "" || (order.ngayDat && order.ngayDat >= filterDateFrom);
     const matchDateTo = filterDateTo === "" || (order.ngayDat && order.ngayDat <= filterDateTo);
-    return matchMaDonHang && matchTenKhachHang && matchTrangThai && matchHinhThuc && matchDateFrom && matchDateTo;
+    return matchMaDonHang && matchTenKhachHang && matchHinhThuc && matchDateFrom && matchDateTo;
   });
 
   const totalPages = Math.ceil(filteredOrders.length / pageSize);
@@ -319,16 +345,7 @@ const Orders = () => {
     <div className="container-fluid px-0">
       <style>{customStyles}</style>
       <h2 className="mb-4 fw-bold text-primary">Quản lý Đơn hàng</h2>
-      {/* Thống kê tổng quan */}
       <div className="row g-3 mb-3">
-        {/* Hàng 1: Tổng quan */}
-        <div className="col-md-3 col-6">
-          <div className="stat-card shadow-sm rounded-3 p-3 text-center bg-white">
-            <FaListAlt size={28} className="mb-1 text-primary" />
-            <div className="fw-bold" style={{fontSize: 20}}>{totalOrders}</div>
-            <div style={{fontSize: 13, color: '#888'}}>Tổng số đơn</div>
-          </div>
-        </div>
         <div className="col-md-3 col-6">
           <div className="stat-card shadow-sm rounded-3 p-3 text-center bg-white">
             <FaMoneyBillWave size={28} className="mb-1 text-success" />
@@ -343,49 +360,6 @@ const Orders = () => {
             <div style={{fontSize: 13, color: '#888'}}>Tổng thanh toán</div>
           </div>
         </div>
-        <div className="col-md-3 col-6">
-          <div className="stat-card shadow-sm rounded-3 p-3 text-center bg-white">
-            <FaTimesCircle size={24} className="mb-1 text-danger" />
-            <div className="fw-bold text-danger" style={{fontSize: 18}}>{countByStatus('Đã hủy')}</div>
-            <div style={{fontSize: 13, color: '#888'}}>Đã hủy</div>
-          </div>
-        </div>
-        {/* Hàng 2: Trạng thái */}
-        <div className="col-md-3 col-6">
-          <div className="stat-card shadow-sm rounded-3 p-3 text-center bg-white">
-            <FaClock size={24} className="mb-1 text-warning" />
-            <div className="fw-bold text-warning" style={{fontSize: 18}}>{countByStatus('Chờ xác nhận')}</div>
-            <div style={{fontSize: 13, color: '#888'}}>Chờ xác nhận</div>
-          </div>
-        </div>
-        <div className="col-md-3 col-6">
-          <div className="stat-card shadow-sm rounded-3 p-3 text-center bg-white">
-            <FaCheckCircle size={24} className="mb-1 text-primary" />
-            <div className="fw-bold text-primary" style={{fontSize: 18}}>{countByStatus('Đã xác nhận')}</div>
-            <div style={{fontSize: 13, color: '#888'}}>Đã xác nhận</div>
-          </div>
-        </div>
-        <div className="col-md-3 col-6">
-          <div className="stat-card shadow-sm rounded-3 p-3 text-center bg-white">
-            <FaShippingFast size={24} className="mb-1 text-info" />
-            <div className="fw-bold text-info" style={{fontSize: 18}}>{countByStatus('Đang giao hàng') + countByStatus('Đang giao')}</div>
-            <div style={{fontSize: 13, color: '#888'}}>Đang giao</div>
-          </div>
-        </div>
-        <div className="col-md-3 col-6">
-          <div className="stat-card shadow-sm rounded-3 p-3 text-center bg-white">
-            <FaBoxOpen size={24} className="mb-1 text-success" />
-            <div className="fw-bold text-success" style={{fontSize: 18}}>{countByStatus('Giao hàng thành công') + countByStatus('Đã giao')}</div>
-            <div style={{fontSize: 13, color: '#888'}}>Đã giao</div>
-          </div>
-        </div>
-        <div className="col-md-3 col-6">
-          <div className="stat-card shadow-sm rounded-3 p-3 text-center bg-white">
-            <FaCheckCircle size={24} className="mb-1 text-info" />
-            <div className="fw-bold text-info" style={{fontSize: 18}}>{countByStatus('Hoàn thành')}</div>
-            <div style={{fontSize: 13, color: '#888'}}>Hoàn thành</div>
-          </div>
-        </div>
       </div>
       {/* Card bộ lọc */}
       <div className="card shadow-sm border-0 mb-3" style={{borderRadius: 14}}>
@@ -398,13 +372,6 @@ const Orders = () => {
             <div className="col-md-2">
               <label className="form-label mb-1 text-secondary" style={{fontSize: '0.95rem'}}>Tên khách hàng</label>
               <input type="text" className="form-control rounded-pill" value={filterTenKhachHang} onChange={e => setFilterTenKhachHang(e.target.value)} placeholder="Nhập tên khách hàng" />
-            </div>
-            <div className="col-md-2">
-              <label className="form-label mb-1 text-secondary" style={{fontSize: '0.95rem'}}>Trạng thái</label>
-              <select className="form-select rounded-pill" value={filterTrangThai} onChange={e => setFilterTrangThai(e.target.value)}>
-                <option value="">Tất cả</option>
-                {trangThaiList.map((tt, idx) => <option key={idx} value={tt}>{tt}</option>)}
-              </select>
             </div>
             <div className="col-md-2">
               <label className="form-label mb-1 text-secondary" style={{fontSize: '0.95rem'}}>Hình thức</label>
@@ -439,6 +406,24 @@ const Orders = () => {
               </button>
             </div>
           </form>
+        </div>
+      </div>
+      {/* Thêm UI tab trạng thái phía trên bảng đơn hàng */}
+      <div className="card shadow-sm border-0 mb-3" style={{borderRadius: 14}}>
+        <div className="card-body py-2 px-3" style={{overflowX: 'auto'}}>
+          <div className="d-flex flex-row gap-2 align-items-center" style={{whiteSpace: 'nowrap'}}>
+            {statusTabs.map(tab => (
+              <button
+                key={tab.label}
+                className={`btn btn-link px-2 py-1 fw-bold position-relative${selectedTab === tab.label ? ' text-primary' : ' text-secondary'}`}
+                style={{fontSize: 18, textDecoration: 'none', borderBottom: selectedTab === tab.label ? '3px solid #1976d2' : 'none'}}
+                onClick={() => setSelectedTab(tab.label)}
+              >
+                {tab.label}
+                <span className="badge bg-danger ms-1" style={{fontSize: 13, position: 'relative', top: -2}}>{countByTab(tab.value)}</span>
+              </button>
+            ))}
+          </div>
         </div>
       </div>
       {/* Card bảng đơn hàng */}
