@@ -2,6 +2,15 @@ import React, { useEffect, useState } from "react";
 import { FaEdit, FaPlus, FaSyncAlt, FaTrash } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import { productsData } from "../data/sampleData";
+import {
+  getAllSanPham,
+  getAllChiTietSanPham,
+  updateSanPhamStatus,
+} from "../services/sanPhamService";
+import { getAllDanhMuc } from "../services/danhMucService";
+import { getAllMauSac } from "../services/mauSacService";
+import { getAllKichCo } from "../services/kichCoService";
+import { getAllChatLieu } from "../services/chatLieuService";
 
 const statusOptions = [
   { value: "", label: "Tất cả" },
@@ -26,54 +35,103 @@ const Products = () => {
   const navigate = useNavigate();
   const [expandedRow, setExpandedRow] = useState(null);
   const [productDetails, setProductDetails] = useState([]);
+  const [danhMucMap, setDanhMucMap] = useState({});
+  const [selectedProductId, setSelectedProductId] = useState(null);
+  const [selectedProductDetails, setSelectedProductDetails] = useState([]);
+  const [colors, setColors] = useState([]);
+  const [sizes, setSizes] = useState([]);
+  const [materials, setMaterials] = useState([]);
 
   useEffect(() => {
-    const localProducts = JSON.parse(localStorage.getItem("products") || "[]");
+    const fetchData = async () => {
+      try {
+        console.log("Fetching data...");
+        const [spRes, ctspRes, dmRes] = await Promise.all([
+          getAllSanPham(),
+          getAllChiTietSanPham(),
+          getAllDanhMuc(),
+        ]);
 
-    // Create a Set of IDs from localProducts for efficient lookup
-    const localProductIds = new Set(localProducts.map((p) => p.id));
+        console.log("API Response:", {
+          products: spRes,
+          details: ctspRes,
+          categories: dmRes,
+        });
+        console.log("Sản phẩm từ API:", spRes);
 
-    // Combine localProducts with products from productsData that are not already in localProducts
-    const allProducts = [
-      ...localProducts,
-      ...productsData.filter((p_data) => !localProductIds.has(p_data.id)),
-    ];
+        // Map lại danh mục để có id và tên
+        const categories = (dmRes || []).map((dm) => ({
+          id: dm.id,
+          label: dm.tenDanhMuc,
+          value: dm.id,
+          tenDanhMuc: dm.tenDanhMuc,
+        }));
+        setAllCategories([
+          { value: "", label: "Tất cả danh mục" },
+          ...categories,
+        ]);
 
-    setProducts(allProducts);
-
-    // Lấy tất cả danh mục duy nhất từ dữ liệu
-    const categorySet = new Set();
-    allProducts.forEach((p) => {
-      if (p.ten_danh_muc && p.ten_danh_muc.trim() !== "") {
-        categorySet.add(p.ten_danh_muc);
+        // Map lại sản phẩm cho đúng format giao diện
+        const mappedProducts = (spRes || []).map((p) => ({
+          id: p.id,
+          maSanPham: p.maSanPham,
+          tenSanPham: p.tenSanPham,
+          idDanhMuc: p.idDanhMuc,
+          tenDanhMuc:
+            categories.find((c) => c.id === p.idDanhMuc)?.tenDanhMuc || "",
+          trangThai: p.trangThai,
+        }));
+        console.log("Mapped Products:", mappedProducts);
+        setProducts(mappedProducts);
+        setProductDetails(ctspRes || []);
+      } catch (err) {
+        console.error("Lỗi khi lấy dữ liệu:", err);
+        setProducts([]);
+        setAllCategories([{ value: "", label: "Tất cả danh mục" }]);
+        setProductDetails([]);
       }
-    });
-    setAllCategories([
-      { value: "", label: "Tất cả danh mục" },
-      ...Array.from(categorySet).map((cat) => ({ value: cat, label: cat })),
-    ]);
-    // Lấy chi tiết sản phẩm từ localStorage
-    const details = JSON.parse(localStorage.getItem("productDetails") || "[]");
-    setProductDetails(details);
+    };
+    fetchData();
+  }, []);
+
+  useEffect(() => {
+    const fetchOptions = async () => {
+      try {
+        const [mauSac, kichCo, chatLieu] = await Promise.all([
+          getAllMauSac(),
+          getAllKichCo(),
+          getAllChatLieu(),
+        ]);
+        setColors(mauSac || []);
+        setSizes(kichCo || []);
+        setMaterials(chatLieu || []);
+      } catch (err) {
+        setColors([]);
+        setSizes([]);
+        setMaterials([]);
+        console.error("Lỗi khi lấy thuộc tính sản phẩm:", err);
+      }
+    };
+    fetchOptions();
   }, []);
 
   // Lọc sản phẩm theo trạng thái, danh mục, mã sản phẩm, tên sản phẩm
   let filteredProducts = products.filter(
     (p) =>
-      (status === "" || p.trang_thai === Number(status)) &&
-      (category === "" || p.ten_danh_muc === category) &&
+      (status === "" || p.trangThai === Number(status)) &&
+      (category === "" || p.tenDanhMuc === category) &&
       (searchCode === "" ||
-        (p.ma_san_pham &&
-          p.ma_san_pham.toLowerCase().includes(searchCode.toLowerCase()))) &&
+        (p.maSanPham &&
+          p.maSanPham.toLowerCase().includes(searchCode.toLowerCase()))) &&
       (search === "" ||
-        (p.ten_san_pham &&
-          p.ten_san_pham.toLowerCase().includes(search.toLowerCase())))
+        (p.tenSanPham &&
+          p.tenSanPham.toLowerCase().includes(search.toLowerCase())))
   );
   // Nếu có lastSavedProductCode thì đưa sản phẩm đó lên đầu bảng (không tạo bản sao)
   const lastSavedCode = localStorage.getItem("lastSavedProductCode");
   if (lastSavedCode) {
     const idx = filteredProducts.findIndex(
-      (p) => p.ma_san_pham === lastSavedCode
+      (p) => p.maSanPham === lastSavedCode
     );
     if (idx > 0) {
       const [sp] = filteredProducts.splice(idx, 1);
@@ -99,46 +157,148 @@ const Products = () => {
     setProducts((prev) => prev.filter((p) => p.id !== id));
   };
 
-  const handleToggleStatus = (productId) => {
-    const updatedProducts = products.map((p) => {
-      if (p.id === productId) {
-        let nextStatus;
-        switch (p.trang_thai) {
-          case 3: // Sắp ra mắt -> Đang bán
-            nextStatus = 1;
-            break;
-          case 1: // Đang bán -> Ngừng bán
-            nextStatus = 0;
-            break;
-          case 0: // Ngừng bán -> Ẩn
-            nextStatus = 2;
-            break;
-          case 2: // Ẩn -> Sắp ra mắt
-            nextStatus = 3;
-            break;
-          default:
-            nextStatus = 1; // Trạng thái mặc định nếu không xác định
-        }
-        return { ...p, trang_thai: nextStatus };
+  const handleToggleStatus = async (productId) => {
+    try {
+      const product = products.find((p) => p.id === productId);
+      if (!product) return;
+
+      let nextStatus;
+      switch (product.trangThai) {
+        case 3: // Sắp ra mắt -> Đang bán
+          nextStatus = 1;
+          break;
+        case 1: // Đang bán -> Ngừng bán
+          nextStatus = 0;
+          break;
+        case 0: // Ngừng bán -> Ẩn
+          nextStatus = 2;
+          break;
+        case 2: // Ẩn -> Sắp ra mắt
+          nextStatus = 3;
+          break;
+        default:
+          nextStatus = 1;
       }
-      return p;
-    });
-    setProducts(updatedProducts);
 
-    // Cập nhật vào localStorage
-    const productToUpdate = updatedProducts.find((p) => p.id === productId);
-    let localProducts = JSON.parse(localStorage.getItem("products") || "[]");
-    const existingProductIndex = localProducts.findIndex(
-      (p) => p.id === productId
-    );
+      // Cập nhật lên backend
+      const updatedProduct = {
+        ...product,
+        trangThai: nextStatus,
+      };
+      await updateSanPhamStatus(productId, updatedProduct);
 
-    if (existingProductIndex > -1) {
-      localProducts[existingProductIndex] = productToUpdate;
-    } else {
-      // Nếu sản phẩm từ dữ liệu mẫu, thêm nó vào localStorage khi trạng thái thay đổi
-      localProducts.unshift(productToUpdate);
+      // Reload lại danh sách sau khi cập nhật
+      const [spRes, ctspRes] = await Promise.all([
+        getAllSanPham(),
+        getAllChiTietSanPham(),
+      ]);
+
+      // Map lại sản phẩm và cập nhật state
+      const mappedProducts = (spRes || []).map((p) => ({
+        id: p.id,
+        maSanPham: p.maSanPham,
+        tenSanPham: p.tenSanPham,
+        idDanhMuc: p.idDanhMuc,
+        tenDanhMuc:
+          allCategories.find((c) => c.id === p.idDanhMuc)?.tenDanhMuc || "",
+        trangThai: p.trangThai,
+      }));
+      setProducts(mappedProducts);
+      setProductDetails(ctspRes || []);
+    } catch (err) {
+      console.error("Lỗi khi cập nhật trạng thái:", err);
+      alert("Lỗi khi cập nhật trạng thái sản phẩm!");
     }
-    localStorage.setItem("products", JSON.stringify(localProducts));
+  };
+
+  const handleShowDetails = async (productId) => {
+    try {
+      setSelectedProductId(productId);
+      console.log("Showing details for product ID:", productId);
+
+      // Load lại tất cả dữ liệu từ API
+      const [spRes, ctspRes, dmRes, msRes, kcRes, clRes] = await Promise.all([
+        getAllSanPham(),
+        getAllChiTietSanPham(),
+        getAllDanhMuc(),
+        getAllMauSac(),
+        getAllKichCo(),
+        getAllChatLieu(),
+      ]);
+
+      console.log("API Response:", {
+        products: spRes,
+        details: ctspRes,
+        categories: dmRes,
+        colors: msRes,
+        sizes: kcRes,
+        materials: clRes,
+      });
+
+      // Lọc chi tiết cho sản phẩm được chọn
+      const details = (ctspRes || []).filter(
+        (d) => Number(d.idSanPham) === Number(productId)
+      );
+
+      console.log("Filtered details:", details);
+
+      // Cập nhật tất cả state
+      setProducts(spRes || []);
+      setProductDetails(ctspRes || []);
+      setSelectedProductDetails(details);
+      setAllCategories(dmRes || []);
+      setColors(msRes || []);
+      setSizes(kcRes || []);
+      setMaterials(clRes || []);
+
+      // Nếu không có chi tiết, hiển thị thông báo
+      if (details.length === 0) {
+        alert(
+          "Sản phẩm này chưa có chi tiết. Vui lòng thêm chi tiết sản phẩm bằng cách click vào nút Sửa (bút chì)."
+        );
+      }
+    } catch (error) {
+      console.error("Error loading product details:", error);
+      alert("Có lỗi khi tải chi tiết sản phẩm");
+    }
+  };
+
+  // Hàm map id sang tên
+  const getNameById = (list, id, nameField = "label") => {
+    console.log(`Finding ${nameField} for ID:${id} in list:`, list);
+    const found = list.find((item) => Number(item.id) === Number(id));
+    console.log("Found item:", found);
+    return found ? found[nameField] : "";
+  };
+
+  const getStatusBadgeStyle = (status) => {
+    switch (status) {
+      case 1:
+        return { backgroundColor: "#e0f2f7", color: "#007bff" };
+      case 0:
+        return { backgroundColor: "#f8d7da", color: "#721c24" };
+      case 2:
+        return { backgroundColor: "#e2e3e5", color: "#383d41" };
+      case 3:
+        return { backgroundColor: "#d4edda", color: "#155724" };
+      default:
+        return { backgroundColor: "#e9ecef", color: "#495057" };
+    }
+  };
+
+  const getStatusText = (status) => {
+    switch (status) {
+      case 1:
+        return "Đang bán";
+      case 0:
+        return "Ngừng bán";
+      case 2:
+        return "Ẩn";
+      case 3:
+        return "Sắp ra mắt";
+      default:
+        return "Tất cả";
+    }
   };
 
   return (
@@ -231,20 +391,18 @@ const Products = () => {
             {paginatedProducts.map((p, idx) => (
               <React.Fragment key={p.id}>
                 <tr
+                  key={p.id}
                   style={{ cursor: "pointer" }}
-                  onClick={() =>
-                    setExpandedRow(expandedRow === p.id ? null : p.id)
-                  }
+                  onClick={() => handleShowDetails(p.id)}
                 >
                   <td className="text-center">{idx + 1}</td>
-                  <td className="text-center">{p.ma_san_pham}</td>
-                  <td className="text-center">{p.ten_san_pham}</td>
-                  <td className="text-center">{p.ten_danh_muc}</td>
+                  <td className="text-center">{p.maSanPham}</td>
+                  <td className="text-center">{p.tenSanPham}</td>
+                  <td className="text-center">{p.tenDanhMuc}</td>
                   <td className="text-center">
-                    {p.trang_thai === 1 && "Đang bán"}
-                    {p.trang_thai === 0 && "Ngừng bán"}
-                    {p.trang_thai === 2 && "Ẩn"}
-                    {p.trang_thai === 3 && "Sắp ra mắt"}
+                    <span style={getStatusBadgeStyle(p.trangThai)}>
+                      {getStatusText(p.trangThai)}
+                    </span>
                   </td>
                   <td className="text-center">
                     <button
@@ -305,13 +463,13 @@ const Products = () => {
                                 <React.Fragment key={d.id || i}>
                                   <tr>
                                     <td className="text-center">
-                                      {p.ma_san_pham}
+                                      {p.maSanPham}
                                     </td>
                                     <td className="text-center">
-                                      {p.ten_san_pham}
+                                      {p.tenSanPham}
                                     </td>
                                     <td className="text-center">
-                                      {p.ten_danh_muc}
+                                      {p.tenDanhMuc}
                                     </td>
                                     <td className="text-center">
                                       {d.id_mau_sac}
@@ -395,11 +553,31 @@ const Products = () => {
                                 </React.Fragment>
                               ))}
                             {productDetails.filter(
-                              (d) => d.id_san_pham === p.id
+                              (d) => Number(d.idSanPham) === Number(p.id)
                             ).length === 0 && (
                               <tr>
                                 <td colSpan={9} className="text-center">
-                                  Không có chi tiết
+                                  <div className="text-muted p-3">
+                                    <i className="fas fa-info-circle me-2"></i>
+                                    <strong>
+                                      Sản phẩm này chưa có chi tiết
+                                    </strong>
+                                    <br />
+                                    <small>
+                                      Chi tiết sản phẩm bao gồm: màu sắc, kích
+                                      thước, chất liệu, giá, số lượng
+                                    </small>
+                                    <br />
+                                    <button
+                                      className="btn btn-primary btn-sm mt-2"
+                                      onClick={() =>
+                                        (window.location.href = `/dashboard/products/edit/${p.id}`)
+                                      }
+                                    >
+                                      <i className="fas fa-edit me-1"></i>
+                                      Thêm chi tiết sản phẩm
+                                    </button>
+                                  </div>
                                 </td>
                               </tr>
                             )}
@@ -437,6 +615,68 @@ const Products = () => {
           </button>
         </div>
       </div>
+      {selectedProductId && (
+        <div style={{ marginTop: 24 }}>
+          <h5>Chi tiết sản phẩm:</h5>
+          <table className="table">
+            <thead>
+              <tr>
+                <th>Mã sản phẩm</th>
+                <th>Tên</th>
+                <th>Danh mục</th>
+                <th>Màu sắc</th>
+                <th>Kích thước</th>
+                <th>Chất liệu</th>
+                <th>Giá nhập</th>
+                <th>Giá bán</th>
+                <th>Số lượng</th>
+              </tr>
+            </thead>
+            <tbody>
+              {selectedProductDetails.length > 0 ? (
+                selectedProductDetails.map((ct, idx) => {
+                  const product = products.find((p) => p.id === ct.idSanPham);
+                  console.log("Product:", product);
+                  const idDanhMuc = product ? product.idDanhMuc : null;
+                  console.log("ID Danh mục:", idDanhMuc);
+                  console.log("All Categories:", allCategories);
+                  return (
+                    <tr key={idx}>
+                      <td>{product?.maSanPham}</td>
+                      <td>{product?.tenSanPham}</td>
+                      <td>
+                        {getNameById(
+                          allCategories,
+                          product?.idDanhMuc,
+                          "tenDanhMuc"
+                        )}
+                      </td>
+                      <td>{getNameById(colors, ct.idMauSac, "tenMauSac")}</td>
+                      <td>{getNameById(sizes, ct.idKichCo, "tenKichCo")}</td>
+                      <td>
+                        {getNameById(materials, ct.idChatLieu, "tenChatLieu")}
+                      </td>
+                      <td>{ct.giaNhap?.toLocaleString()} VNĐ</td>
+                      <td>{ct.gia?.toLocaleString()} VNĐ</td>
+                      <td>{ct.soLuong}</td>
+                    </tr>
+                  );
+                })
+              ) : (
+                <tr>
+                  <td colSpan={9} className="text-center">
+                    <div className="alert alert-info mb-0">
+                      <i className="fas fa-info-circle me-2"></i>
+                      Sản phẩm này chưa có chi tiết. Vui lòng click vào nút{" "}
+                      <i className="fas fa-edit"></i> để thêm chi tiết sản phẩm.
+                    </div>
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      )}
     </div>
   );
 };

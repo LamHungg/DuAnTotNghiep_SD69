@@ -4,11 +4,15 @@ import { FaEdit, FaTimes, FaPlus } from "react-icons/fa";
 import Select from "react-select";
 import ImageCarousel from "../components/ImageCarousel";
 import {
-  productsData,
-  sampleColors,
-  sampleMaterials,
-  sampleSizes,
-} from "../data/sampleData";
+  getAllSanPham,
+  getAllChiTietSanPham,
+  updateChiTietSanPham,
+  uploadHinhAnh,
+} from "../services/sanPhamService";
+import { getAllDanhMuc } from "../services/danhMucService";
+import { getAllMauSac } from "../services/mauSacService";
+import { getAllKichCo } from "../services/kichCoService";
+import { getAllChatLieu } from "../services/chatLieuService";
 
 const EditProduct = () => {
   const { productId } = useParams();
@@ -32,11 +36,11 @@ const EditProduct = () => {
   const [showEditModal, setShowEditModal] = useState(false);
   const [editingVariant, setEditingVariant] = useState(null);
   const [variantForm, setVariantForm] = useState({
-    id_mau_sac: null,
-    id_kich_co: null,
-    id_chat_lieu: null,
-    so_luong: 0,
-    gia_nhap: 0,
+    idMauSac: null,
+    idKichCo: null,
+    idChatLieu: null,
+    soLuong: 0,
+    giaNhap: 0,
     gia: 0,
     images: [],
   });
@@ -45,77 +49,122 @@ const EditProduct = () => {
   const [allColorOptions, setAllColorOptions] = useState([]);
   const [allSizeOptions, setAllSizeOptions] = useState([]);
   const [allMaterialOptions, setAllMaterialOptions] = useState([]);
+  const [allCategories, setAllCategories] = useState([]);
+  const [allColors, setAllColors] = useState([]);
+  const [allSizes, setAllSizes] = useState([]);
+  const [allMaterials, setAllMaterials] = useState([]);
 
   // Ref for image upload
   const imageInputRef = useRef(null);
 
   useEffect(() => {
-    const localProducts = JSON.parse(localStorage.getItem("products") || "[]");
-    const allProducts = [...localProducts, ...productsData];
-    const foundProduct = allProducts.find((p) => p.id === Number(productId));
+    const fetchData = async () => {
+      try {
+        const [spRes, ctspRes, dmRes, msRes, kcRes, clRes] = await Promise.all([
+          getAllSanPham(),
+          getAllChiTietSanPham(),
+          getAllDanhMuc(),
+          getAllMauSac(),
+          getAllKichCo(),
+          getAllChatLieu(),
+        ]);
+
+        console.log("API Responses:", {
+          spRes,
+          ctspRes,
+          dmRes,
+          msRes,
+          kcRes,
+          clRes,
+        });
+
+        // Tìm sản phẩm theo ID
+        const foundProduct = (spRes || []).find(
+          (p) => p.id === Number(productId)
+        );
     setProduct(foundProduct);
 
-    const localDetails = JSON.parse(
-      localStorage.getItem("productDetails") || "[]"
+        // Lấy chi tiết sản phẩm cho sản phẩm này
+        const variants = (ctspRes || []).filter(
+          (d) => d.idSanPham === Number(productId)
     );
-    if (foundProduct) {
-      const variants = localDetails.filter(
-        (d) => d.id_san_pham === foundProduct.id
-      );
+        console.log("Variants for product:", variants);
       setAllVariants(variants);
       setFilteredVariants(variants);
 
-      // Derive filter options from the variants
-      setColorOptions(
-        [...new Set(variants.map((v) => v.id_mau_sac))].map((c) => ({
-          value: c,
-          label: c,
-        }))
-      );
-      setSizeOptions(
-        [...new Set(variants.map((v) => v.id_kich_co))].map((s) => ({
-          value: s,
-          label: s,
-        }))
-      );
-      setMaterialOptions(
-        [...new Set(variants.map((v) => v.id_chat_lieu))].map((m) => ({
-          value: m,
-          label: m,
-        }))
-      );
-    }
+        // Tạo options cho filter từ variants
+        const uniqueColors = [...new Set(variants.map((v) => v.idMauSac))];
+        const uniqueSizes = [...new Set(variants.map((v) => v.idKichCo))];
+        const uniqueMaterials = [...new Set(variants.map((v) => v.idChatLieu))];
 
-    // Load ALL options for the edit modal dropdowns
-    const savedColors = JSON.parse(localStorage.getItem("colors") || "[]");
+        console.log("Unique IDs:", {
+          uniqueColors,
+          uniqueSizes,
+          uniqueMaterials,
+        });
+
+        // Map tên từ ID
+        const colorNames = uniqueColors.map((id) => {
+          const color = (msRes || []).find((c) => c.id === id);
+          console.log(`Color ID ${id}:`, color);
+          return { value: id, label: color ? color.tenMauSac : `ID: ${id}` };
+        });
+        const sizeNames = uniqueSizes.map((id) => {
+          const size = (kcRes || []).find((s) => s.id === id);
+          console.log(`Size ID ${id}:`, size);
+          return { value: id, label: size ? size.tenKichCo : `ID: ${id}` };
+        });
+        const materialNames = uniqueMaterials.map((id) => {
+          const material = (clRes || []).find((m) => m.id === id);
+          console.log(`Material ID ${id}:`, material);
+          return {
+            value: id,
+            label: material ? material.tenChatLieu : `ID: ${id}`,
+          };
+        });
+
+        setColorOptions(colorNames);
+        setSizeOptions(sizeNames);
+        setMaterialOptions(materialNames);
+
+        // Tạo options cho modal dropdowns
     setAllColorOptions(
-      savedColors.length > 0
-        ? savedColors
-            .filter((c) => c.trang_thai === 1)
-            .map((c) => ({ value: c.ten_mau_sac, label: c.ten_mau_sac }))
-        : sampleColors.map((c) => ({ value: c, label: c }))
+          (msRes || [])
+            .filter((c) => c.trangThai === 1)
+            .map((c) => ({ value: c.id, label: c.tenMauSac }))
     );
 
-    const savedSizes = JSON.parse(localStorage.getItem("sizes") || "[]");
     setAllSizeOptions(
-      savedSizes.length > 0
-        ? savedSizes
-            .filter((s) => s.trang_thai === 1)
-            .map((s) => ({ value: s.ten_kich_co, label: s.ten_kich_co }))
-        : sampleSizes.map((s) => ({ value: s, label: s }))
-    );
+          (kcRes || [])
+            .filter((s) => s.trangThai === 1)
+            .map((s) => ({ value: s.id, label: s.tenKichCo }))
+        );
 
-    const savedMaterials = JSON.parse(
-      localStorage.getItem("materials") || "[]"
-    );
     setAllMaterialOptions(
-      savedMaterials.length > 0
-        ? savedMaterials
-            .filter((m) => m.trang_thai === 1)
-            .map((m) => ({ value: m.ten_chat_lieu, label: m.ten_chat_lieu }))
-        : sampleMaterials.map((m) => ({ value: m, label: m }))
-    );
+          (clRes || [])
+            .filter((m) => m.trangThai === 1)
+            .map((m) => ({ value: m.id, label: m.tenChatLieu }))
+        );
+
+        setAllCategories(dmRes || []);
+        setAllColors(msRes || []);
+        setAllSizes(kcRes || []);
+        setAllMaterials(clRes || []);
+      } catch (error) {
+        console.error("Lỗi khi tải dữ liệu:", error);
+        alert("Lỗi khi tải dữ liệu sản phẩm!");
+      }
+    };
+
+    fetchData();
   }, [productId]);
+
+  const getNameById = (id, list, fieldName) => {
+    if (!id || !list || list.length === 0) return "";
+    const item = list.find((item) => item.id === id);
+    console.log(`getNameById: ID=${id}, fieldName=${fieldName}, found:`, item);
+    return item ? item[fieldName] : `ID: ${id}`;
+  };
 
   const handleFilterChange = (name, selectedOption) => {
     setFilters((prev) => ({
@@ -128,19 +177,14 @@ const EditProduct = () => {
     let tempVariants = [...allVariants];
 
     if (filters.color) {
-      tempVariants = tempVariants.filter((v) => v.id_mau_sac === filters.color);
+      tempVariants = tempVariants.filter((v) => v.idMauSac === filters.color);
     }
     if (filters.size) {
-      tempVariants = tempVariants.filter((v) => v.id_kich_co === filters.size);
+      tempVariants = tempVariants.filter((v) => v.idKichCo === filters.size);
     }
     if (filters.material) {
       tempVariants = tempVariants.filter(
-        (v) => v.id_chat_lieu === filters.material
-      );
-    }
-    if (filters.category) {
-      tempVariants = tempVariants.filter(
-        (v) => product.ten_danh_muc === filters.category
+        (v) => v.idChatLieu === filters.material
       );
     }
 
@@ -154,15 +198,31 @@ const EditProduct = () => {
 
   const handleEditVariant = (variant) => {
     setEditingVariant(variant);
+
+    // Tìm tên từ ID để hiển thị trong dropdown
+    const colorName = getNameById(variant.idMauSac, allColors, "tenMauSac");
+    const sizeName = getNameById(variant.idKichCo, allSizes, "tenKichCo");
+    const materialName = getNameById(
+      variant.idChatLieu,
+      allMaterials,
+      "tenChatLieu"
+    );
+
     setVariantForm({
-      id_mau_sac: { value: variant.id_mau_sac, label: variant.id_mau_sac },
-      id_kich_co: { value: variant.id_kich_co, label: variant.id_kich_co },
-      id_chat_lieu: {
-        value: variant.id_chat_lieu,
-        label: variant.id_chat_lieu,
+      idMauSac: {
+        value: variant.idMauSac,
+        label: colorName,
       },
-      so_luong: variant.so_luong,
-      gia_nhap: variant.gia_nhap,
+      idKichCo: {
+        value: variant.idKichCo,
+        label: sizeName,
+      },
+      idChatLieu: {
+        value: variant.idChatLieu,
+        label: materialName,
+      },
+      soLuong: variant.soLuong,
+      giaNhap: variant.giaNhap,
       gia: variant.gia,
       images: variant.images || [],
     });
@@ -185,93 +245,110 @@ const EditProduct = () => {
     }));
   };
 
-  const handleImageUpload = (e) => {
+  const handleImageUpload = async (e) => {
     const files = e.target.files;
-    if (files && files.length > 0) {
-      const newImagesPromises = Array.from(files).map((file) => {
-        return new Promise((resolve) => {
-          const reader = new FileReader();
-          reader.onloadend = () => {
-            resolve(reader.result);
-          };
-          reader.readAsDataURL(file);
-        });
+    if (!files || files.length === 0 || !editingVariant) return;
+
+    try {
+      // Tạo FormData để gửi file
+      const formData = new FormData();
+      Array.from(files).forEach((file) => {
+        formData.append("files", file);
       });
 
-      Promise.all(newImagesPromises).then((newImages) => {
+      // Upload hình ảnh
+      await uploadHinhAnh(editingVariant.id, formData);
+
+      // Sau khi upload thành công, load lại dữ liệu
+      const [spRes, ctspRes] = await Promise.all([
+        getAllSanPham(),
+        getAllChiTietSanPham(),
+      ]);
+
+      // Cập nhật state
+      const variants = (ctspRes || []).filter(
+        (d) => d.idSanPham === Number(productId)
+      );
+      setAllVariants(variants);
+      setFilteredVariants(variants);
+
+      // Tìm variant vừa upload để cập nhật form
+      const updatedVariant = variants.find((v) => v.id === editingVariant.id);
+      if (updatedVariant) {
         setVariantForm((prev) => ({
           ...prev,
-          images: [...prev.images, ...newImages],
+          images: updatedVariant.images || [],
         }));
-      });
+      }
+
+      alert("Upload hình ảnh thành công!");
+    } catch (error) {
+      console.error("Lỗi khi upload hình ảnh:", error);
+      alert("Lỗi khi upload hình ảnh!");
     }
-    // Reset file input value to allow re-uploading the same file
+
+    // Reset file input
     e.target.value = null;
   };
 
-  const handleUpdateVariant = () => {
+  const handleUpdateVariant = async () => {
     if (!editingVariant) return;
 
-    const updatedVariantForState = {
-      ...editingVariant,
-      id_mau_sac: variantForm.id_mau_sac.value,
-      id_kich_co: variantForm.id_kich_co.value,
-      id_chat_lieu: variantForm.id_chat_lieu.value,
-      so_luong: Number(variantForm.so_luong),
-      gia_nhap: Number(variantForm.gia_nhap),
-      gia: Number(variantForm.gia),
-      images: variantForm.images,
-    };
-
-    const newAllVariants = allVariants.map((v) =>
-      v.id === updatedVariantForState.id ? updatedVariantForState : v
-    );
-    setAllVariants(newAllVariants);
-
-    // Re-apply filters after update
-    let tempVariants = [...newAllVariants];
-    if (filters.color) {
-      tempVariants = tempVariants.filter((v) => v.id_mau_sac === filters.color);
-    }
-    if (filters.size) {
-      tempVariants = tempVariants.filter((v) => v.id_kich_co === filters.size);
-    }
-    if (filters.material) {
-      tempVariants = tempVariants.filter(
-        (v) => v.id_chat_lieu === filters.material
-      );
-    }
-    setFilteredVariants(tempVariants);
-
-    // Prepare a version for localStorage that doesn't include new Base64 images
-    const variantForStorage = {
-      ...updatedVariantForState,
-      images: updatedVariantForState.images.filter(
-        (img) => !img.startsWith("data:image")
-      ),
-    };
-
-    const localDetails = JSON.parse(
-      localStorage.getItem("productDetails") || "[]"
-    );
-    const updatedLocalDetails = localDetails.map((d) =>
-      d.id === variantForStorage.id ? variantForStorage : d
-    );
-
     try {
-      localStorage.setItem(
-        "productDetails",
-        JSON.stringify(updatedLocalDetails)
-      );
-    } catch (error) {
-      console.error("Failed to save to localStorage:", error);
-      alert(
-        "Lỗi: Không thể lưu dữ liệu. Dữ liệu có thể quá lớn cho localStorage."
-      );
-    }
+      // Chuẩn bị dữ liệu để gửi lên API
+    const updatedVariantForState = {
+        id: editingVariant.id,
+        idSanPham: editingVariant.idSanPham,
+        idMauSac: variantForm.idMauSac.value,
+        idKichCo: variantForm.idKichCo.value,
+        idChatLieu: variantForm.idChatLieu.value,
+        soLuong: Number(variantForm.soLuong),
+        giaNhap: Number(variantForm.giaNhap),
+      gia: Number(variantForm.gia),
+        trangThai: editingVariant.trangThai || 1,
+    };
 
-    setShowEditModal(false);
-    setEditingVariant(null);
+      console.log("Sending update with:", updatedVariantForState);
+
+      // Gọi API để cập nhật
+      await updateChiTietSanPham(editingVariant.id, updatedVariantForState);
+
+      // Sau khi cập nhật thành công, load lại dữ liệu
+      const [spRes, ctspRes, dmRes, msRes, kcRes, clRes] = await Promise.all([
+        getAllSanPham(),
+        getAllChiTietSanPham(),
+        getAllDanhMuc(),
+        getAllMauSac(),
+        getAllKichCo(),
+        getAllChatLieu(),
+      ]);
+
+      // Tìm sản phẩm theo ID
+      const foundProduct = (spRes || []).find(
+        (p) => p.id === Number(productId)
+      );
+      setProduct(foundProduct);
+
+      // Lấy chi tiết sản phẩm cho sản phẩm này
+      const variants = (ctspRes || []).filter(
+        (d) => d.idSanPham === Number(productId)
+      );
+      setAllVariants(variants);
+      setFilteredVariants(variants);
+
+      // Cập nhật các options
+      setAllCategories(dmRes || []);
+      setAllColors(msRes || []);
+      setAllSizes(kcRes || []);
+      setAllMaterials(clRes || []);
+
+      setShowEditModal(false);
+      setEditingVariant(null);
+      alert("Cập nhật chi tiết sản phẩm thành công!");
+    } catch (error) {
+      console.error("Lỗi khi cập nhật:", error.response?.data || error);
+      alert("Lỗi khi cập nhật chi tiết sản phẩm!");
+    }
   };
 
   if (!product) {
@@ -284,7 +361,7 @@ const EditProduct = () => {
       <div className="mb-4">
         <Link to="/dashboard/products">Danh sách sản phẩm</Link>
         <span className="mx-2">/</span>
-        <span className="fw-bold">{product.ten_san_pham}</span>
+        <span className="fw-bold">{product.tenSanPham}</span>
       </div>
 
       {/* Product Info */}
@@ -294,24 +371,27 @@ const EditProduct = () => {
           <div className="row">
             <div className="col-md-6">
               <p>
-                <strong>Tên sản phẩm:</strong> {product.ten_san_pham}
+                <strong>Tên sản phẩm:</strong> {product.tenSanPham}
               </p>
               <p>
-                <strong>Mã sản phẩm:</strong> {product.ma_san_pham}
+                <strong>Mã sản phẩm:</strong> {product.maSanPham}
               </p>
               <p>
-                <strong>Danh mục:</strong> {product.ten_danh_muc}
+                <strong>Danh mục:</strong>{" "}
+                {getNameById(product.idDanhMuc, allCategories, "tenDanhMuc")}
               </p>
             </div>
             <div className="col-md-6">
               <p>
                 <strong>Ngày tạo:</strong>{" "}
-                {new Date(product.ngay_tao).toLocaleString()}
+                {product.ngayTao
+                  ? new Date(product.ngayTao).toLocaleString()
+                  : "Invalid Date"}
               </p>
               <p>
                 <strong>Cập nhật lần cuối:</strong>{" "}
-                {product.ngay_cap_nhat
-                  ? new Date(product.ngay_cap_nhat).toLocaleString()
+                {product.ngayCapNhat
+                  ? new Date(product.ngayCapNhat).toLocaleString()
                   : "Chưa có"}
               </p>
             </div>
@@ -386,15 +466,31 @@ const EditProduct = () => {
               {filteredVariants.length > 0 ? (
                 filteredVariants.map((variant) => (
                   <tr key={variant.id}>
-                    <td className="text-center">{product.ma_san_pham}</td>
-                    <td className="text-center">{product.ten_san_pham}</td>
-                    <td className="text-center">{product.ten_danh_muc}</td>
-                    <td className="text-center">{variant.id_mau_sac}</td>
-                    <td className="text-center">{variant.id_kich_co}</td>
-                    <td className="text-center">{variant.id_chat_lieu}</td>
-                    <td className="text-center">{variant.so_luong}</td>
+                    <td className="text-center">{product.maSanPham}</td>
+                    <td className="text-center">{product.tenSanPham}</td>
                     <td className="text-center">
-                      {variant.gia_nhap?.toLocaleString()} VNĐ
+                      {getNameById(
+                        product.idDanhMuc,
+                        allCategories,
+                        "tenDanhMuc"
+                      )}
+                    </td>
+                    <td className="text-center">
+                      {getNameById(variant.idMauSac, allColors, "tenMauSac")}
+                    </td>
+                    <td className="text-center">
+                      {getNameById(variant.idKichCo, allSizes, "tenKichCo")}
+                    </td>
+                    <td className="text-center">
+                      {getNameById(
+                        variant.idChatLieu,
+                        allMaterials,
+                        "tenChatLieu"
+                      )}
+                    </td>
+                    <td className="text-center">{variant.soLuong}</td>
+                    <td className="text-center">
+                      {variant.giaNhap?.toLocaleString()} VNĐ
                     </td>
                     <td className="text-center">
                       {variant.gia?.toLocaleString()} VNĐ
@@ -454,8 +550,10 @@ const EditProduct = () => {
             <div className="modal-content">
               <div className="modal-header">
                 <h5 className="modal-title">
-                  Chỉnh sửa chi tiết: {product.ten_san_pham} [
-                  {editingVariant.id_mau_sac} - {editingVariant.id_kich_co}]
+                  Chỉnh sửa chi tiết: {product.tenSanPham} [
+                  {getNameById(editingVariant.idMauSac, allColors, "tenMauSac")}{" "}
+                  -{" "}
+                  {getNameById(editingVariant.idKichCo, allSizes, "tenKichCo")}]
                 </h5>
                 <button
                   type="button"
@@ -469,9 +567,9 @@ const EditProduct = () => {
                     <label className="form-label">Màu sắc</label>
                     <Select
                       options={allColorOptions}
-                      value={variantForm.id_mau_sac}
+                      value={variantForm.idMauSac}
                       onChange={(opt) =>
-                        handleModalSelectChange("id_mau_sac", opt)
+                        handleModalSelectChange("idMauSac", opt)
                       }
                     />
                   </div>
@@ -479,9 +577,9 @@ const EditProduct = () => {
                     <label className="form-label">Kích thước</label>
                     <Select
                       options={allSizeOptions}
-                      value={variantForm.id_kich_co}
+                      value={variantForm.idKichCo}
                       onChange={(opt) =>
-                        handleModalSelectChange("id_kich_co", opt)
+                        handleModalSelectChange("idKichCo", opt)
                       }
                     />
                   </div>
@@ -489,9 +587,9 @@ const EditProduct = () => {
                     <label className="form-label">Chất liệu</label>
                     <Select
                       options={allMaterialOptions}
-                      value={variantForm.id_chat_lieu}
+                      value={variantForm.idChatLieu}
                       onChange={(opt) =>
-                        handleModalSelectChange("id_chat_lieu", opt)
+                        handleModalSelectChange("idChatLieu", opt)
                       }
                     />
                   </div>
@@ -510,8 +608,8 @@ const EditProduct = () => {
                     <input
                       type="number"
                       className="form-control"
-                      name="gia_nhap"
-                      value={variantForm.gia_nhap}
+                      name="giaNhap"
+                      value={variantForm.giaNhap}
                       onChange={handleModalFormChange}
                     />
                   </div>
@@ -520,8 +618,8 @@ const EditProduct = () => {
                     <input
                       type="number"
                       className="form-control"
-                      name="so_luong"
-                      value={variantForm.so_luong}
+                      name="soLuong"
+                      value={variantForm.soLuong}
                       onChange={handleModalFormChange}
                     />
                   </div>
@@ -600,9 +698,3 @@ const EditProduct = () => {
 };
 
 export default EditProduct;
-
-// A temporary sampleData file reference. This should be removed if not needed.
-// You might need to create `src/data/sampleData.js` and export `productsData` from it
-// if it's not already available in this component's scope.
-// For example, `src/data/sampleData.js`:
-// export const productsData = [ ... ];
