@@ -30,6 +30,7 @@ import Materials from "./pages/Materials";
 import EditProduct from "./pages/EditProduct";
 import Vouchers from "./pages/Vouchers";
 import Statistics from "./pages/Statistics";
+import OrderDetail from "./pages/OrderDetail";
 
 // Components
 import ProtectedRoute from "./components/ProtectedRoute";
@@ -85,6 +86,16 @@ function App() {
           element={
             <ProtectedRoute>
               <OrderUpdate />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* Route chi tiết đơn hàng */}
+        <Route
+          path="/orders/:orderId"
+          element={
+            <ProtectedRoute>
+              <OrderDetail />
             </ProtectedRoute>
           }
         />

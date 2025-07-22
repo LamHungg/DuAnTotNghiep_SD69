@@ -1,14 +1,15 @@
 import axios from "axios";
+import SERVER_URL from "../configs/server.config";
 
-const API_URL = "http://localhost:8080/api/auth";
+const API_URL = `${SERVER_URL}/api/auth`;
 
 const authService = {
   login: async (tenDangNhap, matKhau) => {
     try {
       const response = await axios.post(
-        `${API_URL}/login`,
+        `${SERVER_URL}/api/auth/login`,
         {
-          tenDangNhap,
+          tenDangNhap: tenDangNhap,
           matKhau,
         },
         {
