@@ -1,12 +1,13 @@
 import axios from 'axios';
+import SERVER_URL from "../configs/server.config";
 
-const API_BASE = 'http://localhost:8080/ZMEN/Admin/DonHang';
+const API_BASE = `${SERVER_URL}/ZMEN/Admin/DonHang`;
 
 // Lấy danh sách đơn hàng tóm tắt
 export const getAllOrders = () => axios.get(`${API_BASE}`);
 
 // Lấy chi tiết đơn hàng theo ID
-export const getOrderDetail = (id) => axios.get(`${API_BASE}/${id}`);
+export const getOrderById = (id) => axios.get(`${API_BASE}/${id}`);
 
 // Tạo đơn hàng mới
 export const createOrder = (data) => axios.post(`${API_BASE}`, data);
@@ -24,4 +25,4 @@ export const deliverOrder = (id) => axios.post(`${API_BASE}/${id}/deliver`);
 export const completeOrder = (id) => axios.post(`${API_BASE}/${id}/complete`);
 
 // Hủy đơn hàng
-export const cancelOrder = (id) => axios.post(`${API_BASE}/${id}/cancel`); 
+export const cancelOrder = (id) => axios.post(`${API_BASE}/${id}/cancel`);

@@ -6,7 +6,7 @@ import {
   deliverOrder,
   completeOrder,
   cancelOrder,
-  getOrderDetail
+  getOrderById
 } from "../services/donHangService";
 import { FaEye, FaHistory, FaClock, FaCheckCircle, FaShippingFast, FaTimesCircle, FaBoxOpen, FaMoneyBillWave, FaListAlt, FaDollarSign } from "react-icons/fa";
 
@@ -481,7 +481,7 @@ const Orders = () => {
                           title="Xem chi tiết"
                           onClick={async () => {
                             try {
-                              const res = await getOrderDetail(order.id);
+                              const res = await getOrderById(order.id);
                               setSelectedOrder({ ...res.data, id: order.id });
                               setShowDetail(true);
                             } catch (err) {

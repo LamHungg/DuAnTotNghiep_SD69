@@ -22,6 +22,7 @@ import {
   FaGift,
 } from "react-icons/fa";
 import Toast from "../components/Toast";
+import authService from '../services/authService';
 
 const sidebarMenus = [
   { label: "Trang chủ", icon: <FaHome />, to: "/dashboard" },
@@ -90,11 +91,13 @@ const DashboardLayout = () => {
   const [showLogoutModal, setShowLogoutModal] = useState(false);
   const [toast, setToast] = useState({
     visible: false,
-    type: "success",
+    type: "error",
     message: "",
   });
   const navigate = useNavigate();
   const location = useLocation();
+  const currentUser = authService.getCurrentUser();
+  const isNhanVien = currentUser && (currentUser.chucVu === 'NHANVIEN' || currentUser.role === 'NHANVIEN');
 
   const handleLogout = () => {
     setShowLogoutModal(true);
@@ -162,70 +165,87 @@ const DashboardLayout = () => {
           </div>
           <nav className="flex-grow-1 w-100">
             <ul className="nav flex-column w-100">
-              {sidebarMenus.map((item, idx) => (
-                <li className="nav-item w-100" key={item.label}>
-                  {item.children ? (
-                    <>
-                      <div
-                        className={`nav-link d-flex align-items-center w-100 px-3 py-2 mb-1 rounded-2 sidebar-parent ${
-                          item.children.some((child) =>
-                            location.pathname.startsWith(child.to)
-                          )
-                            ? "active-menu"
-                            : "text-secondary"
-                        }`}
-                        style={{
-                          fontWeight: 500,
-                          fontSize: 15,
-                          cursor: "pointer",
-                        }}
-                        onClick={() =>
-                          setOpenMenu(openMenu === item.label ? "" : item.label)
-                        }
-                      >
-                        <span className="me-2">{item.icon}</span>
-                        {item.label}
-                        <span className="ms-auto">
-                          {openMenu === item.label ? "▾" : "▸"}
-                        </span>
-                      </div>
-                      {openMenu === item.label && (
-                        <ul className="nav flex-column ms-3 sidebar-children">
-                          {item.children.map((child) => (
-                            <li className="nav-item w-100" key={child.label}>
-                              <NavLink
-                                to={child.to}
-                                className={({ isActive }) =>
-                                  `nav-link d-flex align-items-center w-100 px-3 py-2 mb-1 rounded-2 sidebar-child ${
-                                    isActive ? "active-menu" : "text-secondary"
-                                  }`
-                                }
-                                style={{ fontWeight: 500, fontSize: 15 }}
-                              >
-                                <span className="me-2">{child.icon}</span>
-                                {child.label}
-                              </NavLink>
-                            </li>
-                          ))}
-                        </ul>
-                      )}
-                    </>
-                  ) : (
-                    <NavLink
-                      to={item.to}
-                      className={({ isActive }) =>
-                        `nav-link d-flex align-items-center w-100 px-3 py-2 mb-1 rounded-2 ${
-                          isActive ? "active-menu" : "text-secondary"
-                        }`
-                      }
-                      style={{ fontWeight: 500, fontSize: 15 }}
-                    >
-                      <span className="me-2">{item.icon}</span>
-                      {item.label}
-                    </NavLink>
-                  )}
-                </li>
-              ))}
+              {sidebarMenus.map((item, idx) => {
+                const isRestricted =
+                  isNhanVien && (item.label === 'Quản Lý Account' || item.label === 'Thống Kê');
+                return (
+                  <li className="nav-item w-100" key={item.label}>
+                    {item.children ? (
+                      <>
+                        <div
+                          className={`nav-link d-flex align-items-center w-100 px-3 py-2 mb-1 rounded-2 sidebar-parent ${
+                            item.children.some((child) =>
+                              location.pathname.startsWith(child.to)
+                            )
+                              ? "active-menu"
+                              : "text-secondary"
+                          }`}
+                          style={{
+                            fontWeight: 500,
+                            fontSize: 15,
+                            cursor: "pointer",
+                          }}
+                          onClick={() =>
+                            setOpenMenu(openMenu === item.label ? "" : item.label)
+                          }
+                        >
+                          <span className="me-2">{item.icon}</span>
+                          {item.label}
+                          <span className="ms-auto">
+                            {openMenu === item.label ? "▾" : "▸"}
+                          </span>
+                        </div>
+                        {openMenu === item.label && (
+                          <ul className="nav flex-column ms-3 sidebar-children">
+                            {item.children.map((child) => (
+                              <li className="nav-item w-100" key={child.label}>
+                                <NavLink
+                                  to={child.to}
+                                  className={({ isActive }) =>
+                                    `nav-link d-flex align-items-center w-100 px-3 py-2 mb-1 rounded-2 sidebar-child ${
+                                      isActive ? "active-menu" : "text-secondary"
+                                    }`
+                                  }
+                                  style={{ fontWeight: 500, fontSize: 15 }}
+                                >
+                                  <span className="me-2">{child.icon}</span>
+                                  {child.label}
+                                </NavLink>
+                              </li>
+                            ))}
+                          </ul>
+                        )}
+                      </>
+                    ) : (
+                      isRestricted ? (
+                        <div
+                          className={
+                            'nav-link d-flex align-items-center w-100 px-3 py-2 mb-1 rounded-2 text-secondary'
+                          }
+                          style={{ fontWeight: 500, fontSize: 15, cursor: 'not-allowed', opacity: 0.7 }}
+                          onClick={() => setToast({ visible: true, type: 'error', message: 'Bạn không có quyền truy cập' })}
+                        >
+                          <span className="me-2">{item.icon}</span>
+                          {item.label}
+                        </div>
+                      ) : (
+                        <NavLink
+                          to={item.to}
+                          className={({ isActive }) =>
+                            `nav-link d-flex align-items-center w-100 px-3 py-2 mb-1 rounded-2 ${
+                              isActive ? "active-menu" : "text-secondary"
+                            }`
+                          }
+                          style={{ fontWeight: 500, fontSize: 15 }}
+                        >
+                          <span className="me-2">{item.icon}</span>
+                          {item.label}
+                        </NavLink>
+                      )
+                    )}
+                  </li>
+                );
+              })}
             </ul>
           </nav>
         </div>

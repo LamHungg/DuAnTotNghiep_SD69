@@ -5,8 +5,9 @@ import {
   demoHieuSuatNV,
   demoKhachHangChiTieu,
 } from "../data/demoStatistics";
+import SERVER_URL from "../configs/server.config";
 
-const API_URL = "http://localhost:8080/zmen";
+const API_URL = `${SERVER_URL}/zmen`;
 
 // Helper function để check API có khả dụng không
 const isApiAvailable = async () => {
