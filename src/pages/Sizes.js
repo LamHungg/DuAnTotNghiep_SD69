@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { FaToggleOn, FaToggleOff, FaPlus, FaSearch } from "react-icons/fa";
 import { sampleSizes } from "../data/sampleData";
 import Toast from "../components/Toast";
+import { getAllKichCo, updateKichCoStatus } from "../services/kichCoService";
 
 const Sizes = () => {
   const [sizes, setSizes] = useState([]);
@@ -19,22 +20,28 @@ const Sizes = () => {
   });
 
   useEffect(() => {
-    const savedSizes = JSON.parse(localStorage.getItem("sizes") || "[]");
-    const allSizes = savedSizes.length > 0 ? savedSizes : sampleSizes;
-    setSizes(allSizes);
-    setFilteredSizes(allSizes);
+    const fetchSizes = async () => {
+      try {
+        const data = await getAllKichCo();
+        setSizes(data || []);
+      } catch (err) {
+        setSizes([]);
+        console.error("Lỗi khi lấy kích cỡ:", err);
+      }
+    };
+    fetchSizes();
   }, []);
 
   useEffect(() => {
     let result = sizes;
     if (searchTerm !== "") {
       result = result.filter((size) =>
-        size.ten_kich_co.toLowerCase().includes(searchTerm.toLowerCase())
+        size.tenKichCo.toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
     if (statusFilter !== "") {
       result = result.filter(
-        (size) => size.trang_thai === parseInt(statusFilter)
+        (size) => size.trangThai === parseInt(statusFilter)
       );
     }
     setFilteredSizes(result);
@@ -50,44 +57,40 @@ const Sizes = () => {
     setNewSizeError("");
   };
 
-  const handleToggleStatus = (id) => {
-    const updatedSizes = sizes.map((size) => {
-      if (size.id === id) {
-        return {
-          ...size,
-          trang_thai: size.trang_thai === 1 ? 0 : 1,
-        };
-      }
-      return size;
-    });
-
-    setSizes(updatedSizes);
-    localStorage.setItem("sizes", JSON.stringify(updatedSizes));
-
-    const size = sizes.find((s) => s.id === id);
-    const statusText = size.trang_thai === 1 ? "tắt" : "bật";
-    setToast({
-      visible: true,
-      type: "info",
-      message: `Đã ${statusText} trạng thái kích cỡ "${size.ten_kich_co}"!`,
-    });
-    setTimeout(() => setToast((t) => ({ ...t, visible: false })), 1500);
+  const handleToggleStatus = async (id, currentStatus) => {
+    try {
+      const size = sizes.find((s) => s.id === id);
+      if (!size) return;
+      const updatedSize = {
+        id: size.id,
+        tenKichCo: size.tenKichCo,
+        trangThai: currentStatus === 1 ? 0 : 1,
+      };
+      await updateKichCoStatus(id, updatedSize);
+      const data = await getAllKichCo();
+      setSizes(data || []);
+      setToast({
+        visible: true,
+        type: "info",
+        message: `Đã đổi trạng thái kích cỡ "${size.tenKichCo}"!`,
+      });
+      setTimeout(() => setToast((t) => ({ ...t, visible: false })), 1500);
+    } catch (err) {
+      alert("Lỗi khi cập nhật trạng thái!");
+      console.error("Lỗi cập nhật:", err?.response?.data || err);
+    }
   };
 
-  const getStatusText = (status) => {
-    return status === 1 ? "Đang hoạt động" : "Ngừng hoạt động";
-  };
-
-  const getStatusBadgeStyle = (status) => {
-    return {
-      padding: "4px 8px",
-      borderRadius: "12px",
-      fontSize: "12px",
-      fontWeight: "600",
-      backgroundColor: status === 1 ? "#d1fae5" : "#fee2e2",
-      color: status === 1 ? "#065f46" : "#991b1b",
-    };
-  };
+  const getStatusText = (status) =>
+    status === 1 ? "Đang hoạt động" : "Ngừng hoạt động";
+  const getStatusBadgeStyle = (status) => ({
+    padding: "4px 8px",
+    borderRadius: "12px",
+    fontSize: "12px",
+    fontWeight: "600",
+    backgroundColor: status === 1 ? "#d1fae5" : "#fee2e2",
+    color: status === 1 ? "#065f46" : "#991b1b",
+  });
 
   const getSizeType = (type) => {
     return type === "Kích cỡ số" ? "Số" : "Chữ";
@@ -330,16 +333,16 @@ const Sizes = () => {
           {filteredSizes.map((size) => (
             <tr key={size.id}>
               <td style={{ ...tdStyle, textAlign: "center" }}>
-                <strong>{size.ten_kich_co}</strong>
+                <strong>{size.tenKichCo}</strong>
               </td>
               <td style={{ ...tdStyle, textAlign: "center" }}>
-                <span style={getStatusBadgeStyle(size.trang_thai)}>
-                  {getStatusText(size.trang_thai)}
+                <span style={getStatusBadgeStyle(size.trangThai)}>
+                  {getStatusText(size.trangThai)}
                 </span>
               </td>
               <td style={{ ...tdStyle, textAlign: "center" }}>
                 <button
-                  onClick={() => handleToggleStatus(size.id)}
+                  onClick={() => handleToggleStatus(size.id, size.trangThai)}
                   style={{
                     background: "none",
                     border: "none",
@@ -347,10 +350,10 @@ const Sizes = () => {
                     padding: 0,
                   }}
                   title={
-                    size.trang_thai === 1 ? "Tắt hoạt động" : "Bật hoạt động"
+                    size.trangThai === 1 ? "Tắt hoạt động" : "Bật hoạt động"
                   }
                 >
-                  {size.trang_thai === 1 ? (
+                  {size.trangThai === 1 ? (
                     <FaToggleOn style={{ color: "#10b981", fontSize: 32 }} />
                   ) : (
                     <FaToggleOff style={{ color: "#d1d5db", fontSize: 32 }} />

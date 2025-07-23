@@ -4,6 +4,13 @@ import { FaPlus, FaTrash, FaImage } from "react-icons/fa";
 import Select from "react-select";
 import CreatableSelect from "react-select/creatable";
 import { productsData } from "../data/sampleData";
+import { createSanPham } from "../services/sanPhamService";
+import { getAllDanhMuc } from "../services/danhMucService";
+import { getAllChatLieu } from "../services/chatLieuService";
+import { getAllKichCo } from "../services/kichCoService";
+import { getAllMauSac } from "../services/mauSacService";
+import { createChiTietSanPham } from "../services/sanPhamService";
+import authService from "../services/authService";
 
 // Dữ liệu mặc định để fallback nếu localStorage trống
 const defaultCategories = ["Áo thun", "Áo sơ mi", "Áo khoác", "Áo len"];
@@ -105,7 +112,7 @@ const AddProduct = () => {
         : defaultMaterials.map((m) => ({ value: m, label: m }));
     setMaterialOptions(activeMaterials);
 
-    // Load categories from localStorage or use default
+    // Load categories from localStorage hoặc API hoặc default
     const savedCategories = JSON.parse(
       localStorage.getItem("categories") || "[]"
     );
@@ -113,8 +120,11 @@ const AddProduct = () => {
       savedCategories.length > 0
         ? savedCategories
             .filter((c) => c.trang_thai === 1)
-            .map((c) => ({ value: c.ten_danh_muc, label: c.ten_danh_muc }))
-        : defaultCategories.map((c) => ({ value: c, label: c }));
+            .map((c) => ({
+              value: c.id || c.value,
+              label: c.ten_danh_muc || c.label,
+            }))
+        : defaultCategories.map((c, idx) => ({ value: idx + 1, label: c }));
     setCategoryOptions(activeCategories);
 
     // Load sizes from localStorage or use default
@@ -136,6 +146,37 @@ const AddProduct = () => {
             .map((c) => ({ value: c.ten_mau_sac, label: c.ten_mau_sac }))
         : defaultColors.map((c) => ({ value: c, label: c }));
     setColorOptions(activeColors);
+  }, []);
+
+  useEffect(() => {
+    const fetchOptions = async () => {
+      try {
+        const [danhMuc, chatLieu, kichCo, mauSac] = await Promise.all([
+          getAllDanhMuc(),
+          getAllChatLieu(),
+          getAllKichCo(),
+          getAllMauSac(),
+        ]);
+        setCategoryOptions(
+          (danhMuc || []).map((dm) => ({ value: dm.id, label: dm.tenDanhMuc }))
+        );
+        setMaterialOptions(
+          (chatLieu || []).map((cl) => ({
+            value: cl.id,
+            label: cl.tenChatLieu,
+          }))
+        );
+        setSizeOptions(
+          (kichCo || []).map((kc) => ({ value: kc.id, label: kc.tenKichCo }))
+        );
+        setColorOptions(
+          (mauSac || []).map((ms) => ({ value: ms.id, label: ms.tenMauSac }))
+        );
+      } catch (err) {
+        console.error("Lỗi khi lấy thuộc tính sản phẩm:", err);
+      }
+    };
+    fetchOptions();
   }, []);
 
   const handleProductNameChange = (option, actionMeta) => {
@@ -191,7 +232,6 @@ const AddProduct = () => {
     sizes,
     colors,
     material,
-    quantity,
     importPrice,
     sellPrice,
   ]);
@@ -397,141 +437,52 @@ const AddProduct = () => {
     );
   };
 
-  const handleConfirmSave = () => {
-    const localProducts = JSON.parse(localStorage.getItem("products") || "[]");
-    const allKnownProducts = [...localProducts, ...productsData];
-
-    const foundProduct = allKnownProducts.find(
-      (p) => p.ten_san_pham === productName.value
-    );
-
-    if (!foundProduct) {
-      // Find the max ID from all products (local storage + initial data)
-      const maxId = allKnownProducts.reduce(
-        (max, p) => (p.id > max ? p.id : max),
-        0
-      );
-      const newId = maxId + 1;
-
-      // Generate ma_san_pham based on the new ID
-      const ma_san_pham = "SP" + String(newId).padStart(3, "0");
-
+  const handleConfirmSave = async () => {
+    if (!productName) return;
+    try {
+      // Chuẩn bị dữ liệu sản phẩm gửi lên API
       const sanPham = {
-        id: newId, // The new auto-incrementing ID
-        ma_san_pham,
-        ten_san_pham: productName.value,
-        ten_danh_muc: category,
-        mo_ta: "",
-        trang_thai: 3, // Mặc định là Sắp ra mắt
-        id_nguoi_tao: JSON.parse(localStorage.getItem("currentUser"))?.id || 1,
-        ngay_tao: new Date().toISOString(),
-        id_nguoi_cap_nhat: null,
-        ngay_cap_nhat: null,
-        deleted_at: null,
-        id_nguoi_xoa: null,
+        tenSanPham: productName.value,
+        idDanhMuc: category, // Đã là số
+        moTa: "",
+        trangThai: 3, // Sắp ra mắt
+        // Thêm các trường khác nếu backend yêu cầu
       };
-
-      const updatedLocalProducts = [sanPham, ...localProducts];
-      localStorage.setItem("products", JSON.stringify(updatedLocalProducts));
-
-      // Lưu chi tiết sản phẩm (biến thể) với ID tự tăng
-      const existingDetails = JSON.parse(
-        localStorage.getItem("productDetails") || "[]"
-      );
-      let maxDetailId = existingDetails.reduce(
-        (max, d) => (d.id > max ? d.id : max),
-        0
-      );
-
-      const productVariantsToSave = productVariants.map((variant) => {
-        maxDetailId++;
-        return {
-          id: maxDetailId,
-          id_san_pham: sanPham.id,
-          id_kich_co: variant.size,
-          id_mau_sac: variant.color,
-          id_chat_lieu: variant.material,
-          so_luong: variant.quantity,
-          gia: variant.gia_ban,
-          gia_nhap: variant.gia_nhap,
-          images: variant.images,
-          id_nguoi_tao:
-            JSON.parse(localStorage.getItem("currentUser"))?.id || 1,
-          ngay_tao: new Date().toISOString(),
-          id_nguoi_cap_nhat: null,
-          ngay_cap_nhat: null,
-        };
-      });
-
-      existingDetails.push(...productVariantsToSave);
-      localStorage.setItem("productDetails", JSON.stringify(existingDetails));
-
-      localStorage.setItem("lastSavedProductCode", ma_san_pham);
-    } else {
-      // Logic for adding variants to an EXISTING product
-      const sanPham = foundProduct;
-      const existingDetails = JSON.parse(
-        localStorage.getItem("productDetails") || "[]"
-      );
-      let maxDetailId = existingDetails.reduce(
-        (max, d) => (d.id > max ? d.id : max),
-        0
-      );
-
-      // Filter out variants that might already exist for this product, color, and size to avoid duplicates
-      const newProductVariantsToSave = productVariants
-        .filter(
-          (variant) =>
-            !existingDetails.some(
-              (detail) =>
-                detail.id_san_pham === sanPham.id &&
-                detail.id_mau_sac === variant.color &&
-                detail.id_kich_co === variant.size
-            )
-        )
-        .map((variant) => {
-          maxDetailId++;
-          return {
-            id: maxDetailId,
-            id_san_pham: sanPham.id,
-            id_kich_co: variant.size,
-            id_mau_sac: variant.color,
-            id_chat_lieu: variant.material,
-            so_luong: variant.quantity,
-            gia: variant.gia_ban,
-            gia_nhap: variant.gia_nhap,
-            images: variant.images,
-            id_nguoi_tao:
-              JSON.parse(localStorage.getItem("currentUser"))?.id || 1,
-            ngay_tao: new Date().toISOString(),
-            id_nguoi_cap_nhat: null,
-            ngay_cap_nhat: null,
+      // Tạo sản phẩm cha
+      const created = await createSanPham(sanPham);
+      // Lấy id sản phẩm vừa tạo (nếu backend trả về)
+      const idSanPham = created?.id || created?.data?.id;
+      // Tạo chi tiết sản phẩm cho từng biến thể
+      if (idSanPham && productVariants && productVariants.length > 0) {
+        for (const v of productVariants) {
+          const chiTiet = {
+            idSanPham: idSanPham,
+            idMauSac: v.color,
+            idKichCo: v.size,
+            idChatLieu: material,
+            soLuong: v.quantity,
+            giaNhap: v.gia_nhap,
+            gia: v.gia_ban,
+            trangThai: 1,
+            idKhuyenMai: 0, // Không có khuyến mãi
+            idNguoiTao: 1, // Hoặc lấy từ user hiện tại
           };
-        });
-
-      if (newProductVariantsToSave.length > 0) {
-        existingDetails.push(...newProductVariantsToSave);
-        localStorage.setItem("productDetails", JSON.stringify(existingDetails));
+          await createChiTietSanPham(chiTiet);
+        }
       }
-
-      const localProductsToUpdate = [...localProducts];
-      const isInLocal = localProductsToUpdate.some((p) => p.id === sanPham.id);
-
-      if (!isInLocal) {
-        localProductsToUpdate.unshift(sanPham);
-        localStorage.setItem("products", JSON.stringify(localProductsToUpdate));
-      }
-
-      localStorage.setItem("lastSavedProductCode", sanPham.ma_san_pham);
+      setShowConfirmModal(false);
+      setShowSuccessToast(true);
+      setTimeout(() => {
+        setShowSuccessToast(false);
+        navigate("/dashboard/products");
+      }, 1500);
+    } catch (error) {
+      setShowConfirmModal(false);
+      alert(
+        "Lỗi khi thêm sản phẩm: " +
+          (error?.response?.data?.message || error.message)
+      );
     }
-
-    // Đóng modal xác nhận và hiện toast
-    setShowConfirmModal(false);
-    setShowSuccessToast(true);
-    setTimeout(() => {
-      setShowSuccessToast(false);
-      navigate("/dashboard/products");
-    }, 1500);
   };
 
   const handleSaveProduct = (e) => {
@@ -562,12 +513,14 @@ const AddProduct = () => {
             border: "none",
           }}
           onClick={() => setShowModal(true)}
+          title="Thêm nhanh sản phẩm cơ bản (tên, danh mục)"
         >
           <FaPlus />
         </button>
       </div>
 
       {/* Form chính đầy đủ */}
+
       <form
         className="p-4 border rounded bg-white shadow-sm"
         onSubmit={(e) => e.preventDefault()}
@@ -916,7 +869,7 @@ const AddProduct = () => {
           className="btn btn-primary px-4 fw-bold"
           onClick={handleSaveProduct}
         >
-          Lưu sản phẩm
+          Lưu chi tiết sản phẩm
         </button>
       </div>
 
@@ -1073,7 +1026,8 @@ const AddProduct = () => {
           <div className="modal-dialog modal-dialog-centered">
             <div className="modal-content">
               <div className="modal-header border-0 pb-0">
-                <h5 className="modal-title fw-bold">Thêm áo</h5>
+                <h5 className="modal-title fw-bold">Thêm sản phẩm</h5>
+
                 <button
                   type="button"
                   className="btn-close"

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { FaToggleOn, FaToggleOff } from "react-icons/fa";
 import Toast from "../components/Toast";
 import { sampleColors, sampleMaterials } from "../data/sampleData";
+import { getAllMauSac, updateMauSacStatus } from "../services/mauSacService";
 
 const Colors = () => {
   const [colors, setColors] = useState([]);
@@ -21,33 +22,28 @@ const Colors = () => {
   });
 
   useEffect(() => {
-    let savedColors = [];
-    try {
-      savedColors = JSON.parse(localStorage.getItem("colors") || "[]");
-    } catch {
-      savedColors = [];
-    }
-    // Nếu không có dữ liệu hợp lệ thì lấy lại dữ liệu mẫu
-    if (!Array.isArray(savedColors) || savedColors.length === 0) {
-      localStorage.setItem("colors", JSON.stringify(sampleColors));
-      setColors(sampleColors);
-      setFilteredColors(sampleColors);
-    } else {
-      setColors(savedColors);
-      setFilteredColors(savedColors);
-    }
+    const fetchColors = async () => {
+      try {
+        const data = await getAllMauSac();
+        setColors(data || []);
+      } catch (err) {
+        setColors([]);
+        console.error("Lỗi khi lấy màu sắc:", err);
+      }
+    };
+    fetchColors();
   }, []);
 
   useEffect(() => {
     let result = colors;
     if (searchTerm !== "") {
       result = result.filter((color) =>
-        color.ten_mau_sac.toLowerCase().includes(searchTerm.toLowerCase())
+        color.tenMauSac.toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
     if (statusFilter !== "") {
       result = result.filter(
-        (color) => color.trang_thai === parseInt(statusFilter)
+        (color) => color.trangThai === parseInt(statusFilter)
       );
     }
     setFilteredColors(result);
@@ -105,44 +101,40 @@ const Colors = () => {
     }
   };
 
-  const handleToggleStatus = (id) => {
-    const updatedColors = colors.map((color) => {
-      if (color.id === id) {
-        return {
-          ...color,
-          trang_thai: color.trang_thai === 1 ? 0 : 1,
-        };
-      }
-      return color;
-    });
-
-    setColors(updatedColors);
-    localStorage.setItem("colors", JSON.stringify(updatedColors));
-
-    const color = colors.find((c) => c.id === id);
-    const statusText = color.trang_thai === 1 ? "tắt" : "bật";
-    setToast({
-      visible: true,
-      type: "info",
-      message: `Đã ${statusText} trạng thái màu "${color.ten_mau_sac}"!`,
-    });
-    setTimeout(() => setToast((t) => ({ ...t, visible: false })), 1500);
+  const handleToggleStatus = async (id, currentStatus) => {
+    try {
+      const color = colors.find((c) => c.id === id);
+      if (!color) return;
+      const updatedColor = {
+        id: color.id,
+        tenMauSac: color.tenMauSac,
+        trangThai: currentStatus === 1 ? 0 : 1,
+      };
+      await updateMauSacStatus(id, updatedColor);
+      const data = await getAllMauSac();
+      setColors(data || []);
+      setToast({
+        visible: true,
+        type: "info",
+        message: `Đã đổi trạng thái màu "${color.tenMauSac}"!`,
+      });
+      setTimeout(() => setToast((t) => ({ ...t, visible: false })), 1500);
+    } catch (err) {
+      alert("Lỗi khi cập nhật trạng thái!");
+      console.error("Lỗi cập nhật:", err?.response?.data || err);
+    }
   };
 
-  const getStatusText = (status) => {
-    return status === 1 ? "Hoạt động" : "Không hoạt động";
-  };
-
-  const getStatusBadgeStyle = (status) => {
-    return {
-      padding: "4px 8px",
-      borderRadius: "12px",
-      fontSize: "12px",
-      fontWeight: "600",
-      backgroundColor: status === 1 ? "#d1fae5" : "#fee2e2",
-      color: status === 1 ? "#065f46" : "#991b1b",
-    };
-  };
+  const getStatusText = (status) =>
+    status === 1 ? "Hoạt động" : "Không hoạt động";
+  const getStatusBadgeStyle = (status) => ({
+    padding: "4px 8px",
+    borderRadius: "12px",
+    fontSize: "12px",
+    fontWeight: "600",
+    backgroundColor: status === 1 ? "#d1fae5" : "#fee2e2",
+    color: status === 1 ? "#065f46" : "#991b1b",
+  });
 
   // Styles
   const containerStyle = {
@@ -358,29 +350,29 @@ const Colors = () => {
           {filteredColors.map((color) => (
             <tr key={color.id}>
               <td style={{ ...tdStyle, textAlign: "center" }}>
-                {color.ten_mau_sac}
+                {color.tenMauSac}
               </td>
               <td style={{ ...tdStyle, textAlign: "center" }}>
-                <span style={getStatusBadgeStyle(color.trang_thai)}>
-                  {getStatusText(color.trang_thai)}
+                <span style={getStatusBadgeStyle(color.trangThai)}>
+                  {getStatusText(color.trangThai)}
                 </span>
               </td>
               <td style={{ ...tdStyle, textAlign: "center" }}>
                 <button
-                  onClick={() => handleToggleStatus(color.id)}
+                  onClick={() => handleToggleStatus(color.id, color.trangThai)}
                   style={{
                     background: "none",
                     border: "none",
                     cursor: "pointer",
                     fontSize: "20px",
-                    color: color.trang_thai === 1 ? "#10b981" : "#6b7280",
+                    color: color.trangThai === 1 ? "#10b981" : "#6b7280",
                     transition: "color 0.2s",
                   }}
                   title={
-                    color.trang_thai === 1 ? "Tắt hoạt động" : "Bật hoạt động"
+                    color.trangThai === 1 ? "Tắt hoạt động" : "Bật hoạt động"
                   }
                 >
-                  {color.trang_thai === 1 ? <FaToggleOn /> : <FaToggleOff />}
+                  {color.trangThai === 1 ? <FaToggleOn /> : <FaToggleOff />}
                 </button>
               </td>
             </tr>

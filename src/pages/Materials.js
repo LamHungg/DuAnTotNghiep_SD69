@@ -2,6 +2,10 @@ import React, { useState, useEffect } from "react";
 import { FaToggleOn, FaToggleOff } from "react-icons/fa";
 import { sampleMaterials } from "../data/sampleData";
 import Toast from "../components/Toast";
+import {
+  getAllChatLieu,
+  updateChatLieuStatus,
+} from "../services/chatLieuService";
 
 const Materials = () => {
   const [materials, setMaterials] = useState([]);
@@ -16,71 +20,66 @@ const Materials = () => {
   });
 
   useEffect(() => {
-    let savedMaterials = [];
-    try {
-      savedMaterials = JSON.parse(localStorage.getItem("materials") || "[]");
-    } catch {
-      savedMaterials = [];
-    }
-    // Nếu không có dữ liệu hợp lệ thì lấy lại dữ liệu mẫu
-    if (!Array.isArray(savedMaterials) || savedMaterials.length === 0) {
-      localStorage.setItem("materials", JSON.stringify(sampleMaterials));
-      setMaterials(sampleMaterials);
-      setFilteredMaterials(sampleMaterials);
-    } else {
-      setMaterials(savedMaterials);
-      setFilteredMaterials(savedMaterials);
-    }
+    const fetchMaterials = async () => {
+      try {
+        const data = await getAllChatLieu();
+        setMaterials(data || []);
+      } catch (err) {
+        setMaterials([]);
+        console.error("Lỗi khi lấy chất liệu:", err);
+      }
+    };
+    fetchMaterials();
   }, []);
 
   useEffect(() => {
     let result = materials;
     if (searchTerm !== "") {
       result = result.filter((material) =>
-        material.ten_chat_lieu.toLowerCase().includes(searchTerm.toLowerCase())
+        material.tenChatLieu.toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
     if (statusFilter !== "") {
       result = result.filter(
-        (material) => material.trang_thai === parseInt(statusFilter)
+        (material) => material.trangThai === parseInt(statusFilter)
       );
     }
     setFilteredMaterials(result);
   }, [searchTerm, statusFilter, materials]);
 
-  const getStatusText = (status) => {
-    return status === 1 ? "Đang hoạt động" : "Ngừng hoạt động";
-  };
+  const getStatusText = (status) =>
+    status === 1 ? "Đang hoạt động" : "Ngừng hoạt động";
+  const getStatusBadgeStyle = (status) => ({
+    padding: "4px 8px",
+    borderRadius: "12px",
+    fontSize: "12px",
+    fontWeight: "600",
+    backgroundColor: status === 1 ? "#d1fae5" : "#fee2e2",
+    color: status === 1 ? "#065f46" : "#991b1b",
+  });
 
-  const getStatusBadgeStyle = (status) => {
-    return {
-      padding: "4px 8px",
-      borderRadius: "12px",
-      fontSize: "12px",
-      fontWeight: "600",
-      backgroundColor: status === 1 ? "#d1fae5" : "#fee2e2",
-      color: status === 1 ? "#065f46" : "#991b1b",
-    };
-  };
-
-  const handleToggleStatus = (id) => {
-    const updatedMaterials = materials.map((material) => {
-      if (material.id === id) {
-        return { ...material, trang_thai: material.trang_thai === 1 ? 0 : 1 };
-      }
-      return material;
-    });
-    setMaterials(updatedMaterials);
-    localStorage.setItem("materials", JSON.stringify(updatedMaterials));
-
-    const material = materials.find((m) => m.id === id);
-    const statusText = material.trang_thai === 1 ? "tắt" : "bật";
-    setToast({
-      visible: true,
-      type: "info",
-      message: `Đã ${statusText} trạng thái chất liệu "${material.ten_chat_lieu}"!`,
-    });
-    setTimeout(() => setToast((t) => ({ ...t, visible: false })), 1500);
+  const handleToggleStatus = async (id, currentStatus) => {
+    try {
+      const material = materials.find((m) => m.id === id);
+      if (!material) return;
+      const updatedMaterial = {
+        id: material.id,
+        tenChatLieu: material.tenChatLieu,
+        trangThai: currentStatus === 1 ? 0 : 1,
+      };
+      await updateChatLieuStatus(id, updatedMaterial);
+      const data = await getAllChatLieu();
+      setMaterials(data || []);
+      setToast({
+        visible: true,
+        type: "info",
+        message: `Đã đổi trạng thái chất liệu "${material.tenChatLieu}"!`,
+      });
+      setTimeout(() => setToast((t) => ({ ...t, visible: false })), 1500);
+    } catch (err) {
+      alert("Lỗi khi cập nhật trạng thái!");
+      console.error("Lỗi cập nhật:", err?.response?.data || err);
+    }
   };
 
   const handleAddMaterial = (e) => {
@@ -234,31 +233,31 @@ const Materials = () => {
           {filteredMaterials.map((material) => (
             <tr key={material.id}>
               <td style={{ ...tdStyle, textAlign: "center" }}>
-                {material.ten_chat_lieu}
+                {material.tenChatLieu}
               </td>
               <td style={{ ...tdStyle, textAlign: "center" }}>
-                <span style={getStatusBadgeStyle(material.trang_thai)}>
-                  {getStatusText(material.trang_thai)}
+                <span style={getStatusBadgeStyle(material.trangThai)}>
+                  {getStatusText(material.trangThai)}
                 </span>
               </td>
               <td style={{ ...tdStyle, textAlign: "center" }}>
                 <button
-                  onClick={() => handleToggleStatus(material.id)}
+                  onClick={() =>
+                    handleToggleStatus(material.id, material.trangThai)
+                  }
                   style={{
                     background: "none",
                     border: "none",
                     cursor: "pointer",
                     fontSize: "20px",
-                    color: material.trang_thai === 1 ? "#10b981" : "#6b7280",
+                    color: material.trangThai === 1 ? "#10b981" : "#6b7280",
                     transition: "color 0.2s",
                   }}
                   title={
-                    material.trang_thai === 1
-                      ? "Tắt hoạt động"
-                      : "Bật hoạt động"
+                    material.trangThai === 1 ? "Tắt hoạt động" : "Bật hoạt động"
                   }
                 >
-                  {material.trang_thai === 1 ? <FaToggleOn /> : <FaToggleOff />}
+                  {material.trangThai === 1 ? <FaToggleOn /> : <FaToggleOff />}
                 </button>
               </td>
             </tr>

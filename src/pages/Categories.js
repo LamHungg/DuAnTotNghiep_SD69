@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { FaToggleOn, FaToggleOff } from "react-icons/fa";
+import { getAllDanhMuc, updateDanhMucStatus } from "../services/danhMucService";
 
 const Categories = () => {
   const [categories, setCategories] = useState([]);
@@ -7,9 +8,16 @@ const Categories = () => {
   const [statusFilter, setStatusFilter] = useState("");
 
   useEffect(() => {
-    // Lấy dữ liệu từ localStorage hoặc tạo dữ liệu mẫu
-    const saved = JSON.parse(localStorage.getItem("categories") || "[]");
-    setCategories(saved);
+    const fetchCategories = async () => {
+      try {
+        const data = await getAllDanhMuc();
+        setCategories(data || []);
+      } catch (err) {
+        console.error("Lỗi khi lấy danh mục:", err);
+        setCategories([]);
+      }
+    };
+    fetchCategories();
   }, []);
 
   const getStatusText = (status) =>
@@ -24,7 +32,7 @@ const Categories = () => {
   });
 
   const filteredCategories = categories.filter((cat) => {
-    const matchesSearch = cat.ten_danh_muc
+    const matchesSearch = cat.tenDanhMuc
       ?.toLowerCase()
       .includes(searchTerm.toLowerCase());
     const matchesStatus =
@@ -32,16 +40,28 @@ const Categories = () => {
     return matchesSearch && matchesStatus;
   });
 
-  const handleToggleStatus = (id) => {
-    setCategories((prev) => {
-      const updated = prev.map((cat) =>
-        cat.id === id
-          ? { ...cat, trang_thai: cat.trang_thai === 1 ? 0 : 1 }
-          : cat
-      );
-      localStorage.setItem("categories", JSON.stringify(updated));
-      return updated;
-    });
+  const handleToggleStatus = async (id, currentStatus) => {
+    console.log("Toggle click:", id, currentStatus);
+    try {
+      const cat = categories.find((c) => c.id === id);
+      if (!cat) return;
+      const updatedCat = {
+        id: cat.id,
+        tenDanhMuc: cat.tenDanhMuc,
+        idDanhMucCha: cat.idDanhMucCha,
+        trangThai: currentStatus === 1 ? 0 : 1,
+        idNguoiTao: cat.idNguoiTao,
+        ngayTao: cat.ngayTao,
+        idNguoiCapNhat: cat.idNguoiCapNhat,
+        ngayCapNhat: cat.ngayCapNhat,
+      };
+      await updateDanhMucStatus(id, updatedCat);
+      const data = await getAllDanhMuc();
+      setCategories(data || []);
+    } catch (err) {
+      alert("Lỗi khi cập nhật trạng thái!");
+      console.error("Lỗi cập nhật:", err?.response?.data || err);
+    }
   };
 
   return (
@@ -92,11 +112,11 @@ const Categories = () => {
               <tr key={cat.id}>
                 <td style={{ padding: 12, textAlign: "center" }}>{cat.id}</td>
                 <td style={{ padding: 12, textAlign: "center" }}>
-                  {cat.ten_danh_muc}
+                  {cat.tenDanhMuc}
                 </td>
                 <td style={{ padding: 12, textAlign: "center" }}>
-                  <span style={getStatusBadgeStyle(cat.trang_thai)}>
-                    {getStatusText(cat.trang_thai)}
+                  <span style={getStatusBadgeStyle(cat.trangThai)}>
+                    {getStatusText(cat.trangThai)}
                   </span>
                 </td>
                 <td style={{ padding: 12, textAlign: "center" }}>
@@ -108,11 +128,11 @@ const Categories = () => {
                       fontSize: 20,
                     }}
                     title={
-                      cat.trang_thai === 1 ? "Tắt hoạt động" : "Bật hoạt động"
+                      cat.trangThai === 1 ? "Tắt hoạt động" : "Bật hoạt động"
                     }
-                    onClick={() => handleToggleStatus(cat.id)}
+                    onClick={() => handleToggleStatus(cat.id, cat.trangThai)}
                   >
-                    {cat.trang_thai === 1 ? (
+                    {cat.trangThai === 1 ? (
                       <FaToggleOn color="#10b981" />
                     ) : (
                       <FaToggleOff color="#6b7280" />
