@@ -2,9 +2,11 @@ import React, { useState, useEffect } from "react";
 import { FaToggleOn, FaToggleOff } from "react-icons/fa";
 import { sampleMaterials } from "../data/sampleData";
 import Toast from "../components/Toast";
+import ConfirmModal from "../components/ConfirmModal";
 import {
   getAllChatLieu,
   updateChatLieuStatus,
+  createChatLieu,
 } from "../services/chatLieuService";
 
 const Materials = () => {
@@ -17,6 +19,13 @@ const Materials = () => {
     visible: false,
     type: "info",
     message: "",
+  });
+  const [newMaterial, setNewMaterial] = useState("");
+  const [newMaterialError, setNewMaterialError] = useState("");
+  const [confirmModal, setConfirmModal] = useState({
+    visible: false,
+    action: null,
+    data: null,
   });
 
   useEffect(() => {
@@ -58,33 +67,89 @@ const Materials = () => {
     color: status === 1 ? "#065f46" : "#991b1b",
   });
 
-  const handleToggleStatus = async (id, currentStatus) => {
-    try {
-      const material = materials.find((m) => m.id === id);
-      if (!material) return;
-      const updatedMaterial = {
-        id: material.id,
-        tenChatLieu: material.tenChatLieu,
-        trangThai: currentStatus === 1 ? 0 : 1,
-      };
-      await updateChatLieuStatus(id, updatedMaterial);
-      const data = await getAllChatLieu();
-      setMaterials(data || []);
-      setToast({
-        visible: true,
-        type: "info",
-        message: `Đã đổi trạng thái chất liệu "${material.tenChatLieu}"!`,
-      });
-      setTimeout(() => setToast((t) => ({ ...t, visible: false })), 1500);
-    } catch (err) {
-      alert("Lỗi khi cập nhật trạng thái!");
-      console.error("Lỗi cập nhật:", err?.response?.data || err);
-    }
+  const handleToggleStatus = (id, currentStatus) => {
+    setConfirmModal({
+      visible: true,
+      action: "toggle",
+      data: { id, currentStatus },
+    });
   };
 
-  const handleAddMaterial = (e) => {
+  const handleConfirmModal = async () => {
+    if (confirmModal.action === "add") {
+      if (!newMaterial.trim()) {
+        setNewMaterialError("Tên chất liệu không được để trống");
+        return;
+      }
+      // Kiểm tra trùng lặp
+      const isDuplicate = materials.some(
+        (material) =>
+          material.tenChatLieu?.toLowerCase() ===
+          newMaterial.trim().toLowerCase()
+      );
+      if (isDuplicate) {
+        setNewMaterialError("Chất liệu này đã tồn tại");
+        return;
+      }
+      try {
+        await createChatLieu({
+          tenChatLieu: newMaterial.trim(),
+          trangThai: 1,
+        });
+        setNewMaterial("");
+        setShowAddForm(false);
+        setNewMaterialError("");
+        const data = await getAllChatLieu();
+        setMaterials(data || []);
+        setToast({
+          visible: true,
+          type: "success",
+          message: "Thêm chất liệu thành công!",
+        });
+        setTimeout(() => setToast((t) => ({ ...t, visible: false })), 1500);
+      } catch (err) {
+        setNewMaterialError("Lỗi khi thêm chất liệu!");
+        setToast({
+          visible: true,
+          type: "error",
+          message: "Lỗi khi thêm chất liệu!",
+        });
+        setTimeout(() => setToast((t) => ({ ...t, visible: false })), 1500);
+      }
+    } else if (confirmModal.action === "toggle") {
+      try {
+        const { id, currentStatus } = confirmModal.data;
+        const material = materials.find((m) => m.id === id);
+        if (!material) return;
+        const updatedMaterial = {
+          id: material.id,
+          tenChatLieu: material.tenChatLieu,
+          trangThai: currentStatus === 1 ? 0 : 1,
+        };
+        await updateChatLieuStatus(id, updatedMaterial);
+        const data = await getAllChatLieu();
+        setMaterials(data || []);
+        setToast({
+          visible: true,
+          type: "info",
+          message: `Đã đổi trạng thái chất liệu "${material.tenChatLieu}"!`,
+        });
+        setTimeout(() => setToast((t) => ({ ...t, visible: false })), 1500);
+      } catch (err) {
+        alert("Lỗi khi cập nhật trạng thái!");
+        console.error("Lỗi cập nhật:", err?.response?.data || err);
+      }
+    }
+    setConfirmModal({ visible: false, action: null, data: null });
+  };
+
+  const handleAddMaterial = async (e) => {
     e.preventDefault();
-    // Logic to add new material
+    setConfirmModal({
+      visible: true,
+      action: "add",
+      data: { name: newMaterial },
+    });
   };
 
   // Styles
@@ -195,7 +260,24 @@ const Materials = () => {
 
       {showAddForm && (
         <form onSubmit={handleAddMaterial} style={addFormStyle}>
-          {/* Add form fields here */}
+          <div style={{ marginBottom: 16 }}>
+            <label style={{ fontWeight: 500 }}>Tên chất liệu</label>
+            <input
+              type="text"
+              value={newMaterial}
+              onChange={(e) => setNewMaterial(e.target.value)}
+              style={{ ...inputStyle, marginTop: 8, width: "100%" }}
+              placeholder="Nhập tên chất liệu..."
+            />
+            {newMaterialError && (
+              <div style={{ color: "#dc3545", marginTop: 4 }}>
+                {newMaterialError}
+              </div>
+            )}
+          </div>
+          <button type="submit" style={buttonStyle}>
+            Lưu
+          </button>
         </form>
       )}
 
@@ -279,6 +361,24 @@ const Materials = () => {
           onClose={() => setToast((t) => ({ ...t, visible: false }))}
         />
       )}
+
+      <ConfirmModal
+        visible={confirmModal.visible}
+        title="Xác nhận"
+        message={
+          confirmModal.action === "add"
+            ? `Bạn có chắc chắn muốn thêm chất liệu "${confirmModal.data?.name}"?`
+            : confirmModal.action === "toggle"
+            ? `Bạn có chắc chắn muốn đổi trạng thái chất liệu này?`
+            : "Bạn có chắc chắn?"
+        }
+        onConfirm={handleConfirmModal}
+        onCancel={() =>
+          setConfirmModal({ visible: false, action: null, data: null })
+        }
+        confirmText="Xác nhận"
+        cancelText="Hủy"
+      />
     </div>
   );
 };

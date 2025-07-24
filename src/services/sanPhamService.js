@@ -103,11 +103,36 @@ export const updateChiTietSanPham = async (id, chiTietSanPhamObj) => {
   }
 };
 
-// Upload hình ảnh sản phẩm
-export const uploadHinhAnh = async (id, formData) => {
+// Xóa chi tiết sản phẩm
+export const deleteChiTietSanPham = async (id) => {
+  try {
+    const response = await axios.delete(
+      `http://localhost:8080/api/chi-tiet-san-pham/${id}`
+    );
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
+
+// Lọc chi tiết sản phẩm
+export const locChiTietSanPham = async (params) => {
+  try {
+    const response = await axios.get(
+      "http://localhost:8080/api/chi-tiet-san-pham/loc",
+      { params }
+    );
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
+
+// Sửa lại upload hình ảnh sản phẩm cho đúng endpoint backend
+export const uploadHinhAnh = async (formData) => {
   try {
     const response = await axios.post(
-      `http://localhost:8080/api/hinh-anh-san-pham/upload/${id}`,
+      `http://localhost:8080/api/hinhanhsanpham`,
       formData,
       {
         headers: {
@@ -129,6 +154,50 @@ export const createChiTietSanPham = async (chiTietSanPhamObj) => {
       chiTietSanPhamObj
     );
     return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
+
+// Đổi trạng thái sản phẩm (soft delete)
+export const softDeleteSanPham = async (id, sanPhamObj) => {
+  try {
+    const response = await axios.put(
+      `http://localhost:8080/api/sanpham/${id}`,
+      { ...sanPhamObj, trangThai: 0 }
+    );
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
+
+// Đổi trạng thái chi tiết sản phẩm (soft delete)
+export const softDeleteChiTietSanPham = async (id, chiTietObj) => {
+  try {
+    const response = await axios.put(
+      `http://localhost:8080/api/chi-tiet-san-pham/${id}`,
+      { ...chiTietObj, trangThai: 0 }
+    );
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
+
+// Upload ảnh lên server (API mới)
+export const uploadImageToServer = async (file) => {
+  const formData = new FormData();
+  formData.append("file", file);
+  try {
+    const response = await axios.post(
+      "http://localhost:8080/api/hinhanhsanpham/upload",
+      formData,
+      {
+        headers: { "Content-Type": "multipart/form-data" },
+      }
+    );
+    return response.data; // URL ảnh
   } catch (error) {
     throw error;
   }

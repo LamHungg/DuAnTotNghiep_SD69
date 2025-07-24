@@ -20,3 +20,15 @@ export const updateKichCoStatus = async (id, kichCoObj) => {
     throw error;
   }
 };
+
+export const createKichCo = async (kichCoObj) => {
+  try {
+    const response = await axios.post(
+      "http://localhost:8080/api/kichco",
+      kichCoObj
+    );
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};

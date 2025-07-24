@@ -4,12 +4,15 @@ import { FaPlus, FaTrash, FaImage } from "react-icons/fa";
 import Select from "react-select";
 import CreatableSelect from "react-select/creatable";
 import { productsData } from "../data/sampleData";
-import { createSanPham } from "../services/sanPhamService";
+import {
+  createSanPham,
+  createChiTietSanPham,
+  uploadImageToServer,
+} from "../services/sanPhamService";
 import { getAllDanhMuc } from "../services/danhMucService";
 import { getAllChatLieu } from "../services/chatLieuService";
 import { getAllKichCo } from "../services/kichCoService";
 import { getAllMauSac } from "../services/mauSacService";
-import { createChiTietSanPham } from "../services/sanPhamService";
 import authService from "../services/authService";
 
 // Dữ liệu mặc định để fallback nếu localStorage trống
@@ -291,14 +294,19 @@ const AddProduct = () => {
   };
 
   // Upload ảnh mới vào gallery
-  const handleUploadGalleryImg = (e) => {
+  const handleUploadGalleryImg = async (e) => {
     const file = e.target.files[0];
     if (file) {
       setUploadingGallery(true);
-      const url = URL.createObjectURL(file);
-      setGallery((prev) => [url, ...prev]);
-      setSelectedGalleryImgs((prev) => [url, ...prev]);
-      setTimeout(() => setUploadingGallery(false), 500); // giả lập upload
+      try {
+        const url = await uploadImageToServer(file); // upload lên backend, nhận URL
+        setGallery((prev) => [url, ...prev]);
+        setSelectedGalleryImgs((prev) => [url, ...prev]);
+      } catch (err) {
+        alert("Lỗi upload ảnh: " + (err?.message || ""));
+      } finally {
+        setUploadingGallery(false);
+      }
     }
   };
 

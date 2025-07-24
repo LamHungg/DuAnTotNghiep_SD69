@@ -1,8 +1,13 @@
 import React, { useState, useEffect } from "react";
 import { FaToggleOn, FaToggleOff } from "react-icons/fa";
 import Toast from "../components/Toast";
+import ConfirmModal from "../components/ConfirmModal";
 import { sampleColors, sampleMaterials } from "../data/sampleData";
-import { getAllMauSac, updateMauSacStatus } from "../services/mauSacService";
+import {
+  getAllMauSac,
+  updateMauSacStatus,
+  createMauSac,
+} from "../services/mauSacService";
 
 const Colors = () => {
   const [colors, setColors] = useState([]);
@@ -19,6 +24,11 @@ const Colors = () => {
     visible: false,
     type: "info",
     message: "",
+  });
+  const [confirmModal, setConfirmModal] = useState({
+    visible: false,
+    action: null,
+    data: null,
   });
 
   useEffect(() => {
@@ -53,7 +63,7 @@ const Colors = () => {
     setShowAddForm(true);
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
     // Validation
@@ -65,7 +75,7 @@ const Colors = () => {
     // Kiểm tra trùng lặp
     const isDuplicate = colors.some(
       (color) =>
-        color.ten_mau_sac.toLowerCase() === newColor.ten_mau_sac.toLowerCase()
+        color.tenMauSac?.toLowerCase() === newColor.ten_mau_sac.toLowerCase()
     );
     if (isDuplicate) {
       newErrors.ten_mau_sac = "Màu sắc này đã tồn tại";
@@ -76,53 +86,77 @@ const Colors = () => {
     );
 
     if (Object.keys(newErrors).length === 0) {
-      const colorToAdd = {
-        id: Date.now(),
-        ...newColor,
-      };
-
-      const updatedColors = [...colors, colorToAdd];
-      setColors(updatedColors);
-      localStorage.setItem("colors", JSON.stringify(updatedColors));
-
-      setNewColor({
-        ten_mau_sac: "",
-        trang_thai: 1,
-      });
-      setShowAddForm(false);
-      setNewColorError("");
-
-      setToast({
+      setConfirmModal({
         visible: true,
-        type: "success",
-        message: "Thêm màu sắc thành công!",
+        action: "add",
+        data: { name: newColor.ten_mau_sac },
       });
-      setTimeout(() => setToast((t) => ({ ...t, visible: false })), 1500);
     }
   };
 
-  const handleToggleStatus = async (id, currentStatus) => {
-    try {
-      const color = colors.find((c) => c.id === id);
-      if (!color) return;
-      const updatedColor = {
-        id: color.id,
-        tenMauSac: color.tenMauSac,
-        trangThai: currentStatus === 1 ? 0 : 1,
-      };
-      await updateMauSacStatus(id, updatedColor);
-      const data = await getAllMauSac();
-      setColors(data || []);
-      setToast({
-        visible: true,
-        type: "info",
-        message: `Đã đổi trạng thái màu "${color.tenMauSac}"!`,
-      });
-      setTimeout(() => setToast((t) => ({ ...t, visible: false })), 1500);
-    } catch (err) {
-      alert("Lỗi khi cập nhật trạng thái!");
-      console.error("Lỗi cập nhật:", err?.response?.data || err);
+  const handleToggleStatus = (id, currentStatus) => {
+    setConfirmModal({
+      visible: true,
+      action: "toggle",
+      data: { id, currentStatus },
+    });
+  };
+
+  const handleConfirmModal = async () => {
+    if (confirmModal.action === "add") {
+      try {
+        await createMauSac({
+          tenMauSac: confirmModal.data.name,
+          trangThai: 1,
+        });
+        setNewColor({
+          ten_mau_sac: "",
+          trang_thai: 1,
+        });
+        setShowAddForm(false);
+        setNewColorError("");
+        const data = await getAllMauSac();
+        setColors(data || []);
+        setToast({
+          visible: true,
+          type: "success",
+          message: "Thêm màu sắc thành công!",
+        });
+        setTimeout(() => setToast((t) => ({ ...t, visible: false })), 1500);
+      } catch (err) {
+        setNewColorError("Lỗi khi thêm màu sắc!");
+        setToast({
+          visible: true,
+          type: "error",
+          message: "Lỗi khi thêm màu sắc!",
+        });
+        setTimeout(() => setToast((t) => ({ ...t, visible: false })), 1500);
+      }
+    } else if (confirmModal.action === "toggle") {
+      try {
+        const { id, currentStatus } = confirmModal.data;
+        const color = colors.find((c) => c.id === id);
+        if (!color) return;
+        const updatedColor = {
+          id: color.id,
+          tenMauSac: color.tenMauSac,
+          trangThai: currentStatus === 1 ? 0 : 1,
+        };
+        await updateMauSacStatus(id, updatedColor);
+        const data = await getAllMauSac();
+        setColors(data || []);
+        setToast({
+          visible: true,
+          type: "info",
+          message: `Đã đổi trạng thái màu "${color.tenMauSac}"!`,
+        });
+        setTimeout(() => setToast((t) => ({ ...t, visible: false })), 1500);
+      } catch (err) {
+        alert("Lỗi khi cập nhật trạng thái!");
+        console.error("Lỗi cập nhật:", err?.response?.data || err);
+      }
     }
+    setConfirmModal({ visible: false, action: null, data: null });
   };
 
   const getStatusText = (status) =>
@@ -394,6 +428,24 @@ const Colors = () => {
           onClose={() => setToast((t) => ({ ...t, visible: false }))}
         />
       )}
+
+      <ConfirmModal
+        visible={confirmModal.visible}
+        title="Xác nhận"
+        message={
+          confirmModal.action === "add"
+            ? `Bạn có chắc chắn muốn thêm màu sắc \"${confirmModal.data?.name}\"?`
+            : confirmModal.action === "toggle"
+            ? `Bạn có chắc chắn muốn đổi trạng thái màu sắc này?`
+            : "Bạn có chắc chắn?"
+        }
+        onConfirm={handleConfirmModal}
+        onCancel={() =>
+          setConfirmModal({ visible: false, action: null, data: null })
+        }
+        confirmText="Xác nhận"
+        cancelText="Hủy"
+      />
     </div>
   );
 };

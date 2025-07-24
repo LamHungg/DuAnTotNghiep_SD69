@@ -2,7 +2,12 @@ import React, { useState, useEffect } from "react";
 import { FaToggleOn, FaToggleOff, FaPlus, FaSearch } from "react-icons/fa";
 import { sampleSizes } from "../data/sampleData";
 import Toast from "../components/Toast";
-import { getAllKichCo, updateKichCoStatus } from "../services/kichCoService";
+import {
+  getAllKichCo,
+  updateKichCoStatus,
+  createKichCo,
+} from "../services/kichCoService";
+import ConfirmModal from "../components/ConfirmModal";
 
 const Sizes = () => {
   const [sizes, setSizes] = useState([]);
@@ -17,6 +22,11 @@ const Sizes = () => {
     visible: false,
     type: "info",
     message: "",
+  });
+  const [confirmModal, setConfirmModal] = useState({
+    visible: false,
+    action: null,
+    data: null,
   });
 
   useEffect(() => {
@@ -47,38 +57,80 @@ const Sizes = () => {
     setFilteredSizes(result);
   }, [searchTerm, statusFilter, sizes]);
 
-  const handleAddNew = (e) => {
+  const handleAddNew = async (e) => {
     e.preventDefault();
     if (!newSizeName) {
       setNewSizeError("Tên kích thước không được để trống.");
       return;
     }
-    // ... existing code ...
-    setNewSizeError("");
+    setConfirmModal({
+      visible: true,
+      action: "add",
+      data: { name: newSizeName, type: sizeType },
+    });
   };
 
-  const handleToggleStatus = async (id, currentStatus) => {
-    try {
-      const size = sizes.find((s) => s.id === id);
-      if (!size) return;
-      const updatedSize = {
-        id: size.id,
-        tenKichCo: size.tenKichCo,
-        trangThai: currentStatus === 1 ? 0 : 1,
-      };
-      await updateKichCoStatus(id, updatedSize);
-      const data = await getAllKichCo();
-      setSizes(data || []);
-      setToast({
-        visible: true,
-        type: "info",
-        message: `Đã đổi trạng thái kích cỡ "${size.tenKichCo}"!`,
-      });
-      setTimeout(() => setToast((t) => ({ ...t, visible: false })), 1500);
-    } catch (err) {
-      alert("Lỗi khi cập nhật trạng thái!");
-      console.error("Lỗi cập nhật:", err?.response?.data || err);
+  const handleToggleStatus = (id, currentStatus) => {
+    setConfirmModal({
+      visible: true,
+      action: "toggle",
+      data: { id, currentStatus },
+    });
+  };
+
+  const handleConfirmModal = async () => {
+    if (confirmModal.action === "add") {
+      try {
+        await createKichCo({
+          tenKichCo: confirmModal.data.name,
+          trangThai: 1,
+          loai: confirmModal.data.type,
+        });
+        setNewSizeName("");
+        setShowAddForm(false);
+        setNewSizeError("");
+        const data = await getAllKichCo();
+        setSizes(data || []);
+        setToast({
+          visible: true,
+          type: "success",
+          message: "Thêm kích cỡ thành công!",
+        });
+        setTimeout(() => setToast((t) => ({ ...t, visible: false })), 1500);
+      } catch (err) {
+        setNewSizeError("Lỗi khi thêm kích cỡ!");
+        setToast({
+          visible: true,
+          type: "error",
+          message: "Lỗi khi thêm kích cỡ!",
+        });
+        setTimeout(() => setToast((t) => ({ ...t, visible: false })), 1500);
+      }
+    } else if (confirmModal.action === "toggle") {
+      try {
+        const { id, currentStatus } = confirmModal.data;
+        const size = sizes.find((s) => s.id === id);
+        if (!size) return;
+        const updatedSize = {
+          id: size.id,
+          tenKichCo: size.tenKichCo,
+          trangThai: currentStatus === 1 ? 0 : 1,
+        };
+        await updateKichCoStatus(id, updatedSize);
+        const data = await getAllKichCo();
+        setSizes(data || []);
+        setToast({
+          visible: true,
+          type: "info",
+          message: `Đã đổi trạng thái kích cỡ "${size.tenKichCo}"!`,
+        });
+        setTimeout(() => setToast((t) => ({ ...t, visible: false })), 1500);
+      } catch (err) {
+        alert("Lỗi khi cập nhật trạng thái!");
+        console.error("Lỗi cập nhật:", err?.response?.data || err);
+      }
     }
+    setConfirmModal({ visible: false, action: null, data: null });
   };
 
   const getStatusText = (status) =>
@@ -379,6 +431,25 @@ const Sizes = () => {
           onClose={() => setToast((t) => ({ ...t, visible: false }))}
         />
       )}
+
+      {/* Modal xác nhận */}
+      <ConfirmModal
+        visible={confirmModal.visible}
+        title="Xác nhận"
+        message={
+          confirmModal.action === "add"
+            ? `Bạn có chắc chắn muốn thêm kích cỡ "${confirmModal.data?.name}"?`
+            : confirmModal.action === "toggle"
+            ? `Bạn có chắc chắn muốn đổi trạng thái kích cỡ này?`
+            : "Bạn có chắc chắn?"
+        }
+        onConfirm={handleConfirmModal}
+        onCancel={() =>
+          setConfirmModal({ visible: false, action: null, data: null })
+        }
+        confirmText="Xác nhận"
+        cancelText="Hủy"
+      />
     </div>
   );
 };

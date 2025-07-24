@@ -20,3 +20,15 @@ export const updateMauSacStatus = async (id, mauSacObj) => {
     throw error;
   }
 };
+
+export const createMauSac = async (mauSacObj) => {
+  try {
+    const response = await axios.post(
+      "http://localhost:8080/api/mausac",
+      mauSacObj
+    );
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};

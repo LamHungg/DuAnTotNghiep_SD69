@@ -20,3 +20,15 @@ export const updateChatLieuStatus = async (id, chatLieuObj) => {
     throw error;
   }
 };
+
+export const createChatLieu = async (chatLieuObj) => {
+  try {
+    const response = await axios.post(
+      "http://localhost:8080/api/chatlieu",
+      chatLieuObj
+    );
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { FaEdit, FaPlus, FaSyncAlt, FaTrash } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import { productsData } from "../data/sampleData";
@@ -6,11 +6,13 @@ import {
   getAllSanPham,
   getAllChiTietSanPham,
   updateSanPhamStatus,
+  searchSanPham,
 } from "../services/sanPhamService";
 import { getAllDanhMuc } from "../services/danhMucService";
 import { getAllMauSac } from "../services/mauSacService";
 import { getAllKichCo } from "../services/kichCoService";
 import { getAllChatLieu } from "../services/chatLieuService";
+import { getAllFont } from "../services/fontService";
 
 const statusOptions = [
   { value: "", label: "Tất cả" },
@@ -40,6 +42,15 @@ const Products = () => {
   const [colors, setColors] = useState([]);
   const [sizes, setSizes] = useState([]);
   const [materials, setMaterials] = useState([]);
+  const [suggestions, setSuggestions] = useState([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const searchInputRef = useRef();
+  const debounceTimeout = useRef();
+  const [pendingSearch, setPendingSearch] = useState("");
+
+  // State cho input và tìm kiếm
+  const [searchInput, setSearchInput] = useState(""); // input thực tế
+  // const [searchText, setSearchText] = useState(""); // trigger tìm kiếm
 
   useEffect(() => {
     const fetchData = async () => {
@@ -114,45 +125,120 @@ const Products = () => {
     fetchOptions();
   }, []);
 
-  // Lọc sản phẩm theo trạng thái, danh mục, mã sản phẩm, tên sản phẩm
-  let filteredProducts = products.filter(
-    (p) =>
-      (status === "" || p.trangThai === Number(status)) &&
-      (category === "" || p.tenDanhMuc === category) &&
-      (searchText === "" ||
-        (p.maSanPham &&
-          p.maSanPham.toLowerCase().includes(searchText.toLowerCase())) ||
-        (p.tenSanPham &&
-          p.tenSanPham.toLowerCase().includes(searchText.toLowerCase())))
-  );
+  const normalizeKeyword = (str) =>
+    str.trim().replace(/\s+/g, " ").toLowerCase();
+
+  // Hàm buildSearchParams tối ưu: chỉ truyền 1 trong 2 nếu có thể
+  const buildSearchParams = (keyword, status, category) => {
+    const normalized = normalizeKeyword(keyword || "");
+    let params = {};
+    if (normalized) {
+      // Nếu nhập toàn số hoặc có tiền tố mã sản phẩm (ví dụ: SP-)
+      if (
+        /^\d+$/.test(normalized) ||
+        normalized.startsWith("sp-") ||
+        normalized.startsWith("SP-")
+      ) {
+        params.maSanPham = normalized;
+      } else if (/^[a-zA-Z\s]+$/.test(normalized)) {
+        params.tenSanPham = normalized;
+      } else {
+        // Nếu không rõ, truyền cả hai (giống cũ)
+        params.tenSanPham = normalized;
+        params.maSanPham = normalized;
+      }
+    }
+    if (status !== undefined && status !== "") {
+      params.trangThai = status;
+    }
+    if (category !== undefined && category !== "") {
+      params.idDanhMuc = category;
+    }
+    return params;
+  };
+
+  // useEffect tìm kiếm như cũ, chỉ đổi sang searchText
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        const params = buildSearchParams(searchText, status, category);
+        let spRes;
+        if (Object.keys(params).length > 0) {
+          spRes = await searchSanPham(params);
+        } else {
+          spRes = await getAllSanPham();
+        }
+        // Map lại sản phẩm cho đúng format giao diện
+        const mappedProducts = (spRes || []).map((p) => ({
+          id: p.id,
+          maSanPham: p.maSanPham,
+          tenSanPham: p.tenSanPham,
+          idDanhMuc: p.idDanhMuc,
+          tenDanhMuc:
+            allCategories.find((c) => c.id === p.idDanhMuc)?.tenDanhMuc || "",
+          trangThai: p.trangThai,
+        }));
+        setProducts(mappedProducts);
+      } catch (err) {
+        setProducts([]);
+        console.error("Lỗi khi tìm kiếm sản phẩm:", err);
+      }
+    };
+    fetchProducts();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchText, status, category]);
+
   // Nếu có lastSavedProductCode thì đưa sản phẩm đó lên đầu bảng (không tạo bản sao)
   const lastSavedCode = localStorage.getItem("lastSavedProductCode");
   if (lastSavedCode) {
-    const idx = filteredProducts.findIndex(
-      (p) => p.maSanPham === lastSavedCode
-    );
+    const idx = products.findIndex((p) => p.maSanPham === lastSavedCode);
     if (idx > 0) {
-      const [sp] = filteredProducts.splice(idx, 1);
-      filteredProducts.unshift(sp);
+      const [sp] = products.splice(idx, 1);
+      products.unshift(sp);
     }
   }
 
-  // Phân trang
-  const totalPages = Math.ceil(filteredProducts.length / PAGE_SIZE);
-  const paginatedProducts = filteredProducts.slice(
+  // Bỏ đoạn lọc filteredProducts local, chỉ phân trang trên products
+  const totalPages = Math.ceil(products.length / PAGE_SIZE);
+  const paginatedProducts = products.slice(
     (page - 1) * PAGE_SIZE,
     page * PAGE_SIZE
   );
 
-  // Xóa sản phẩm
-  const handleDelete = (id) => {
-    if (!window.confirm("Bạn có chắc chắn muốn xóa sản phẩm này?")) return;
-    // Xóa khỏi localStorage nếu là sản phẩm do người dùng thêm
-    let localProducts = JSON.parse(localStorage.getItem("products") || "[]");
-    localProducts = localProducts.filter((p) => p.id !== id);
-    localStorage.setItem("products", JSON.stringify(localProducts));
-    // Cập nhật lại danh sách
-    setProducts((prev) => prev.filter((p) => p.id !== id));
+  // Xóa sản phẩm (chuyển trạng thái thành ngừng bán)
+  const handleDelete = async (id) => {
+    if (!window.confirm("Bạn có chắc chắn muốn ngừng bán sản phẩm này?"))
+      return;
+    try {
+      const product = products.find((p) => p.id === id);
+      if (!product) return;
+      // Đổi trạng thái thành ngừng bán (0)
+      const updatedProduct = {
+        ...product,
+        trangThai: 0,
+      };
+      await updateSanPhamStatus(id, updatedProduct);
+      // Reload lại danh sách sau khi cập nhật
+      const [spRes, ctspRes] = await Promise.all([
+        getAllSanPham(),
+        getAllChiTietSanPham(),
+      ]);
+      // Map lại sản phẩm và cập nhật state
+      const mappedProducts = (spRes || []).map((p) => ({
+        id: p.id,
+        maSanPham: p.maSanPham,
+        tenSanPham: p.tenSanPham,
+        idDanhMuc: p.idDanhMuc,
+        tenDanhMuc:
+          allCategories.find((c) => c.id === p.idDanhMuc)?.tenDanhMuc || "",
+        trangThai: p.trangThai,
+      }));
+      setProducts(mappedProducts);
+      setProductDetails(ctspRes || []);
+    } catch (err) {
+      console.error("Lỗi khi cập nhật trạng thái sản phẩm:", err);
+      alert("Lỗi khi cập nhật trạng thái sản phẩm!");
+    }
   };
 
   const handleToggleStatus = async (productId) => {
@@ -299,6 +385,90 @@ const Products = () => {
     }
   };
 
+  // Scroll table về đầu khi tìm kiếm
+  const scrollToTable = () => {
+    const table = document.querySelector(".product-table-wrapper");
+    if (table) {
+      table.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  };
+
+  // Gợi ý khi nhập input
+  const handleInputChange = (e) => {
+    const value = e.target.value;
+    setSearchInput(value);
+    if (debounceTimeout.current) clearTimeout(debounceTimeout.current);
+    const normalized = normalizeKeyword(value);
+    if (normalized === "") {
+      setSuggestions([]);
+      setShowSuggestions(false);
+      return;
+    }
+    debounceTimeout.current = setTimeout(async () => {
+      try {
+        const params = buildSearchParams(value);
+        const res = await searchSanPham(params);
+        const unique = [];
+        const seen = new Set();
+        (res || []).forEach((p) => {
+          const key = p.maSanPham + "-" + p.tenSanPham;
+          if (!seen.has(key)) {
+            unique.push({
+              id: p.id,
+              maSanPham: p.maSanPham,
+              tenSanPham: p.tenSanPham,
+            });
+            seen.add(key);
+          }
+        });
+        setSuggestions(unique.slice(0, 8));
+        setShowSuggestions(true);
+      } catch (err) {
+        setSuggestions([]);
+        setShowSuggestions(false);
+      }
+    }, 300);
+  };
+
+  // Bấm nút tìm kiếm hoặc Enter
+  const handleSearch = () => {
+    setSearchText(searchInput);
+    setShowSuggestions(false);
+    setPage(1);
+  };
+
+  // Chọn suggestion
+  const handleSuggestionClick = (suggestion) => {
+    const value = suggestion.maSanPham || suggestion.tenSanPham;
+    setSearchInput(value);
+    setSearchText(value);
+    setShowSuggestions(false);
+    setPage(1);
+    scrollToTable();
+  };
+
+  // Clear input
+  const handleClearInput = () => {
+    setSearchInput("");
+    setSearchText("");
+    setShowSuggestions(false);
+    setPage(1);
+  };
+
+  // Đóng suggestions khi click ngoài
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (
+        searchInputRef.current &&
+        !searchInputRef.current.contains(e.target)
+      ) {
+        setShowSuggestions(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
   return (
     <div>
       <div className="text-center mb-4">
@@ -307,15 +477,109 @@ const Products = () => {
       {/* Search, Add, Filter */}
       <div className="product-search-card mb-3 p-4">
         <div className="row g-3">
-          <div className="col-md-6">
+          <div
+            className="col-md-6"
+            ref={searchInputRef}
+            style={{ position: "relative" }}
+          >
             <label className="form-label mb-2">Tìm kiếm sản phẩm</label>
-            <input
-              className="form-control product-search-input"
-              placeholder="Tìm kiếm theo mã hoặc tên sản phẩm..."
-              value={searchText}
-              onChange={(e) => setSearchText(e.target.value)}
-              style={{ height: 40 }}
-            />
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                position: "relative",
+              }}
+            >
+              <input
+                className="form-control product-search-input"
+                placeholder="Tìm kiếm theo mã hoặc tên sản phẩm..."
+                value={searchInput}
+                onChange={handleInputChange}
+                style={{ height: 40 }}
+                autoComplete="off"
+                onFocus={() =>
+                  suggestions.length > 0 && setShowSuggestions(true)
+                }
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") handleSearch();
+                  if (e.key === "Escape") setShowSuggestions(false);
+                }}
+              />
+              {searchInput && (
+                <button
+                  type="button"
+                  className="btn btn-link p-0 ms-1"
+                  style={{
+                    position: "absolute",
+                    right: 50,
+                    top: 8,
+                    zIndex: 101,
+                  }}
+                  onClick={handleClearInput}
+                  tabIndex={-1}
+                  title="Xóa tìm kiếm"
+                >
+                  <span aria-label="clear">❌</span>
+                </button>
+              )}
+              <button
+                className="btn btn-primary ms-2"
+                style={{
+                  height: 40,
+                  minWidth: 48,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+                onClick={handleSearch}
+                type="button"
+                title="Tìm kiếm"
+              >
+                <span role="img" aria-label="search">
+                  🔍
+                </span>
+              </button>
+              {showSuggestions && suggestions.length > 0 && (
+                <div
+                  style={{
+                    position: "absolute",
+                    top: 54,
+                    left: 0,
+                    right: 0,
+                    background: "#fff",
+                    border: "1px solid #ddd",
+                    borderRadius: 6,
+                    zIndex: 100,
+                    boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
+                    maxHeight: 260,
+                    overflowY: "auto",
+                  }}
+                >
+                  {suggestions.map((s, idx) => (
+                    <div
+                      key={s.id + "-" + idx}
+                      style={{
+                        padding: "10px 16px",
+                        cursor: "pointer",
+                        borderBottom:
+                          idx !== suggestions.length - 1
+                            ? "1px solid #eee"
+                            : "none",
+                        background: "#fff",
+                        fontSize: 15,
+                      }}
+                      onMouseDown={() => handleSuggestionClick(s)}
+                    >
+                      <span style={{ color: "#1976d2", fontWeight: 500 }}>
+                        {s.maSanPham}
+                      </span>
+                      {" - "}
+                      <span>{s.tenSanPham}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
           <div className="col-md-6">
             <label className="form-label mb-2">Danh mục sản phẩm</label>
@@ -582,9 +846,7 @@ const Products = () => {
       </div>
       {/* Pagination */}
       <div className="d-flex justify-content-between align-items-center mt-3 flex-wrap gap-2">
-        <div className="text-secondary">
-          Tổng {filteredProducts.length} sản phẩm
-        </div>
+        <div className="text-secondary">Tổng {products.length} sản phẩm</div>
         <div className="d-flex align-items-center gap-2">
           <button
             className="btn product-page-btn"
