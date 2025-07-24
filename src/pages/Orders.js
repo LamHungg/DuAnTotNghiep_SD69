@@ -9,6 +9,7 @@ import {
   getOrderById
 } from "../services/donHangService";
 import { FaEye, FaHistory, FaClock, FaCheckCircle, FaShippingFast, FaTimesCircle, FaBoxOpen, FaMoneyBillWave, FaListAlt, FaDollarSign } from "react-icons/fa";
+import { useNavigate } from "react-router-dom";
 
 const statusBadge = (status) => {
   switch (status) {
@@ -46,20 +47,47 @@ const Orders = () => {
   const [showDetail, setShowDetail] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [showHistory, setShowHistory] = useState(false);
+  const [selectedTab, setSelectedTab] = useState("TẤT CẢ");
+  const statusTabs = [
+    { label: "TẤT CẢ", value: "TẤT CẢ" },
+    { label: "CHỜ THÊM SẢN PHẨM", value: "Chờ thêm sản phẩm" },
+    { label: "CHỜ XÁC NHẬN", value: "Chờ xác nhận" },
+    { label: "ĐÃ XÁC NHẬN", value: "Đã xác nhận" },
+    { label: "ĐANG GIAO", value: ["Đang giao hàng", "Đang giao"] },
+    { label: "ĐÃ GIAO", value: ["Giao hàng thành công", "Đã giao"] },
+    { label: "HOÀN THÀNH", value: "Hoàn thành" },
+  ];
 
   const trangThaiList = Array.from(new Set(orders.map(o => o.tenTrangThai).filter(Boolean)));
   const hinhThucList = Array.from(new Set(orders.map(o => o.hinhThucDonHang).filter(Boolean)));
 
-  const filteredOrders = orders.filter(order => {
+  const countByTab = (tabValue) => {
+    if (tabValue === "TẤT CẢ") return orders.length;
+    if (Array.isArray(tabValue)) {
+      return orders.filter(o => tabValue.map(v => v.toLowerCase()).includes((o.tenTrangThai || "").toLowerCase())).length;
+    }
+    return orders.filter(o => (o.tenTrangThai || "").toLowerCase() === tabValue.toLowerCase()).length;
+  };
+  const ordersByTab = selectedTab === "TẤT CẢ"
+    ? orders
+    : (() => {
+        const tab = statusTabs.find(t => t.label === selectedTab);
+        if (!tab) return orders;
+        if (Array.isArray(tab.value)) {
+          return orders.filter(o => tab.value.map(v => v.toLowerCase()).includes((o.tenTrangThai || "").toLowerCase()));
+        }
+        return orders.filter(o => (o.tenTrangThai || "").toLowerCase() === tab.value.toLowerCase());
+      })();
+  // Sắp xếp đơn hàng mới nhất lên đầu
+  const sortedOrders = [...ordersByTab].sort((a, b) => new Date(b.ngayDat) - new Date(a.ngayDat));
+  const filteredOrders = sortedOrders.filter(order => {
     const matchMaDonHang = filterMaDonHang === "" || order.maDonHang?.toLowerCase().includes(filterMaDonHang.toLowerCase());
     const matchTenKhachHang = filterTenKhachHang === "" || order.tenKhachHang?.toLowerCase().includes(filterTenKhachHang.toLowerCase());
-    const matchTrangThai = filterTrangThai === "" || order.tenTrangThai === filterTrangThai;
     const matchHinhThuc = filterHinhThuc === "" || order.hinhThucDonHang === filterHinhThuc;
     const matchDateFrom = filterDateFrom === "" || (order.ngayDat && order.ngayDat >= filterDateFrom);
     const matchDateTo = filterDateTo === "" || (order.ngayDat && order.ngayDat <= filterDateTo);
-    return matchMaDonHang && matchTenKhachHang && matchTrangThai && matchHinhThuc && matchDateFrom && matchDateTo;
+    return matchMaDonHang && matchTenKhachHang && matchHinhThuc && matchDateFrom && matchDateTo;
   });
-
   const totalPages = Math.ceil(filteredOrders.length / pageSize);
   const paginatedOrders = filteredOrders.slice((currentPage - 1) * pageSize, currentPage * pageSize);
 
@@ -315,20 +343,20 @@ const Orders = () => {
     setShowHistory(false);
   };
 
+  const navigate = useNavigate();
+
+  // Thêm hàm formatVNDateTime nếu chưa có
+  function formatVNDateTime(dateString) {
+    const d = new Date(dateString);
+    const pad = n => n.toString().padStart(2, '0');
+    return `${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())} ${pad(d.getDate())}/${pad(d.getMonth() + 1)}/${d.getFullYear()}`;
+  }
+
   return (
     <div className="container-fluid px-0">
       <style>{customStyles}</style>
       <h2 className="mb-4 fw-bold text-primary">Quản lý Đơn hàng</h2>
-      {/* Thống kê tổng quan */}
       <div className="row g-3 mb-3">
-        {/* Hàng 1: Tổng quan */}
-        <div className="col-md-3 col-6">
-          <div className="stat-card shadow-sm rounded-3 p-3 text-center bg-white">
-            <FaListAlt size={28} className="mb-1 text-primary" />
-            <div className="fw-bold" style={{fontSize: 20}}>{totalOrders}</div>
-            <div style={{fontSize: 13, color: '#888'}}>Tổng số đơn</div>
-          </div>
-        </div>
         <div className="col-md-3 col-6">
           <div className="stat-card shadow-sm rounded-3 p-3 text-center bg-white">
             <FaMoneyBillWave size={28} className="mb-1 text-success" />
@@ -343,49 +371,6 @@ const Orders = () => {
             <div style={{fontSize: 13, color: '#888'}}>Tổng thanh toán</div>
           </div>
         </div>
-        <div className="col-md-3 col-6">
-          <div className="stat-card shadow-sm rounded-3 p-3 text-center bg-white">
-            <FaTimesCircle size={24} className="mb-1 text-danger" />
-            <div className="fw-bold text-danger" style={{fontSize: 18}}>{countByStatus('Đã hủy')}</div>
-            <div style={{fontSize: 13, color: '#888'}}>Đã hủy</div>
-          </div>
-        </div>
-        {/* Hàng 2: Trạng thái */}
-        <div className="col-md-3 col-6">
-          <div className="stat-card shadow-sm rounded-3 p-3 text-center bg-white">
-            <FaClock size={24} className="mb-1 text-warning" />
-            <div className="fw-bold text-warning" style={{fontSize: 18}}>{countByStatus('Chờ xác nhận')}</div>
-            <div style={{fontSize: 13, color: '#888'}}>Chờ xác nhận</div>
-          </div>
-        </div>
-        <div className="col-md-3 col-6">
-          <div className="stat-card shadow-sm rounded-3 p-3 text-center bg-white">
-            <FaCheckCircle size={24} className="mb-1 text-primary" />
-            <div className="fw-bold text-primary" style={{fontSize: 18}}>{countByStatus('Đã xác nhận')}</div>
-            <div style={{fontSize: 13, color: '#888'}}>Đã xác nhận</div>
-          </div>
-        </div>
-        <div className="col-md-3 col-6">
-          <div className="stat-card shadow-sm rounded-3 p-3 text-center bg-white">
-            <FaShippingFast size={24} className="mb-1 text-info" />
-            <div className="fw-bold text-info" style={{fontSize: 18}}>{countByStatus('Đang giao hàng') + countByStatus('Đang giao')}</div>
-            <div style={{fontSize: 13, color: '#888'}}>Đang giao</div>
-          </div>
-        </div>
-        <div className="col-md-3 col-6">
-          <div className="stat-card shadow-sm rounded-3 p-3 text-center bg-white">
-            <FaBoxOpen size={24} className="mb-1 text-success" />
-            <div className="fw-bold text-success" style={{fontSize: 18}}>{countByStatus('Giao hàng thành công') + countByStatus('Đã giao')}</div>
-            <div style={{fontSize: 13, color: '#888'}}>Đã giao</div>
-          </div>
-        </div>
-        <div className="col-md-3 col-6">
-          <div className="stat-card shadow-sm rounded-3 p-3 text-center bg-white">
-            <FaCheckCircle size={24} className="mb-1 text-info" />
-            <div className="fw-bold text-info" style={{fontSize: 18}}>{countByStatus('Hoàn thành')}</div>
-            <div style={{fontSize: 13, color: '#888'}}>Hoàn thành</div>
-          </div>
-        </div>
       </div>
       {/* Card bộ lọc */}
       <div className="card shadow-sm border-0 mb-3" style={{borderRadius: 14}}>
@@ -398,13 +383,6 @@ const Orders = () => {
             <div className="col-md-2">
               <label className="form-label mb-1 text-secondary" style={{fontSize: '0.95rem'}}>Tên khách hàng</label>
               <input type="text" className="form-control rounded-pill" value={filterTenKhachHang} onChange={e => setFilterTenKhachHang(e.target.value)} placeholder="Nhập tên khách hàng" />
-            </div>
-            <div className="col-md-2">
-              <label className="form-label mb-1 text-secondary" style={{fontSize: '0.95rem'}}>Trạng thái</label>
-              <select className="form-select rounded-pill" value={filterTrangThai} onChange={e => setFilterTrangThai(e.target.value)}>
-                <option value="">Tất cả</option>
-                {trangThaiList.map((tt, idx) => <option key={idx} value={tt}>{tt}</option>)}
-              </select>
             </div>
             <div className="col-md-2">
               <label className="form-label mb-1 text-secondary" style={{fontSize: '0.95rem'}}>Hình thức</label>
@@ -441,6 +419,24 @@ const Orders = () => {
           </form>
         </div>
       </div>
+      {/* Thêm UI tab trạng thái phía trên bảng đơn hàng */}
+      <div className="card shadow-sm border-0 mb-3" style={{borderRadius: 14}}>
+        <div className="card-body py-2 px-3" style={{overflowX: 'auto'}}>
+          <div className="d-flex flex-row gap-2 align-items-center" style={{whiteSpace: 'nowrap'}}>
+            {statusTabs.map(tab => (
+              <button
+                key={tab.label}
+                className={`btn btn-link px-2 py-1 fw-bold position-relative${selectedTab === tab.label ? ' text-primary' : ' text-secondary'}`}
+                style={{fontSize: 18, textDecoration: 'none', borderBottom: selectedTab === tab.label ? '3px solid #1976d2' : 'none'}}
+                onClick={() => setSelectedTab(tab.label)}
+              >
+                {tab.label}
+                <span className="badge bg-danger ms-1" style={{fontSize: 13, position: 'relative', top: -2}}>{countByTab(tab.value)}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
       {/* Card bảng đơn hàng */}
       <div className="card shadow-sm border-0 mb-4">
         <div className="card-body">
@@ -472,22 +468,14 @@ const Orders = () => {
                       <td>{order.tenKhachHang}</td>
                       <td>{order.hinhThucDonHang}</td>
                       <td>{statusBadge(order.tenTrangThai)}</td>
-                      <td>{order.ngayDat}</td>
+                      <td>{order.ngayDat ? formatVNDateTime(order.ngayDat) : ''}</td>
                       <td className="text-end">{order.tongTienHang?.toLocaleString("vi-VN")}</td>
                       <td className="text-end">{order.tongThanhToan?.toLocaleString("vi-VN")}</td>
                       <td className="text-center">
                         <button
                           className="btn btn-eye btn-sm"
                           title="Xem chi tiết"
-                          onClick={async () => {
-                            try {
-                              const res = await getOrderById(order.id);
-                              setSelectedOrder({ ...res.data, id: order.id });
-                              setShowDetail(true);
-                            } catch (err) {
-                              alert('Không lấy được chi tiết đơn hàng!');
-                            }
-                          }}
+                          onClick={() => navigate(`/orders/${order.id}`)}
                         >
                           <FaEye />
                         </button>
@@ -518,166 +506,7 @@ const Orders = () => {
           )}
         </div>
       </div>
-      {/* Modal chi tiết đơn hàng */}
-      {showDetail && selectedOrder && (
-        <div
-          className="modal fade show"
-          style={{ display: 'block', zIndex: 1055 }}
-          tabIndex="-1"
-          role="dialog"
-        >
-          <div className="modal-dialog modal-lg" role="document" style={{ zIndex: 1060 }}>
-            <div
-              className="modal-content"
-              style={{ background: '#fff', borderRadius: 18, border: 'none', zIndex: 1060 }}
-            >
-              <style>{`
-                .info-section {
-                  border: 1.5px solid #e3e8f0;
-                  border-radius: 14px;
-                  background: #fff;
-                  padding: 18px 22px 12px 22px;
-                  margin-bottom: 18px;
-                  box-shadow: 0 2px 8px 0 rgba(31, 38, 135, 0.06);
-                }
-                .info-section-title {
-                  font-weight: 700;
-                  font-size: 1.13rem;
-                  color: #4e54c8;
-                  margin-bottom: 12px;
-                  display: flex;
-                  align-items: center;
-                  gap: 8px;
-                }
-              `}</style>
-              <div className="modal-header" style={{background: 'linear-gradient(90deg, #4e54c8 0%, #8f94fb 100%)', borderTopLeftRadius: 18, borderTopRightRadius: 18, borderBottom: 'none', justifyContent: 'center'}}>
-                <h5 className="modal-title fw-bold text-white" style={{fontSize: '1.5rem', letterSpacing: 1}}><FaEye className="me-2"/>Chi tiết đơn hàng: <span style={{color:'#ffd200'}}>{selectedOrder.maDonHang}</span></h5>
-                <button type="button" className="btn-close bg-white" onClick={handleCloseModal}></button>
-              </div>
-              <div className="modal-body" style={{borderRadius: 16, margin: 10, boxShadow: '0 2px 16px 0 rgba(31, 38, 135, 0.08)'}}>
-                <div className="row g-3">
-                  <div className="col-md-6">
-                    <div className="info-section">
-                      <div className="info-section-title"><FaListAlt /> Thông tin đơn hàng</div>
-                      <div className="mb-2"><span className="fw-semibold">Mã đơn hàng:</span> <span style={{color:'#222'}}>{selectedOrder.maDonHang || 'Không có thông tin'}</span></div>
-                      <div className="mb-2"><span className="fw-semibold">Hình thức đơn hàng:</span> <span>{selectedOrder.hinhThucDonHang || 'Không có thông tin'}</span></div>
-                      <div className="mb-2"><span className="fw-semibold">Ngày đặt:</span> <span>{selectedOrder.ngayDat || 'Không có thông tin'}</span></div>
-                      <div className="mb-2"><span className="fw-semibold">Trạng thái:</span> {statusBadge(selectedOrder.tenTrangThai) || 'Không có thông tin'}</div>
-                      <div className="mb-2"><span className="fw-semibold">Tổng tiền:</span> <span className="fw-bold text-primary" style={{fontSize:'1.15rem'}}>{selectedOrder.tongThanhToan?.toLocaleString('vi-VN') || '0'} đ</span></div>
-                      <div className="d-flex gap-2 mt-3">
-                        {selectedOrder.tenTrangThai === "Chờ xác nhận" && (
-                          <>
-                            <button className="btn btn-success btn-sm fw-bold px-3" onClick={() => handleConfirmOrder(selectedOrder.id)}>
-                              Xác nhận đơn hàng
-                            </button>
-                            <button className="btn btn-danger btn-sm fw-bold px-3" onClick={() => handleCancelOrder(selectedOrder.id)}>
-                              Hủy đơn hàng
-                            </button>
-                          </>
-                        )}
-                        {selectedOrder.tenTrangThai === "Đã xác nhận" && (
-                          <button className="btn btn-info btn-sm fw-bold px-3" onClick={() => handleShipOrder(selectedOrder.id)}>
-                            Bắt đầu giao hàng
-                          </button>
-                        )}
-                        {(selectedOrder.tenTrangThai === "Đang giao hàng" || selectedOrder.tenTrangThai === "Đang giao") && (
-                          <button className="btn btn-primary btn-sm fw-bold px-3" onClick={() => handleDeliverOrder(selectedOrder.id)}>
-                            Giao hàng thành công
-                          </button>
-                        )}
-                        {(selectedOrder.tenTrangThai === "Giao hàng thành công" || selectedOrder.tenTrangThai === "Đã giao") && (
-                          <button className="btn btn-success btn-sm fw-bold px-3" onClick={() => handleCompleteOrder(selectedOrder.id)}>
-                            Hoàn thành đơn hàng
-                          </button>
-                        )}
-                        <button className="btn btn-outline-secondary btn-sm fw-bold px-3" onClick={() => setShowHistory((prev) => !prev)}>
-                          <FaHistory className="me-1" />Lịch sử
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="col-md-6">
-                    <div className="info-section">
-                      <div className="info-section-title"><FaListAlt /> Thông tin khách hàng</div>
-                      <div className="mb-2"><span className="fw-semibold">Tên khách hàng:</span> <span>{selectedOrder.tenKhachHang || 'Không có thông tin'}</span></div>
-                      <div className="mb-2"><span className="fw-semibold">Số điện thoại:</span> <span>{selectedOrder.soDienThoai || 'Không có thông tin'}</span></div>
-                      <div className="mb-2"><span className="fw-semibold">Email:</span> <span>{selectedOrder.email || 'Không có thông tin'}</span></div>
-                      <div className="mb-2"><span className="fw-semibold">Địa chỉ:</span> <span>{getFullAddress(selectedOrder)}</span></div>
-                    </div>
-                  </div>
-                </div>
-                <div className="info-section">
-                  <div className="info-section-title"><FaListAlt /> Chi tiết sản phẩm</div>
-                  <div className="table-responsive">
-                    <table className="table order-detail-table">
-                      <thead>
-                        <tr>
-                          <th>TÊN SẢN PHẨM</th>
-                          <th>SỐ LƯỢNG</th>
-                          <th className="text-end">ĐƠN GIÁ</th>
-                          <th className="text-end">THÀNH TIỀN</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {selectedOrder.chiTietSanPhams && selectedOrder.chiTietSanPhams.map((item, idx) => (
-                          <tr key={idx}>
-                            <td>{item.tenSanPham}</td>
-                            <td>{item.soLuong}</td>
-                            <td className="text-end">{item.gia?.toLocaleString('vi-VN')} đ</td>
-                            <td className="text-end">{(item.gia && item.soLuong ? (item.gia * item.soLuong).toLocaleString('vi-VN') : '0')} đ</td>
-                          </tr>
-                        ))}
-                      </tbody>
-                      <tfoot>
-                        <tr>
-                          <td colSpan="3" className="text-end fw-bold">Tổng cộng:</td>
-                          <td className="text-end fw-bold text-primary">
-                            {selectedOrder.chiTietSanPhams
-                              ? selectedOrder.chiTietSanPhams.reduce((sum, i) => sum + (i.gia && i.soLuong ? i.gia * i.soLuong : 0), 0).toLocaleString('vi-VN')
-                              : '0'} đ
-                          </td>
-                        </tr>
-                      </tfoot>
-                    </table>
-                  </div>
-                </div>
-                {showHistory && selectedOrder.lichSuDonHang && selectedOrder.lichSuDonHang.length > 0 && (
-                  <div className="info-section">
-                    <div className="info-section-title"><FaHistory /> Lịch sử đơn hàng</div>
-                    <div className="table-responsive">
-                      <table className="table table-bordered">
-                        <thead>
-                          <tr>
-                            <th>Thời gian</th>
-                            <th>Trạng thái</th>
-                            <th>Ghi chú</th>
-                            <th>Người cập nhật</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {selectedOrder.lichSuDonHang.map((item, idx) => (
-                            <tr key={idx}>
-                              <td>{item.thoiGianCapNhat ? new Date(item.thoiGianCapNhat).toLocaleString('vi-VN') : ''}</td>
-                              <td>{item.tenTrangThai}</td>
-                              <td>{item.ghiChu}</td>
-                              <td>{item.tenNguoiCapNhat}</td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-          <div
-            className="modal-backdrop fade show"
-            style={{ zIndex: 1050 }}
-            onClick={handleCloseModal}
-          ></div>
-        </div>
-      )}
+      {/* Xóa phần Modal chi tiết đơn hàng ở đây */}
     </div>
   );
 };

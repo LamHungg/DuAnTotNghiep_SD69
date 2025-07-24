@@ -188,7 +188,7 @@ const FormLogin = ({
     <form className="login-form" onSubmit={handleSubmit}>
       <div className="input-group" style={{ marginBottom: 18 }}>
         <label
-          htmlFor="email"
+          htmlFor="tenDangNhap"
           className="form-label"
           style={{
             marginBottom: 4,
@@ -197,25 +197,25 @@ const FormLogin = ({
             fontWeight: 500,
           }}
         >
-          Email
+          Tên đăng nhập
         </label>
         <div style={{ position: "relative" }}>
           <span className="input-icon">
             <FaUser />
           </span>
           <input
-            type="email"
-            name="email"
+            type="text"
+            name="tenDangNhap"
             className="login-input"
-            placeholder="Nhập email"
-            value={formData.email}
+            placeholder="Nhập tên đăng nhập"
+            value={formData.tenDangNhap}
             onChange={handleChange}
             disabled={isLoading}
             autoComplete="username"
             style={{ paddingLeft: 40 }}
           />
         </div>
-        {errors.email && (
+        {errors.tenDangNhap && (
           <div
             style={{
               color: "#ff6b6b",
@@ -223,7 +223,7 @@ const FormLogin = ({
               marginTop: 4,
             }}
           >
-            {errors.email}
+            {errors.tenDangNhap}
           </div>
         )}
       </div>
@@ -311,7 +311,7 @@ const FormLogin = ({
 const Login = () => {
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
-    email: "",
+    tenDangNhap: "",
     matKhau: "",
     remember: false,
   });
@@ -400,10 +400,8 @@ const Login = () => {
 
   const validateForm = () => {
     const newErrors = {};
-    if (!formData.email.trim()) {
-      newErrors.email = "Email không được để trống";
-    } else if (!/^\S+@\S+\.\S+$/.test(formData.email)) {
-      newErrors.email = "Email không đúng định dạng";
+    if (!formData.tenDangNhap.trim()) {
+      newErrors.tenDangNhap = "Tên đăng nhập không được để trống";
     }
     if (!formData.matKhau.trim()) {
       newErrors.matKhau = "Mật khẩu không được để trống";
@@ -418,7 +416,7 @@ const Login = () => {
     setIsLoading(true);
     try {
       const userData = await authService.login(
-        formData.email,
+        formData.tenDangNhap,
         formData.matKhau
       );
       if (userData && userData.trangThai) {
@@ -499,7 +497,7 @@ const Login = () => {
           <div className="login-title">Login</div>
           {!showForgot ? (
             <FormLogin
-              email={formData.email}
+              email={formData.tenDangNhap}
               handleSubmit={handleSubmit}
               setShowForgot={setShowForgot}
               formData={formData}

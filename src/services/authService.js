@@ -9,7 +9,7 @@ const authService = {
       const response = await axios.post(
         `${SERVER_URL}/api/auth/login`,
         {
-          email: tenDangNhap,
+          tenDangNhap: tenDangNhap,
           matKhau,
         },
         {
