@@ -82,15 +82,15 @@ const EditProduct = () => {
         const foundProduct = (spRes || []).find(
           (p) => p.id === Number(productId)
         );
-    setProduct(foundProduct);
+        setProduct(foundProduct);
 
         // Lấy chi tiết sản phẩm cho sản phẩm này
         const variants = (ctspRes || []).filter(
           (d) => d.idSanPham === Number(productId)
-    );
+        );
         console.log("Variants for product:", variants);
-      setAllVariants(variants);
-      setFilteredVariants(variants);
+        setAllVariants(variants);
+        setFilteredVariants(variants);
 
         // Tạo options cho filter từ variants
         const uniqueColors = [...new Set(variants.map((v) => v.idMauSac))];
@@ -128,19 +128,19 @@ const EditProduct = () => {
         setMaterialOptions(materialNames);
 
         // Tạo options cho modal dropdowns
-    setAllColorOptions(
+        setAllColorOptions(
           (msRes || [])
             .filter((c) => c.trangThai === 1)
             .map((c) => ({ value: c.id, label: c.tenMauSac }))
-    );
+        );
 
-    setAllSizeOptions(
+        setAllSizeOptions(
           (kcRes || [])
             .filter((s) => s.trangThai === 1)
             .map((s) => ({ value: s.id, label: s.tenKichCo }))
         );
 
-    setAllMaterialOptions(
+        setAllMaterialOptions(
           (clRes || [])
             .filter((m) => m.trangThai === 1)
             .map((m) => ({ value: m.id, label: m.tenChatLieu }))
@@ -296,7 +296,7 @@ const EditProduct = () => {
 
     try {
       // Chuẩn bị dữ liệu để gửi lên API
-    const updatedVariantForState = {
+      const updatedVariantForState = {
         id: editingVariant.id,
         idSanPham: editingVariant.idSanPham,
         idMauSac: variantForm.idMauSac.value,
@@ -304,9 +304,9 @@ const EditProduct = () => {
         idChatLieu: variantForm.idChatLieu.value,
         soLuong: Number(variantForm.soLuong),
         giaNhap: Number(variantForm.giaNhap),
-      gia: Number(variantForm.gia),
+        gia: Number(variantForm.gia),
         trangThai: editingVariant.trangThai || 1,
-    };
+      };
 
       console.log("Sending update with:", updatedVariantForState);
 
@@ -349,6 +349,14 @@ const EditProduct = () => {
       console.error("Lỗi khi cập nhật:", error.response?.data || error);
       alert("Lỗi khi cập nhật chi tiết sản phẩm!");
     }
+  };
+
+  // Helper để build URL ảnh đúng
+  const getImageUrl = (url) => {
+    if (!url) return "";
+    if (url.startsWith("http")) return url;
+    if (url.startsWith("/uploads/")) return `http://localhost:8080${url}`;
+    return url;
   };
 
   if (!product) {
@@ -498,12 +506,12 @@ const EditProduct = () => {
                     <td className="text-center">
                       {variant.images && variant.images.length > 1 ? (
                         <ImageCarousel
-                          images={variant.images}
+                          images={variant.images.map(getImageUrl)}
                           carouselId={`carousel-${variant.id}`}
                         />
                       ) : variant.images && variant.images.length === 1 ? (
                         <img
-                          src={variant.images[0]}
+                          src={getImageUrl(variant.images[0])}
                           alt="variant"
                           style={{
                             width: "120px",
@@ -629,7 +637,7 @@ const EditProduct = () => {
                       {variantForm.images.map((img, index) => (
                         <div key={index} className="position-relative">
                           <img
-                            src={img}
+                            src={getImageUrl(img)}
                             alt="variant"
                             style={{
                               width: "80px",

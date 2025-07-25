@@ -14,6 +14,7 @@ import { getAllChatLieu } from "../services/chatLieuService";
 import { getAllKichCo } from "../services/kichCoService";
 import { getAllMauSac } from "../services/mauSacService";
 import authService from "../services/authService";
+import "./AddProduct.css"; // Thêm file CSS cho hiệu ứng
 
 // Dữ liệu mặc định để fallback nếu localStorage trống
 const defaultCategories = ["Áo thun", "Áo sơ mi", "Áo khoác", "Áo len"];
@@ -82,6 +83,12 @@ const AddProduct = () => {
 
   // State cho toast thông báo thành công
   const [showSuccessToast, setShowSuccessToast] = useState(false);
+  const [toast, setToast] = useState({
+    show: false,
+    message: "",
+    type: "success",
+  });
+  const [newlyUploadedImg, setNewlyUploadedImg] = useState(null); // Đánh dấu ảnh mới upload
 
   const navigate = useNavigate();
 
@@ -302,10 +309,25 @@ const AddProduct = () => {
         const url = await uploadImageToServer(file); // upload lên backend, nhận URL
         setGallery((prev) => [url, ...prev]);
         setSelectedGalleryImgs((prev) => [url, ...prev]);
+        setNewlyUploadedImg(url); // Đánh dấu ảnh mới
+        setToast({
+          show: true,
+          message: "Tải ảnh thành công!",
+          type: "success",
+        });
       } catch (err) {
-        alert("Lỗi upload ảnh: " + (err?.message || ""));
+        setToast({
+          show: true,
+          message: "Lỗi upload ảnh: " + (err?.message || ""),
+          type: "error",
+        });
       } finally {
         setUploadingGallery(false);
+        setTimeout(
+          () => setToast({ show: false, message: "", type: "success" }),
+          2000
+        );
+        setTimeout(() => setNewlyUploadedImg(null), 1500);
       }
     }
   };
@@ -498,6 +520,20 @@ const AddProduct = () => {
     if (validateForm()) {
       setShowConfirmModal(true);
     }
+  };
+
+  // Toast component
+  const renderToast = () =>
+    toast.show && (
+      <div className={`custom-toast ${toast.type}`}>{toast.message}</div>
+    );
+
+  // Helper để build URL ảnh đúng
+  const getImageUrl = (url) => {
+    if (!url) return "";
+    if (url.startsWith("http")) return url;
+    if (url.startsWith("/uploads/")) return `http://localhost:8080${url}`;
+    return url;
   };
 
   return (
@@ -844,7 +880,7 @@ const AddProduct = () => {
                                     {v.images.map((img, i) => (
                                       <img
                                         key={img + i}
-                                        src={img}
+                                        src={getImageUrl(img)}
                                         alt="Ảnh sản phẩm"
                                         style={{
                                           width: 100,
@@ -915,7 +951,7 @@ const AddProduct = () => {
                       {selectedGalleryImgs.map((img, i) => (
                         <img
                           key={img + i}
-                          src={img}
+                          src={getImageUrl(img)}
                           alt="Chọn ảnh"
                           style={{
                             width: 120,
@@ -923,7 +959,10 @@ const AddProduct = () => {
                             objectFit: "cover",
                             borderRadius: 8,
                             border: "2px solid #7c3aed",
+                            opacity: newlyUploadedImg === img ? 0.5 : 1,
+                            transition: "opacity 0.5s",
                           }}
+                          className={newlyUploadedImg === img ? "fade-in" : ""}
                         />
                       ))}
                     </div>
@@ -952,7 +991,7 @@ const AddProduct = () => {
                         }}
                       />
                       <img
-                        src={img}
+                        src={getImageUrl(img)}
                         alt="gallery"
                         style={{
                           width: 100,
@@ -960,14 +999,24 @@ const AddProduct = () => {
                           objectFit: "cover",
                           borderRadius: 6,
                           border: selectedGalleryImgs.includes(img)
-                            ? "2px solid #7c3aed"
+                            ? "3px solid #7c3aed"
                             : "1px solid #ccc",
+                          boxShadow:
+                            newlyUploadedImg === img ? "0 0 0 3px #22c55e" : "",
+                          opacity: newlyUploadedImg === img ? 0.5 : 1,
+                          transition: "all 0.5s",
                         }}
+                        className={newlyUploadedImg === img ? "fade-in" : ""}
                         onClick={() => handleToggleGalleryImg(img)}
                       />
+                      {newlyUploadedImg === img && (
+                        <div className="uploading-overlay">
+                          <span>Đang xử lý...</span>
+                        </div>
+                      )}
                     </div>
                   ))}
-                  <div>
+                  <div style={{ position: "relative" }}>
                     <input
                       type="file"
                       accept="image/*"
@@ -984,12 +1033,17 @@ const AddProduct = () => {
                         display: "flex",
                         alignItems: "center",
                         justifyContent: "center",
+                        position: "relative",
                       }}
                       onClick={() => galleryFileInput.current.click()}
                       disabled={uploadingGallery}
                     >
                       {uploadingGallery ? (
-                        "Đang tải..."
+                        <span
+                          className="spinner-border spinner-border-sm"
+                          role="status"
+                          aria-hidden="true"
+                        ></span>
                       ) : (
                         <FaPlus style={{ fontSize: 32 }} />
                       )}
@@ -1018,6 +1072,7 @@ const AddProduct = () => {
                     Đóng
                   </button>
                 </div>
+                {renderToast()}
               </div>
             </div>
           </div>

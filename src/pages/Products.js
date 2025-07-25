@@ -469,6 +469,14 @@ const Products = () => {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+  // Helper để build URL ảnh đúng
+  const getImageUrl = (url) => {
+    if (!url) return "";
+    if (url.startsWith("http")) return url;
+    if (url.startsWith("/uploads/")) return `http://localhost:8080${url}`;
+    return url;
+  };
+
   return (
     <div>
       <div className="text-center mb-4">
@@ -697,6 +705,7 @@ const Products = () => {
                         <table className="table table-bordered mt-2 mb-0">
                           <thead>
                             <tr>
+                              <th className="text-center">Ảnh</th>
                               <th className="text-center">Mã sản phẩm</th>
                               <th className="text-center">Tên</th>
                               <th className="text-center">Danh mục</th>
@@ -714,6 +723,26 @@ const Products = () => {
                               .map((d, i) => (
                                 <React.Fragment key={d.id || i}>
                                   <tr>
+                                    <td className="text-center">
+                                      {Array.isArray(d.images) &&
+                                      d.images.length > 0 ? (
+                                        <img
+                                          src={getImageUrl(d.images[0])}
+                                          alt="Ảnh sản phẩm"
+                                          style={{
+                                            width: 60,
+                                            height: 60,
+                                            objectFit: "cover",
+                                            borderRadius: 6,
+                                            border: "1px solid #ccc",
+                                          }}
+                                        />
+                                      ) : (
+                                        <span className="text-muted">
+                                          Không có ảnh
+                                        </span>
+                                      )}
+                                    </td>
                                     <td className="text-center">
                                       {p.maSanPham}
                                     </td>
@@ -746,7 +775,7 @@ const Products = () => {
                                   {d.auditTrail && d.auditTrail.length > 0 && (
                                     <tr>
                                       <td
-                                        colSpan={9}
+                                        colSpan={10}
                                         style={{
                                           background: "#f3f4f6",
                                           padding: 0,
@@ -808,7 +837,7 @@ const Products = () => {
                               (d) => Number(d.idSanPham) === Number(p.id)
                             ).length === 0 && (
                               <tr>
-                                <td colSpan={9} className="text-center">
+                                <td colSpan={10} className="text-center">
                                   <div className="text-muted p-3">
                                     <i className="fas fa-info-circle me-2"></i>
                                     <strong>
