@@ -30,6 +30,7 @@ import Materials from "./pages/Materials";
 import EditProduct from "./pages/EditProduct";
 import Vouchers from "./pages/Vouchers";
 import Statistics from "./pages/Statistics";
+import Pos from "./pages/Pos";
 import OrderDetail from "./pages/OrderDetail";
 
 // Components
@@ -65,6 +66,7 @@ function App() {
           <Route index element={<Dashboard />} />
           <Route path="stats" element={<Statistics />} />
           <Route path="products" element={<Products />} />
+          <Route path="pos" element={<Pos />} />
           <Route path="products/add" element={<AddProduct />} />
           <Route path="products/edit/:productId" element={<EditProduct />} />
           <Route path="orders" element={<Orders />} />
