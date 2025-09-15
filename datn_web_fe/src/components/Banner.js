@@ -1,59 +1,118 @@
-import React, { useState } from 'react';
-import { FaChevronLeft, FaChevronRight } from 'react-icons/fa';
-import '../styles/main.css';
-
-const slides = [
-  {
-    image: 'https://images.unsplash.com/photo-1512436991641-6745cdb1723f?auto=format&fit=crop&w=800&q=80',
-    slogan: 'THỜI TRANG NAM NỮ HIỆN ĐẠI',
-    desc: 'BST mới nhất, phong cách trẻ trung, năng động',
-    cta: 'Mua ngay',
-  },
-  {
-    image: 'https://images.unsplash.com/photo-1529626455594-4ff0802cfb7e?auto=format&fit=crop&w=800&q=80',
-    slogan: 'SALE UP TO 50%',
-    desc: 'Ưu đãi cực lớn cho mùa hè',
-    cta: 'Xem ưu đãi',
-  },
-  {
-    image: 'https://images.unsplash.com/photo-1503342217505-b0a15ec3261c?auto=format&fit=crop&w=800&q=80',
-    slogan: 'PHỤ KIỆN THỜI TRANG',
-    desc: 'Túi xách, mũ, kính, đồng hồ...',
-    cta: 'Khám phá ngay',
-  },
-];
+import React, { useState, useEffect } from "react";
+import { FaChevronLeft, FaChevronRight } from "react-icons/fa";
+import { useNavigate } from "react-router-dom";
+import { getBanners } from "../services/homeService";
+import "../styles/main.css";
 
 const Banner = () => {
   const [current, setCurrent] = useState(0);
-  const nextSlide = () => setCurrent((prev) => (prev + 1) % slides.length);
-  const prevSlide = () => setCurrent((prev) => (prev - 1 + slides.length) % slides.length);
+  const [bannerData, setBannerData] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
+
+  // Fetch banner data
+  useEffect(() => {
+    const fetchBanners = async () => {
+      try {
+        const data = await getBanners();
+        setBannerData(data);
+      } catch (error) {
+        console.error("Error fetching banners:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchBanners();
+  }, []);
+
+  // Auto slide
+  useEffect(() => {
+    if (bannerData.length === 0) return;
+
+    const timer = setInterval(() => {
+      setCurrent((prev) => (prev + 1) % bannerData.length);
+    }, 5000);
+    return () => clearInterval(timer);
+  }, [bannerData.length]);
+
+  const nextSlide = () => setCurrent((prev) => (prev + 1) % bannerData.length);
+  const prevSlide = () =>
+    setCurrent((prev) => (prev - 1 + bannerData.length) % bannerData.length);
+
+  const handleCTAClick = (link) => {
+    navigate(link);
+  };
+
+  if (loading) {
+    return (
+      <section className="banner">
+        <div className="banner__carousel">
+          <div className="banner__slide" style={{ background: "#f0f0f0" }}>
+            <div className="banner__overlay">
+              <div className="banner__content">
+                <div className="banner__slogan">Đang tải...</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  if (bannerData.length === 0) {
+    return null;
+  }
 
   return (
     <section className="banner">
       <div className="banner__carousel">
-        <button className="banner__arrow banner__arrow--left" onClick={prevSlide} aria-label="Trước">
+        <button
+          className="banner__arrow banner__arrow--left"
+          onClick={prevSlide}
+          aria-label="Trước"
+        >
           <FaChevronLeft size={22} />
         </button>
-        <div className="banner__slide" style={{backgroundImage: `url(${slides[current].image})`}}>
+
+        <div
+          className="banner__slide"
+          style={{ backgroundImage: `url(${bannerData[current].image})` }}
+        >
           <div className="banner__overlay">
             <div className="banner__content">
-              <div className="banner__slogan">{slides[current].slogan}</div>
-              <div className="banner__desc">{slides[current].desc}</div>
-              <button className="banner__cta">{slides[current].cta}</button>
+              <div className="banner__slogan">{bannerData[current].title}</div>
+              <div className="banner__desc">{bannerData[current].subtitle}</div>
+              <button
+                className="banner__cta"
+                onClick={() => handleCTAClick(bannerData[current].buttonLink)}
+              >
+                {bannerData[current].buttonText}
+              </button>
             </div>
           </div>
         </div>
-        <button className="banner__arrow banner__arrow--right" onClick={nextSlide} aria-label="Sau">
+
+        <button
+          className="banner__arrow banner__arrow--right"
+          onClick={nextSlide}
+          aria-label="Sau"
+        >
           <FaChevronRight size={22} />
         </button>
       </div>
+
       <div className="banner__dots">
-        {slides.map((_, idx) => (
-          <span key={idx} className={`banner__dot${idx === current ? ' active' : ''}`} onClick={() => setCurrent(idx)}></span>
+        {bannerData.map((_, idx) => (
+          <span
+            key={idx}
+            className={`banner__dot${idx === current ? " active" : ""}`}
+            onClick={() => setCurrent(idx)}
+          ></span>
         ))}
       </div>
     </section>
   );
 };
 
-export default Banner; 
+export default Banner;

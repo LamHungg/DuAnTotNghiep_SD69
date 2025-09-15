@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Test Checkout Authentication</title>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+  </head>
+  <body>
+    <h1>Test Checkout Authentication</h1>
+
+    <div>
+      <h2>1. Test đăng nhập</h2>
+      <input
+        type="email"
+        id="email"
+        placeholder="Email"
+        value="test@example.com"
+      />
+      <input
+        type="password"
+        id="password"
+        placeholder="Password"
+        value="password123"
+      />
+      <button onclick="testLogin()">Đăng nhập</button>
+      <div id="loginResult"></div>
+    </div>
+
+    <div>
+      <h2>2. Test session check</h2>
+      <button onclick="testSession()">Kiểm tra session</button>
+      <div id="sessionResult"></div>
+    </div>
+
+    <div>
+      <h2>3. Test checkout</h2>
+      <button onclick="testCheckout()">Test checkout</button>
+      <div id="checkoutResult"></div>
+    </div>
+
+    <script>
+      const API_URL = "http://localhost:8080/api";
+
+      async function testLogin() {
+        try {
+          const email = document.getElementById("email").value;
+          const password = document.getElementById("password").value;
+
+          console.log("Đang đăng nhập với:", email);
+
+          const response = await axios.post(
+            `${API_URL}/auth/login`,
+            {
+              email: email,
+              matKhau: password,
+            },
+            {
+              withCredentials: true,
+            }
+          );
+
+          console.log("Đăng nhập thành công:", response.data);
+          document.getElementById("loginResult").innerHTML =
+            '<p style="color: green;">✅ Đăng nhập thành công: ' +
+            JSON.stringify(response.data) +
+            "</p>";
+        } catch (error) {
+          console.error("Lỗi đăng nhập:", error);
+          document.getElementById("loginResult").innerHTML =
+            '<p style="color: red;">❌ Lỗi đăng nhập: ' +
+              error.response?.data?.error || error.message + "</p>";
+        }
+      }
+
+      async function testSession() {
+        try {
+          console.log("Đang kiểm tra session...");
+
+          const response = await axios.get(`${API_URL}/auth/check-session`, {
+            withCredentials: true,
+          });
+
+          console.log("Session check thành công:", response.data);
+          document.getElementById("sessionResult").innerHTML =
+            '<p style="color: green;">✅ Session check thành công: ' +
+            JSON.stringify(response.data) +
+            "</p>";
+        } catch (error) {
+          console.error("Lỗi session check:", error);
+          document.getElementById("sessionResult").innerHTML =
+            '<p style="color: red;">❌ Lỗi session check: ' +
+              error.response?.data?.error || error.message + "</p>";
+        }
+      }
+
+      async function testCheckout() {
+        try {
+          console.log("Đang test checkout...");
+
+          const checkoutData = {
+            cartItems: [
+              {
+                chiTietSanPhamId: 1,
+                soLuong: 2,
+                gia: 100000,
+                thanhTien: 200000,
+              },
+            ],
+            diaChiId: 1,
+            phuongThucThanhToanId: 1,
+            ghiChuKhachHang: "Test order",
+            phiVanChuyen: 30000,
+            tongTienHang: 200000,
+            tongThanhToan: 230000,
+          };
+
+          const response = await axios.post(
+            `${API_URL}/checkout/test-process`,
+            checkoutData,
+            {
+              headers: {
+                "Content-Type": "application/json",
+              },
+              withCredentials: true,
+            }
+          );
+
+          console.log("Checkout test thành công:", response.data);
+          document.getElementById("checkoutResult").innerHTML =
+            '<p style="color: green;">✅ Checkout test thành công: ' +
+            JSON.stringify(response.data) +
+            "</p>";
+        } catch (error) {
+          console.error("Lỗi checkout test:", error);
+          document.getElementById("checkoutResult").innerHTML =
+            '<p style="color: red;">❌ Lỗi checkout test: ' +
+              error.response?.data?.error || error.message + "</p>";
+        }
+      }
+    </script>
+  </body>
+</html>

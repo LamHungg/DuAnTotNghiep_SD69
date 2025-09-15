@@ -1,6 +1,12 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { FaSave, FaTimes, FaArrowLeft, FaEye, FaEyeSlash } from "react-icons/fa";
+import {
+  FaSave,
+  FaTimes,
+  FaArrowLeft,
+  FaEye,
+  FaEyeSlash,
+} from "react-icons/fa";
 import Toast from "../components/Toast";
 import nguoiDungService from "../services/nguoiDungService";
 
@@ -76,7 +82,7 @@ const AddAdmin = () => {
     if (validateForm()) {
       try {
         setIsLoading(true);
-        
+
         // Kiểm tra xem người dùng đã đăng nhập chưa
         const currentUser = JSON.parse(localStorage.getItem("currentUser"));
         if (!currentUser) {
@@ -89,34 +95,33 @@ const AddAdmin = () => {
           navigate("/login");
           return;
         }
-        
+
         // Thêm chuc_vu = "ADMIN" vào dữ liệu
         const adminData = {
           ...formData,
           trangThai: true,
         };
-        
+
         console.log("Sending admin data:", adminData);
-        
+
         // Gọi API để tạo admin mới
         const response = await nguoiDungService.createAdmin(adminData);
         console.log("Server response:", response);
-        
+
         setToast({
           visible: true,
           type: "success",
           message: "Thêm admin thành công!",
         });
-        
+
         // Chuyển về trang danh sách sau 1.5 giây
         setTimeout(() => {
           setToast((t) => ({ ...t, visible: false }));
           navigate("/dashboard/accounts");
         }, 1500);
-        
       } catch (error) {
         console.error("Add admin error:", error);
-        
+
         if (error.response?.status === 401) {
           setToast({
             visible: true,
@@ -204,7 +209,7 @@ const AddAdmin = () => {
     marginTop: "16px",
     fontFamily: "Roboto, Arial, sans-serif",
     boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
-    transition: "background 0.2s, box-shadow 0.2s",
+    transition: "background 0.2s, box-shadow-md 0.2s",
   };
 
   const buttonHoverStyle = {
@@ -213,7 +218,14 @@ const AddAdmin = () => {
   };
 
   return (
-    <div style={{ maxWidth: "800px", margin: "0 auto", padding: "24px", fontFamily: "Roboto, Arial, sans-serif" }}>
+    <div
+      style={{
+        maxWidth: "800px",
+        margin: "0 auto",
+        padding: "24px",
+        fontFamily: "Roboto, Arial, sans-serif",
+      }}
+    >
       {/* Header */}
       <div
         style={{
@@ -244,10 +256,22 @@ const AddAdmin = () => {
             <FaArrowLeft /> Quay lại
           </button>
           <div>
-            <h2 style={{ fontWeight: "700", margin: "0 0 8px 0", fontFamily: "Roboto, Arial, sans-serif" }}>
+            <h2
+              style={{
+                fontWeight: "700",
+                margin: "0 0 8px 0",
+                fontFamily: "Roboto, Arial, sans-serif",
+              }}
+            >
               Thêm Admin
             </h2>
-            <p style={{ margin: "0", color: "#6b7280", fontFamily: "Roboto, Arial, sans-serif" }}>
+            <p
+              style={{
+                margin: "0",
+                color: "#6b7280",
+                fontFamily: "Roboto, Arial, sans-serif",
+              }}
+            >
               Điền thông tin để tạo tài khoản admin mới
             </p>
           </div>
@@ -302,7 +326,9 @@ const AddAdmin = () => {
               style={errors.tenDangNhap ? errorInputStyle : inputStyle}
               placeholder="Nhập tên đăng nhập..."
             />
-            {errors.tenDangNhap && <div style={errorStyle}>{errors.tenDangNhap}</div>}
+            {errors.tenDangNhap && (
+              <div style={errorStyle}>{errors.tenDangNhap}</div>
+            )}
           </div>
 
           {/* Mật khẩu */}
@@ -320,7 +346,7 @@ const AddAdmin = () => {
             />
             <button
               type="button"
-              onClick={() => setShowPassword(v => !v)}
+              onClick={() => setShowPassword((v) => !v)}
               style={{
                 position: "absolute",
                 right: "16px",
@@ -368,20 +394,39 @@ const AddAdmin = () => {
               style={errors.soDienThoai ? errorInputStyle : inputStyle}
               placeholder="Nhập số điện thoại..."
             />
-            {errors.soDienThoai && <div style={errorStyle}>{errors.soDienThoai}</div>}
+            {errors.soDienThoai && (
+              <div style={errorStyle}>{errors.soDienThoai}</div>
+            )}
           </div>
         </div>
 
-        <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 32 }}>
+        <div
+          style={{ display: "flex", justifyContent: "flex-end", marginTop: 32 }}
+        >
           <button
             type="submit"
             style={buttonStyle}
-            onMouseOver={e => e.currentTarget.style.background = buttonHoverStyle.background}
-            onMouseOut={e => e.currentTarget.style.background = buttonStyle.background}
+            onMouseOver={(e) =>
+              (e.currentTarget.style.background = buttonHoverStyle.background)
+            }
+            onMouseOut={(e) =>
+              (e.currentTarget.style.background = buttonStyle.background)
+            }
             disabled={isLoading}
           >
             {isLoading ? (
-              <span className="spinner" style={{ width: 20, height: 20, border: "3px solid #fff", borderTop: "3px solid #007bff", borderRadius: "50%", display: "inline-block", animation: "spin 1s linear infinite" }} />
+              <span
+                className="spinner"
+                style={{
+                  width: 20,
+                  height: 20,
+                  border: "3px solid #fff",
+                  borderTop: "3px solid #007bff",
+                  borderRadius: "50%",
+                  display: "inline-block",
+                  animation: "spin 1s linear infinite",
+                }}
+              />
             ) : (
               <FaSave />
             )}

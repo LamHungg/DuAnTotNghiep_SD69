@@ -1,0 +1,106 @@
+.stock-indicator {
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: 14px;
+  margin: 8px 0;
+  border: 1px solid #e9ecef;
+  background-color: #f8f9fa;
+}
+
+.stock-indicator.loading {
+  background-color: #e3f2fd;
+  border-color: #2196f3;
+}
+
+.stock-indicator.error {
+  background-color: #ffebee;
+  border-color: #f44336;
+}
+
+.stock-indicator.in-stock {
+  background-color: #e8f5e8;
+  border-color: #4caf50;
+}
+
+.stock-indicator.low-stock {
+  background-color: #fff8e1;
+  border-color: #ff9800;
+}
+
+.stock-indicator.out-of-stock {
+  background-color: #ffebee;
+  border-color: #f44336;
+}
+
+.stock-status {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 4px;
+}
+
+.stock-icon {
+  font-size: 16px;
+}
+
+.stock-text {
+  font-weight: 600;
+  font-size: 13px;
+}
+
+.stock-details {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 6px;
+}
+
+.stock-item {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+}
+
+.stock-item .label {
+  color: #6c757d;
+  font-weight: 500;
+}
+
+.stock-item .value {
+  font-weight: 600;
+  color: #495057;
+}
+
+.stock-message {
+  margin-top: 6px;
+  padding-top: 6px;
+  border-top: 1px solid #dee2e6;
+}
+
+.loading-text {
+  color: #2196f3;
+  font-style: italic;
+}
+
+.error-text {
+  color: #f44336;
+  font-weight: 500;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .stock-indicator {
+    padding: 6px 10px;
+    font-size: 13px;
+  }
+
+  .stock-details {
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .stock-item {
+    font-size: 11px;
+  }
+}

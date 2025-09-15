@@ -1,0 +1,68 @@
+console.log(`
+🔧 TEST FIX ORDERS - Copy và paste vào Console:
+
+// Bước 1: Kiểm tra localStorage
+console.log('=== BƯỚC 1: KIỂM TRA LOCALSTORAGE ===');
+
+const userStr = localStorage.getItem("user");
+const isLoggedIn = localStorage.getItem("isLoggedIn");
+
+console.log('User data:', userStr);
+console.log('Is logged in:', isLoggedIn);
+
+if (!userStr || !isLoggedIn) {
+  console.log('❌ Không có user data, tạo test data...');
+  
+  const testUser = {
+    id: 7,
+    email: "test@example.com",
+    hoTen: "Test User",
+    soDienThoai: "0123456789",
+    role: "CUSTOMER"
+  };
+  
+  localStorage.setItem("user", JSON.stringify(testUser));
+  localStorage.setItem("isLoggedIn", "true");
+  
+  console.log('✅ Đã tạo test user data:', testUser);
+} else {
+  console.log('✅ User data đã có sẵn');
+}
+
+// Bước 2: Test customer orders API
+console.log('\\n=== BƯỚC 2: TEST CUSTOMER ORDERS API ===');
+
+const user = JSON.parse(localStorage.getItem("user") || "{}");
+
+fetch('http://localhost:8080/api/customer-orders', {
+  method: 'GET',
+  headers: {
+    'Content-Type': 'application/json',
+    'X-User-ID': user.id || 7
+  },
+  credentials: 'include'
+})
+.then(response => {
+  console.log('Customer orders response status:', response.status);
+  return response.json();
+})
+.then(data => {
+  console.log('Customer orders response data:', data);
+  if (response.status === 200) {
+    console.log('✅ Lấy đơn hàng thành công');
+    if (Array.isArray(data)) {
+      console.log('📦 Số đơn hàng:', data.length);
+      if (data.length > 0) {
+        console.log('Đơn hàng đầu tiên:', data[0]);
+      }
+    }
+  } else {
+    console.log('❌ Lỗi lấy đơn hàng:', data.error || 'Unknown error');
+  }
+})
+.catch(error => {
+  console.log('❌ Customer orders error:', error.message);
+});
+
+console.log('\\n🎯 Kết quả mong đợi: 200 OK với danh sách đơn hàng');
+`);

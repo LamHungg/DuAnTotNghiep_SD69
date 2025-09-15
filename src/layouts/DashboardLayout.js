@@ -9,20 +9,17 @@ import {
   FaThList,
   FaPalette,
   FaRulerCombined,
-  FaTrademark,
   FaTint,
-  FaRegHandPaper,
-  FaRegCircle,
   FaHome,
   FaShoppingCart,
-  FaPlus,
   FaUserTie,
   FaSignOutAlt,
   FaRegClock,
   FaGift,
+  FaImage,
 } from "react-icons/fa";
 import Toast from "../components/Toast";
-import authService from '../services/authService';
+import authService from "../services/authService";
 
 const sidebarMenus = [
   { label: "Trang chủ", icon: <FaHome />, to: "/dashboard" },
@@ -56,6 +53,7 @@ const sidebarMenus = [
     to: "/dashboard/vouchers",
   },
   { label: "Cài đặt", icon: <FaCog />, to: "/dashboard/settings" },
+  { label: "Test Upload", icon: <FaImage />, to: "/test-upload" },
 ];
 
 function Clock() {
@@ -89,6 +87,7 @@ function Clock() {
 const DashboardLayout = () => {
   const [openMenu, setOpenMenu] = useState("");
   const [showLogoutModal, setShowLogoutModal] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const [toast, setToast] = useState({
     visible: false,
     type: "error",
@@ -97,7 +96,9 @@ const DashboardLayout = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const currentUser = authService.getCurrentUser();
-  const isNhanVien = currentUser && (currentUser.chucVu === 'NHANVIEN' || currentUser.role === 'NHANVIEN');
+  const isNhanVien =
+    currentUser &&
+    (currentUser.chucVu === "NHANVIEN" || currentUser.role === "NHANVIEN");
 
   const handleLogout = () => {
     setShowLogoutModal(true);
@@ -119,129 +120,92 @@ const DashboardLayout = () => {
   };
 
   return (
-    <div
-      className="d-flex"
-      style={{ minHeight: "100vh", background: "#f6f8fa" }}
-    >
+    <div className="admin-layout">
       {/* Sidebar */}
-      <div
-        className="bg-white border-end"
-        style={{
-          width: 260,
-          minHeight: "100vh",
-          boxShadow: "2px 0 8px #f0f1f2",
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "center",
-          justifyContent: "center",
-        }}
-      >
-        <div className="d-flex flex-column align-items-center p-3 h-100 w-100">
-          <div
-            style={{
-              width: 110,
-              height: 110,
-              background: "#fff",
-              borderRadius: 24,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              boxShadow: "0 4px 16px rgba(0,0,0,0.08)",
-              border: "1.5px solid #eee",
-              margin: "auto",
-            }}
-            className="mb-4"
-          >
-            <img
-              src="/logo.png"
-              alt="logo"
-              style={{
-                width: 90,
-                height: 90,
-                objectFit: "contain",
-                display: "block",
-              }}
-            />
+      <div className={`admin-sidebar ${sidebarOpen ? "open" : ""}`}>
+        <div className="admin-sidebar-content">
+          <div className="admin-logo-container">
+            <img src="/logo.png" alt="logo" className="admin-logo" />
           </div>
-          <nav className="flex-grow-1 w-100">
-            <ul className="nav flex-column w-100">
+          <nav className="admin-nav">
+            <ul className="admin-nav-list">
               {sidebarMenus.map((item, idx) => {
                 const isRestricted =
-                  isNhanVien && (item.label === 'Quản Lý Account' || item.label === 'Thống Kê');
+                  isNhanVien &&
+                  (item.label === "Quản Lý Account" ||
+                    item.label === "Thống Kê");
                 return (
-                  <li className="nav-item w-100" key={item.label}>
+                  <li className="admin-nav-item" key={item.label}>
                     {item.children ? (
                       <>
                         <div
-                          className={`nav-link d-flex align-items-center w-100 px-3 py-2 mb-1 rounded-2 sidebar-parent ${
+                          className={`admin-nav-link admin-nav-parent ${
                             item.children.some((child) =>
                               location.pathname.startsWith(child.to)
                             )
-                              ? "active-menu"
-                              : "text-secondary"
+                              ? "admin-nav-active"
+                              : ""
                           }`}
-                          style={{
-                            fontWeight: 500,
-                            fontSize: 15,
-                            cursor: "pointer",
-                          }}
                           onClick={() =>
-                            setOpenMenu(openMenu === item.label ? "" : item.label)
+                            setOpenMenu(
+                              openMenu === item.label ? "" : item.label
+                            )
                           }
                         >
-                          <span className="me-2">{item.icon}</span>
-                          {item.label}
-                          <span className="ms-auto">
+                          <span className="admin-nav-icon">{item.icon}</span>
+                          <span className="admin-nav-label">{item.label}</span>
+                          <span className="admin-nav-arrow">
                             {openMenu === item.label ? "▾" : "▸"}
                           </span>
                         </div>
                         {openMenu === item.label && (
-                          <ul className="nav flex-column ms-3 sidebar-children">
+                          <ul className="admin-nav-children">
                             {item.children.map((child) => (
-                              <li className="nav-item w-100" key={child.label}>
+                              <li className="admin-nav-item" key={child.label}>
                                 <NavLink
                                   to={child.to}
                                   className={({ isActive }) =>
-                                    `nav-link d-flex align-items-center w-100 px-3 py-2 mb-1 rounded-2 sidebar-child ${
-                                      isActive ? "active-menu" : "text-secondary"
+                                    `admin-nav-link admin-nav-child ${
+                                      isActive ? "admin-nav-active" : ""
                                     }`
                                   }
-                                  style={{ fontWeight: 500, fontSize: 15 }}
                                 >
-                                  <span className="me-2">{child.icon}</span>
-                                  {child.label}
+                                  <span className="admin-nav-icon">
+                                    {child.icon}
+                                  </span>
+                                  <span className="admin-nav-label">
+                                    {child.label}
+                                  </span>
                                 </NavLink>
                               </li>
                             ))}
                           </ul>
                         )}
                       </>
+                    ) : isRestricted ? (
+                      <div
+                        className="admin-nav-link admin-nav-disabled"
+                        onClick={() =>
+                          setToast({
+                            visible: true,
+                            type: "error",
+                            message: "Bạn không có quyền truy cập",
+                          })
+                        }
+                      >
+                        <span className="admin-nav-icon">{item.icon}</span>
+                        <span className="admin-nav-label">{item.label}</span>
+                      </div>
                     ) : (
-                      isRestricted ? (
-                        <div
-                          className={
-                            'nav-link d-flex align-items-center w-100 px-3 py-2 mb-1 rounded-2 text-secondary'
-                          }
-                          style={{ fontWeight: 500, fontSize: 15, cursor: 'not-allowed', opacity: 0.7 }}
-                          onClick={() => setToast({ visible: true, type: 'error', message: 'Bạn không có quyền truy cập' })}
-                        >
-                          <span className="me-2">{item.icon}</span>
-                          {item.label}
-                        </div>
-                      ) : (
-                        <NavLink
-                          to={item.to}
-                          className={({ isActive }) =>
-                            `nav-link d-flex align-items-center w-100 px-3 py-2 mb-1 rounded-2 ${
-                              isActive ? "active-menu" : "text-secondary"
-                            }`
-                          }
-                          style={{ fontWeight: 500, fontSize: 15 }}
-                        >
-                          <span className="me-2">{item.icon}</span>
-                          {item.label}
-                        </NavLink>
-                      )
+                      <NavLink
+                        to={item.to}
+                        className={({ isActive }) =>
+                          `admin-nav-link ${isActive ? "admin-nav-active" : ""}`
+                        }
+                      >
+                        <span className="admin-nav-icon">{item.icon}</span>
+                        <span className="admin-nav-label">{item.label}</span>
+                      </NavLink>
                     )}
                   </li>
                 );
@@ -251,29 +215,35 @@ const DashboardLayout = () => {
         </div>
       </div>
       {/* Main Content */}
-      <div className="flex-grow-1">
-        <nav
-          className="navbar navbar-light bg-white border-bottom shadow-sm"
-          style={{ minHeight: 60 }}
-        >
-          <div className="container-fluid">
-            <span className="navbar-brand fw-bold d-flex align-items-center">
-              Admin Dashboard
-              <Clock />
-            </span>
-            <div className="d-flex align-items-center">
+      <div className="admin-main">
+        <nav className="admin-navbar">
+          <div className="admin-navbar-content">
+            <div className="admin-navbar-left">
+              <button
+                className="admin-sidebar-toggle"
+                onClick={() => setSidebarOpen(!sidebarOpen)}
+              >
+                <span></span>
+                <span></span>
+                <span></span>
+              </button>
+              <span className="admin-navbar-brand">
+                Admin Dashboard
+                <Clock />
+              </span>
+            </div>
+            <div className="admin-navbar-right">
               <button
                 onClick={handleLogout}
-                className="btn btn-outline-danger d-flex align-items-center gap-2"
-                style={{ fontSize: "14px" }}
+                className="admin-btn admin-btn-outline admin-btn-danger"
               >
                 <FaSignOutAlt />
-                Đăng xuất
+                <span>Đăng xuất</span>
               </button>
             </div>
           </div>
         </nav>
-        <main className="p-4">
+        <main className="admin-main-content">
           <Outlet />
         </main>
       </div>

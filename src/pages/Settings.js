@@ -114,12 +114,16 @@ const Settings = () => {
 
       // Cập nhật mật khẩu: nếu không nhập mới thì giữ mật khẩu cũ
       const updatedData = { ...formData };
-      updatedData.matKhau = newPassword.trim() ? newPassword : currentUser?.matKhau || formData.matKhau;
+      updatedData.matKhau = newPassword.trim()
+        ? newPassword
+        : currentUser?.matKhau || formData.matKhau;
       updatedData.ngayCapNhat = new Date().toISOString();
 
       // Gọi API cập nhật
-      const updatedUser = await nguoiDungService.updateNguoiDung(userId, updatedData);
-
+      const updatedUser = await nguoiDungService.updateNguoiDung(
+        currentUser.id,
+        updatedData
+      );
       // Cập nhật lại currentUser trong localStorage
       localStorage.setItem("currentUser", JSON.stringify(updatedUser));
       setCurrentUser(updatedUser);

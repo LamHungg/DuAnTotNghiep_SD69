@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Backend API - ZMEN</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+        }
+        .test-button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        .test-button:hover {
+            background: #0056b3;
+        }
+        .result {
+            margin-top: 10px;
+            padding: 10px;
+            border-radius: 5px;
+            font-family: monospace;
+            font-size: 12px;
+            white-space: pre-wrap;
+        }
+        .success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .loading {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+        }
+        .status {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 3px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        .status.success { background: #28a745; color: white; }
+        .status.error { background: #dc3545; color: white; }
+        .status.loading { background: #ffc107; color: black; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔧 Test Backend API Endpoints</h1>
+        <p>Kiểm tra các API endpoint của backend ZMEN</p>
+
+        <div class="test-section">
+            <h3>1. Test Basic Endpoints</h3>
+            <button class="test-button" onclick="testEndpoint('/zmen/san-pham/ngay?ngay=2025-08-26', 'GET')">
+                Test San Pham Ngay
+            </button>
+            <button class="test-button" onclick="testEndpoint('/zmen/doanh-thu/ngay?ngay=2025-08-26', 'GET')">
+                Test Doanh Thu Ngay
+            </button>
+            <button class="test-button" onclick="testEndpoint('/zmen/nhan-vien/ngay?ngay=2025-08-26', 'GET')">
+                Test Nhan Vien Ngay
+            </button>
+            <button class="test-button" onclick="testEndpoint('/zmen/khach-hang/ngay?ngay=2025-08-26', 'GET')">
+                Test Khach Hang Ngay
+            </button>
+        </div>
+
+        <div class="test-section">
+            <h3>2. Test New Statistics Endpoints</h3>
+            <button class="test-button" onclick="testEndpoint('/zmen/tong-quan', 'GET')">
+                Test Tong Quan
+            </button>
+            <button class="test-button" onclick="testEndpoint('/zmen/bieu-do/doanh-thu?loai=ngay&nam=2025&thang=8', 'GET')">
+                Test Bieu Do Doanh Thu
+            </button>
+            <button class="test-button" onclick="testEndpoint('/zmen/danh-muc/doanh-thu?nam=2025&thang=8', 'GET')">
+                Test Danh Muc Doanh Thu
+            </button>
+            <button class="test-button" onclick="testEndpoint('/zmen/thanh-toan/thong-ke?nam=2025&thang=8', 'GET')">
+                Test Thanh Toan Thong Ke
+            </button>
+        </div>
+
+        <div class="test-section">
+            <h3>3. Test Export Endpoints</h3>
+            <button class="test-button" onclick="testEndpoint('/zmen/san-pham/ngay/export-excel?ngay=2025-08-26', 'GET')">
+                Test Export San Pham
+            </button>
+            <button class="test-button" onclick="testEndpoint('/zmen/doanh-thu/export-excel?loai=ngay&ngay=2025-08-26', 'GET')">
+                Test Export Doanh Thu
+            </button>
+            <button class="test-button" onclick="testEndpoint('/zmen/tong-quan/export-excel', 'GET')">
+                Test Export Tong Quan
+            </button>
+        </div>
+
+        <div class="test-section">
+            <h3>4. Test Server Status</h3>
+            <button class="test-button" onclick="testServerStatus()">
+                Test Server Status
+            </button>
+            <div id="server-status"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>5. Results</h3>
+            <div id="results"></div>
+        </div>
+    </div>
+
+    <script>
+        const BASE_URL = 'http://localhost:8080';
+        let testCount = 0;
+
+        async function testEndpoint(endpoint, method = 'GET') {
+            const testId = `test-${++testCount}`;
+            const resultDiv = document.getElementById('results');
+            
+            // Add test entry
+            const testEntry = document.createElement('div');
+            testEntry.id = testId;
+            testEntry.innerHTML = `
+                <div style="margin: 10px 0; padding: 10px; border: 1px solid #ddd; border-radius: 5px;">
+                    <strong>${method} ${endpoint}</strong>
+                    <span class="status loading" id="${testId}-status">Testing...</span>
+                    <div class="result loading" id="${testId}-result">Đang test...</div>
+                </div>
+            `;
+            resultDiv.appendChild(testEntry);
+
+            try {
+                const startTime = Date.now();
+                const response = await fetch(`${BASE_URL}${endpoint}`, {
+                    method: method,
+                    headers: {
+                        'Content-Type': 'application/json',
+                    }
+                });
+                const endTime = Date.now();
+                const responseTime = endTime - startTime;
+
+                let resultText = '';
+                let statusClass = '';
+
+                if (response.ok) {
+                    const data = await response.text();
+                    resultText = `✅ SUCCESS (${response.status})\n⏱️ Response Time: ${responseTime}ms\n📄 Response: ${data.substring(0, 500)}${data.length > 500 ? '...' : ''}`;
+                    statusClass = 'success';
+                } else {
+                    resultText = `❌ ERROR (${response.status} ${response.statusText})\n⏱️ Response Time: ${responseTime}ms\n📄 Error Details: ${response.statusText}`;
+                    statusClass = 'error';
+                }
+
+                document.getElementById(`${testId}-status`).className = `status ${statusClass}`;
+                document.getElementById(`${testId}-status`).textContent = response.ok ? 'SUCCESS' : 'ERROR';
+                document.getElementById(`${testId}-result`).className = `result ${statusClass}`;
+                document.getElementById(`${testId}-result`).textContent = resultText;
+
+            } catch (error) {
+                document.getElementById(`${testId}-status`).className = 'status error';
+                document.getElementById(`${testId}-status`).textContent = 'ERROR';
+                document.getElementById(`${testId}-result`).className = 'result error';
+                document.getElementById(`${testId}-result`).textContent = `❌ NETWORK ERROR\n📄 Error: ${error.message}`;
+            }
+        }
+
+        async function testServerStatus() {
+            const statusDiv = document.getElementById('server-status');
+            statusDiv.innerHTML = '<div class="result loading">Đang kiểm tra server...</div>';
+
+            try {
+                const response = await fetch(`${BASE_URL}/zmen/test`, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    }
+                });
+
+                if (response.ok) {
+                    const data = await response.text();
+                    statusDiv.innerHTML = `<div class="result success">✅ Server is running!\n📄 Response: ${data}</div>`;
+                } else {
+                    statusDiv.innerHTML = `<div class="result error">❌ Server error: ${response.status} ${response.statusText}</div>`;
+                }
+            } catch (error) {
+                statusDiv.innerHTML = `<div class="result error">❌ Cannot connect to server: ${error.message}</div>`;
+            }
+        }
+
+        // Auto test server status on load
+        window.onload = function() {
+            testServerStatus();
+        };
+    </script>
+</body>
+</html>

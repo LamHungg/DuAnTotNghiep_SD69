@@ -1,0 +1,375 @@
+/* ProductRating.css - Additional animations and effects */
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200px 0;
+  }
+  100% {
+    background-position: calc(200px + 100%) 0;
+  }
+}
+
+.product-rating {
+  animation: fadeInUp 0.6s ease-out;
+}
+
+.rating-summary {
+  position: relative;
+  overflow: hidden;
+}
+
+.rating-summary::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.1),
+    transparent
+  );
+  animation: shimmer 3s infinite;
+}
+
+.rating-badge {
+  animation: pulse 2s infinite;
+}
+
+.rating-badge:hover {
+  animation: none;
+  transform: scale(1.05);
+  transition: transform 0.3s ease;
+}
+
+.star.interactive {
+  transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+.star.interactive:hover {
+  transform: scale(1.3) rotate(5deg);
+  filter: drop-shadow(0 0 8px rgba(255, 215, 0, 0.8));
+}
+
+.modern-textarea:focus {
+  animation: pulse 0.3s ease;
+}
+
+.submit-review-btn:not(:disabled):hover {
+  animation: pulse 0.3s ease;
+}
+
+.review-item {
+  animation: fadeInUp 0.4s ease-out;
+  animation-fill-mode: both;
+}
+
+.review-item:nth-child(1) {
+  animation-delay: 0.1s;
+}
+.review-item:nth-child(2) {
+  animation-delay: 0.2s;
+}
+.review-item:nth-child(3) {
+  animation-delay: 0.3s;
+}
+.review-item:nth-child(4) {
+  animation-delay: 0.4s;
+}
+.review-item:nth-child(5) {
+  animation-delay: 0.5s;
+}
+
+.avatar {
+  position: relative;
+  overflow: hidden;
+}
+
+.avatar::before {
+  content: "";
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: linear-gradient(
+    45deg,
+    transparent,
+    rgba(255, 255, 255, 0.1),
+    transparent
+  );
+  transform: rotate(45deg);
+  animation: shimmer 2s infinite;
+}
+
+.action-btn {
+  position: relative;
+  overflow: hidden;
+}
+
+.action-btn::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(102, 126, 234, 0.1),
+    transparent
+  );
+  transition: left 0.5s ease;
+}
+
+.action-btn:hover::before {
+  left: 100%;
+}
+
+.empty-state {
+  animation: fadeInUp 0.6s ease-out;
+}
+
+.be-first-btn {
+  position: relative;
+  overflow: hidden;
+}
+
+.be-first-btn::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.2),
+    transparent
+  );
+  transition: left 0.5s ease;
+}
+
+.be-first-btn:hover::before {
+  left: 100%;
+}
+
+/* Loading animation improvements */
+.loading-spinner {
+  position: relative;
+}
+
+.loading-spinner::before {
+  content: "";
+  position: absolute;
+  top: -2px;
+  left: -2px;
+  right: -2px;
+  bottom: -2px;
+  border: 2px solid transparent;
+  border-top: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 50%;
+  animation: spin 1.5s linear infinite reverse;
+}
+
+/* Progress bar animation */
+.progress-fill {
+  position: relative;
+  overflow: hidden;
+}
+
+.progress-fill::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.3),
+    transparent
+  );
+  animation: shimmer 2s infinite;
+}
+
+/* Responsive improvements */
+@media (max-width: 768px) {
+  .product-rating {
+    margin: 20px 0;
+  }
+
+  .rating-summary {
+    padding: 20px;
+  }
+
+  .review-form {
+    margin: 20px;
+    padding: 20px;
+  }
+
+  .reviews-section {
+    padding: 20px;
+  }
+}
+
+@media (max-width: 480px) {
+  .rating-badge {
+    flex-direction: column;
+    gap: 8px;
+    text-align: center;
+  }
+
+  .rating-stats {
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .stat-item {
+    min-width: auto;
+  }
+
+  .stars-input {
+    flex-direction: column;
+    gap: 12px;
+    text-align: center;
+  }
+
+  .review-actions {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .action-btn {
+    justify-content: center;
+  }
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+  .product-rating {
+    background: linear-gradient(135deg, #1a202c 0%, #2d3748 100%);
+    color: #e2e8f0;
+  }
+
+  .review-form {
+    background: #2d3748;
+    color: #e2e8f0;
+  }
+
+  .review-item {
+    background: #2d3748;
+    border-color: #4a5568;
+    color: #e2e8f0;
+  }
+
+  .modern-textarea {
+    background: #4a5568;
+    border-color: #718096;
+    color: #e2e8f0;
+  }
+
+  .modern-textarea:focus {
+    border-color: #667eea;
+    background: #4a5568;
+  }
+
+  .stars-input {
+    background: #4a5568;
+  }
+
+  .stars-input:hover {
+    background: #718096;
+  }
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .product-rating {
+    border: 2px solid #000;
+  }
+
+  .rating-summary {
+    border-bottom: 2px solid #fff;
+  }
+
+  .review-form {
+    border: 2px solid #000;
+  }
+
+  .review-item {
+    border: 2px solid #000;
+  }
+
+  .submit-review-btn {
+    border: 2px solid #000;
+  }
+
+  .action-btn {
+    border: 2px solid #000;
+  }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  .product-rating,
+  .rating-badge,
+  .star,
+  .review-item,
+  .empty-state,
+  .be-first-btn,
+  .action-btn {
+    animation: none;
+    transition: none;
+  }
+
+  .rating-summary::before,
+  .avatar::before,
+  .action-btn::before,
+  .be-first-btn::before,
+  .progress-fill::after {
+    animation: none;
+  }
+
+  .star.interactive:hover {
+    transform: none;
+  }
+
+  .submit-review-btn:hover:not(:disabled) {
+    transform: none;
+  }
+
+  .review-item:hover {
+    transform: none;
+  }
+
+  .be-first-btn:hover {
+    transform: none;
+  }
+}

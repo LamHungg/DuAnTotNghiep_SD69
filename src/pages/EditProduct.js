@@ -3,11 +3,14 @@ import { useParams, Link } from "react-router-dom";
 import { FaEdit, FaTimes, FaPlus } from "react-icons/fa";
 import Select from "react-select";
 import ImageCarousel from "../components/ImageCarousel";
+import "../App.css";
+import "./EditProduct.css";
 import {
   getAllSanPham,
   getAllChiTietSanPham,
   updateChiTietSanPham,
-  uploadHinhAnh,
+  getChiTietSanPhamById,
+  uploadImageToServer,
 } from "../services/sanPhamService";
 import { getAllDanhMuc } from "../services/danhMucService";
 import { getAllMauSac } from "../services/mauSacService";
@@ -42,7 +45,7 @@ const EditProduct = () => {
     soLuong: 0,
     giaNhap: 0,
     gia: 0,
-    images: [],
+    hinhAnh: [],
   });
 
   // Options for modal dropdowns
@@ -89,6 +92,12 @@ const EditProduct = () => {
           (d) => d.idSanPham === Number(productId)
         );
         console.log("Variants for product:", variants);
+        console.log("Sample variant hinhAnh:", variants[0]?.hinhAnh);
+        console.log(
+          "All variant IDs:",
+          variants.map((v) => v.id)
+        );
+        console.log("Product ID being filtered:", Number(productId));
         setAllVariants(variants);
         setFilteredVariants(variants);
 
@@ -159,6 +168,13 @@ const EditProduct = () => {
     fetchData();
   }, [productId]);
 
+  // Cleanup modal-open class when component unmounts
+  useEffect(() => {
+    return () => {
+      document.body.classList.remove("modal-open");
+    };
+  }, []);
+
   const getNameById = (id, list, fieldName) => {
     if (!id || !list || list.length === 0) return "";
     const item = list.find((item) => item.id === id);
@@ -197,6 +213,10 @@ const EditProduct = () => {
   };
 
   const handleEditVariant = (variant) => {
+    console.log("Editing variant:", variant);
+    console.log("Variant ID:", variant.id);
+    console.log("Variant hinhAnh:", variant.hinhAnh);
+
     setEditingVariant(variant);
 
     // Tìm tên từ ID để hiển thị trong dropdown
@@ -224,9 +244,12 @@ const EditProduct = () => {
       soLuong: variant.soLuong,
       giaNhap: variant.giaNhap,
       gia: variant.gia,
-      images: variant.images || [],
+      hinhAnh: Array.isArray(variant.hinhAnh) ? variant.hinhAnh : [], // Đảm bảo luôn là array
     });
     setShowEditModal(true);
+
+    // Add modal-open class to body
+    document.body.classList.add("modal-open");
   };
 
   const handleModalFormChange = (e) => {
@@ -241,7 +264,7 @@ const EditProduct = () => {
   const handleRemoveImage = (index) => {
     setVariantForm((prev) => ({
       ...prev,
-      images: prev.images.filter((_, i) => i !== index),
+      hinhAnh: prev.hinhAnh.filter((_, i) => i !== index),
     }));
   };
 
@@ -250,41 +273,51 @@ const EditProduct = () => {
     if (!files || files.length === 0 || !editingVariant) return;
 
     try {
-      // Tạo FormData để gửi file
-      const formData = new FormData();
-      Array.from(files).forEach((file) => {
-        formData.append("files", file);
-      });
+      // Upload từng file một cách tuần tự
+      const uploadedUrls = [];
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i];
 
-      // Upload hình ảnh
-      await uploadHinhAnh(editingVariant.id, formData);
+        // Validate file type
+        if (!file.type.startsWith("image/")) {
+          alert(`File ${file.name} không phải là ảnh hợp lệ!`);
+          continue;
+        }
 
-      // Sau khi upload thành công, load lại dữ liệu
-      const [spRes, ctspRes] = await Promise.all([
-        getAllSanPham(),
-        getAllChiTietSanPham(),
-      ]);
+        // Validate file size (max 5MB)
+        if (file.size > 5 * 1024 * 1024) {
+          alert(`File ${file.name} quá lớn (tối đa 5MB)!`);
+          continue;
+        }
 
-      // Cập nhật state
-      const variants = (ctspRes || []).filter(
-        (d) => d.idSanPham === Number(productId)
-      );
-      setAllVariants(variants);
-      setFilteredVariants(variants);
-
-      // Tìm variant vừa upload để cập nhật form
-      const updatedVariant = variants.find((v) => v.id === editingVariant.id);
-      if (updatedVariant) {
-        setVariantForm((prev) => ({
-          ...prev,
-          images: updatedVariant.images || [],
-        }));
+        console.log("Uploading file:", file.name, file.size, file.type);
+        const url = await uploadImageToServer(file);
+        uploadedUrls.push(url);
+        console.log("Uploaded URL:", url);
       }
 
-      alert("Upload hình ảnh thành công!");
+      if (uploadedUrls.length > 0) {
+        // Cập nhật images trong variantForm
+        setVariantForm((prev) => ({
+          ...prev,
+          hinhAnh: [...prev.hinhAnh, ...uploadedUrls],
+        }));
+
+        alert(`Upload thành công ${uploadedUrls.length} ảnh!`);
+      }
     } catch (error) {
       console.error("Lỗi khi upload hình ảnh:", error);
-      alert("Lỗi khi upload hình ảnh!");
+      let errorMessage = "Lỗi không xác định";
+
+      if (error.response) {
+        errorMessage = error.response.data || error.response.statusText;
+      } else if (error.request) {
+        errorMessage = "Không thể kết nối tới server";
+      } else {
+        errorMessage = error.message;
+      }
+
+      alert("Lỗi khi upload hình ảnh: " + errorMessage);
     }
 
     // Reset file input
@@ -296,8 +329,7 @@ const EditProduct = () => {
 
     try {
       // Chuẩn bị dữ liệu để gửi lên API
-      const updatedVariantForState = {
-        id: editingVariant.id,
+      const updatedVariantData = {
         idSanPham: editingVariant.idSanPham,
         idMauSac: variantForm.idMauSac.value,
         idKichCo: variantForm.idKichCo.value,
@@ -306,12 +338,14 @@ const EditProduct = () => {
         giaNhap: Number(variantForm.giaNhap),
         gia: Number(variantForm.gia),
         trangThai: editingVariant.trangThai || 1,
+        hinhAnh: variantForm.hinhAnh || [], // Mảng URL ảnh
       };
 
-      console.log("Sending update with:", updatedVariantForState);
+      console.log("Updating chi tiết sản phẩm with ID:", editingVariant.id);
+      console.log("Data being sent:", updatedVariantData);
 
       // Gọi API để cập nhật
-      await updateChiTietSanPham(editingVariant.id, updatedVariantForState);
+      await updateChiTietSanPham(editingVariant.id, updatedVariantData);
 
       // Sau khi cập nhật thành công, load lại dữ liệu
       const [spRes, ctspRes, dmRes, msRes, kcRes, clRes] = await Promise.all([
@@ -344,6 +378,10 @@ const EditProduct = () => {
 
       setShowEditModal(false);
       setEditingVariant(null);
+
+      // Remove modal-open class from body
+      document.body.classList.remove("modal-open");
+
       alert("Cập nhật chi tiết sản phẩm thành công!");
     } catch (error) {
       console.error("Lỗi khi cập nhật:", error.response?.data || error);
@@ -504,14 +542,18 @@ const EditProduct = () => {
                       {variant.gia?.toLocaleString()} VNĐ
                     </td>
                     <td className="text-center">
-                      {variant.images && variant.images.length > 1 ? (
+                      {variant.hinhAnh &&
+                      Array.isArray(variant.hinhAnh) &&
+                      variant.hinhAnh.length > 1 ? (
                         <ImageCarousel
-                          images={variant.images.map(getImageUrl)}
+                          images={variant.hinhAnh.map(getImageUrl)}
                           carouselId={`carousel-${variant.id}`}
                         />
-                      ) : variant.images && variant.images.length === 1 ? (
+                      ) : variant.hinhAnh &&
+                        Array.isArray(variant.hinhAnh) &&
+                        variant.hinhAnh.length === 1 ? (
                         <img
-                          src={getImageUrl(variant.images[0])}
+                          src={getImageUrl(variant.hinhAnh[0])}
                           alt="variant"
                           style={{
                             width: "120px",
@@ -549,12 +591,8 @@ const EditProduct = () => {
 
       {/* Edit Variant Modal */}
       {showEditModal && (
-        <div
-          className="modal show"
-          tabIndex="-1"
-          style={{ display: "block", backgroundColor: "rgba(0,0,0,0.5)" }}
-        >
-          <div className="modal-dialog modal-lg modal-dialog-centered">
+        <div className="edit-product-modal">
+          <div className="modal-dialog modal-lg">
             <div className="modal-content">
               <div className="modal-header">
                 <h5 className="modal-title">
@@ -566,7 +604,10 @@ const EditProduct = () => {
                 <button
                   type="button"
                   className="btn-close"
-                  onClick={() => setShowEditModal(false)}
+                  onClick={() => {
+                    setShowEditModal(false);
+                    document.body.classList.remove("modal-open");
+                  }}
                 ></button>
               </div>
               <div className="modal-body">
@@ -634,7 +675,7 @@ const EditProduct = () => {
                   <div className="col-12">
                     <label className="form-label">Hình ảnh sản phẩm</label>
                     <div className="d-flex flex-wrap gap-2">
-                      {variantForm.images.map((img, index) => (
+                      {(variantForm.hinhAnh || []).map((img, index) => (
                         <div key={index} className="position-relative">
                           <img
                             src={getImageUrl(img)}
@@ -665,7 +706,7 @@ const EditProduct = () => {
                         onChange={handleImageUpload}
                       />
                       <div
-                        className="d-flex align-items-center justify-content-center"
+                        className="d-flex align-center justify-content-center"
                         style={{
                           width: "80px",
                           height: "80px",
@@ -685,7 +726,10 @@ const EditProduct = () => {
                 <button
                   type="button"
                   className="btn btn-secondary"
-                  onClick={() => setShowEditModal(false)}
+                  onClick={() => {
+                    setShowEditModal(false);
+                    document.body.classList.remove("modal-open");
+                  }}
                 >
                   Hủy
                 </button>

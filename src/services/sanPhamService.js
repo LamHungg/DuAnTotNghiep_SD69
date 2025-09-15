@@ -88,6 +88,19 @@ export const searchSanPham = async (params) => {
   }
 };
 
+// Lấy chi tiết sản phẩm theo ID
+export const getChiTietSanPhamById = async (id) => {
+  try {
+    const response = await axios.get(
+      `http://localhost:8080/api/chi-tiet-san-pham/${id}`
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Error in getChiTietSanPhamById:", error.response || error);
+    throw error;
+  }
+};
+
 // Cập nhật chi tiết sản phẩm
 export const updateChiTietSanPham = async (id, chiTietSanPhamObj) => {
   try {
@@ -194,11 +207,40 @@ export const uploadImageToServer = async (file) => {
       "http://localhost:8080/api/hinhanhsanpham/upload",
       formData,
       {
-        headers: { "Content-Type": "multipart/form-data" },
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+        withCredentials: true,
       }
     );
     return response.data; // URL ảnh
   } catch (error) {
+    console.error("Upload error:", error.response || error);
+    throw error;
+  }
+};
+
+// Upload nhiều ảnh cùng lúc
+export const uploadMultipleImages = async (files) => {
+  const formData = new FormData();
+  files.forEach((file, index) => {
+    formData.append("files", file);
+  });
+
+  try {
+    const response = await axios.post(
+      "http://localhost:8080/api/hinhanhsanpham/upload-multiple",
+      formData,
+      {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+        withCredentials: true,
+      }
+    );
+    return response.data; // Array of URLs
+  } catch (error) {
+    console.error("Upload multiple images error:", error.response || error);
     throw error;
   }
 };

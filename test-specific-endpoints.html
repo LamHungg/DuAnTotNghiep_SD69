@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Test Specific Endpoints</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        margin: 20px;
+        background-color: #f5f5f5;
+      }
+      .container {
+        max-width: 1200px;
+        margin: 0 auto;
+        background: white;
+        padding: 20px;
+        border-radius: 10px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      }
+      .test-button {
+        background: #007bff;
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 5px;
+        cursor: pointer;
+        margin: 5px;
+        width: 100%;
+      }
+      .test-button:hover {
+        background: #0056b3;
+      }
+      .result {
+        margin-top: 10px;
+        padding: 10px;
+        border-radius: 5px;
+        font-family: monospace;
+        font-size: 12px;
+        white-space: pre-wrap;
+        max-height: 300px;
+        overflow-y: auto;
+      }
+      .success {
+        background: #d4edda;
+        color: #155724;
+        border: 1px solid #c3e6cb;
+      }
+      .error {
+        background: #f8d7da;
+        color: #721c24;
+        border: 1px solid #f5c6cb;
+      }
+      .loading {
+        background: #fff3cd;
+        color: #856404;
+        border: 1px solid #ffeaa7;
+      }
+      .warning {
+        background: #fff3cd;
+        color: #856404;
+        border: 1px solid #ffeaa7;
+      }
+      .info {
+        background: #d1ecf1;
+        color: #0c5460;
+        border: 1px solid #bee5eb;
+      }
+      .grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 20px;
+      }
+      .highlight {
+        background: #fff3cd;
+        padding: 10px;
+        border-radius: 5px;
+        margin: 10px 0;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>🔧 Test Specific Endpoints</h1>
+      <p>Kiểm tra các endpoint cụ thể đang bị lỗi</p>
+
+      <div class="highlight">
+        <strong>🎯 Mục tiêu:</strong> Kiểm tra tại sao các biểu đồ và bảng chi
+        tiết không hiển thị dữ liệu
+      </div>
+
+      <div class="grid">
+        <div>
+          <button class="test-button" onclick="testBieuDoDoanhThu()">
+            Test /zmen/bieu-do/doanh-thu
+          </button>
+          <div id="bieudo-result"></div>
+
+          <button class="test-button" onclick="testDanhMucDoanhThu()">
+            Test /zmen/danh-muc/doanh-thu
+          </button>
+          <div id="danhmuc-result"></div>
+
+          <button class="test-button" onclick="testThanhToanThongKe()">
+            Test /zmen/thanh-toan/thong-ke
+          </button>
+          <div id="thanhtoan-result"></div>
+        </div>
+
+        <div>
+          <button class="test-button" onclick="testSanPhamBanChay()">
+            Test /zmen/san-pham/ngay (2025-08-27)
+          </button>
+          <div id="sanpham-result"></div>
+
+          <button class="test-button" onclick="testDoanhThuNgay()">
+            Test /zmen/doanh-thu/ngay (2025-08-27)
+          </button>
+          <div id="doanhthu-result"></div>
+
+          <button class="test-button" onclick="testNhanVienNgay()">
+            Test /zmen/nhan-vien/ngay (2025-08-27)
+          </button>
+          <div id="nhanvien-result"></div>
+        </div>
+      </div>
+
+      <button
+        class="test-button"
+        onclick="testAllSpecificEndpoints()"
+        style="background: #28a745"
+      >
+        🚀 Test Tất Cả Endpoints Cụ Thể
+      </button>
+      <div id="all-results"></div>
+    </div>
+
+    <script>
+      const BASE_URL = "http://localhost:8080";
+      const TEST_DATE = "2025-08-27";
+
+      async function testBieuDoDoanhThu() {
+        const resultDiv = document.getElementById("bieudo-result");
+        resultDiv.innerHTML =
+          '<div class="result loading">Đang test /zmen/bieu-do/doanh-thu...</div>';
+
+        try {
+          const response = await fetch(
+            `${BASE_URL}/zmen/bieu-do/doanh-thu?loai=ngay`
+          );
+          if (response.ok) {
+            const data = await response.json();
+            const hasData = data.length > 0;
+            const status = hasData ? "success" : "warning";
+            const icon = hasData ? "✅" : "⚠️";
+            resultDiv.innerHTML = `<div class="result ${status}">${icon} /zmen/bieu-do/doanh-thu SUCCESS\n📄 Items: ${
+              data.length
+            }\n📄 Response: ${JSON.stringify(data, null, 2)}</div>`;
+          } else {
+            const errorText = await response.text();
+            resultDiv.innerHTML = `<div class="result error">❌ /zmen/bieu-do/doanh-thu ERROR (${response.status})\n📄 Error: ${errorText}</div>`;
+          }
+        } catch (error) {
+          resultDiv.innerHTML = `<div class="result error">❌ /zmen/bieu-do/doanh-thu NETWORK ERROR\n📄 Error: ${error.message}</div>`;
+        }
+      }
+
+      async function testDanhMucDoanhThu() {
+        const resultDiv = document.getElementById("danhmuc-result");
+        resultDiv.innerHTML =
+          '<div class="result loading">Đang test /zmen/danh-muc/doanh-thu...</div>';
+
+        try {
+          const response = await fetch(
+            `${BASE_URL}/zmen/danh-muc/doanh-thu?nam=2025&thang=8`
+          );
+          if (response.ok) {
+            const data = await response.json();
+            const hasData = data.length > 0;
+            const status = hasData ? "success" : "warning";
+            const icon = hasData ? "✅" : "⚠️";
+            resultDiv.innerHTML = `<div class="result ${status}">${icon} /zmen/danh-muc/doanh-thu SUCCESS\n📄 Items: ${
+              data.length
+            }\n📄 Response: ${JSON.stringify(data, null, 2)}</div>`;
+          } else {
+            const errorText = await response.text();
+            resultDiv.innerHTML = `<div class="result error">❌ /zmen/danh-muc/doanh-thu ERROR (${response.status})\n📄 Error: ${errorText}</div>`;
+          }
+        } catch (error) {
+          resultDiv.innerHTML = `<div class="result error">❌ /zmen/danh-muc/doanh-thu NETWORK ERROR\n📄 Error: ${error.message}</div>`;
+        }
+      }
+
+      async function testThanhToanThongKe() {
+        const resultDiv = document.getElementById("thanhtoan-result");
+        resultDiv.innerHTML =
+          '<div class="result loading">Đang test /zmen/thanh-toan/thong-ke...</div>';
+
+        try {
+          const response = await fetch(
+            `${BASE_URL}/zmen/thanh-toan/thong-ke?nam=2025&thang=8`
+          );
+          if (response.ok) {
+            const data = await response.json();
+            const hasData = data.length > 0;
+            const status = hasData ? "success" : "warning";
+            const icon = hasData ? "✅" : "⚠️";
+            resultDiv.innerHTML = `<div class="result ${status}">${icon} /zmen/thanh-toan/thong-ke SUCCESS\n📄 Items: ${
+              data.length
+            }\n📄 Response: ${JSON.stringify(data, null, 2)}</div>`;
+          } else {
+            const errorText = await response.text();
+            resultDiv.innerHTML = `<div class="result error">❌ /zmen/thanh-toan/thong-ke ERROR (${response.status})\n📄 Error: ${errorText}</div>`;
+          }
+        } catch (error) {
+          resultDiv.innerHTML = `<div class="result error">❌ /zmen/thanh-toan/thong-ke NETWORK ERROR\n📄 Error: ${error.message}</div>`;
+        }
+      }
+
+      async function testSanPhamBanChay() {
+        const resultDiv = document.getElementById("sanpham-result");
+        resultDiv.innerHTML =
+          '<div class="result loading">Đang test /zmen/san-pham/ngay...</div>';
+
+        try {
+          const response = await fetch(
+            `${BASE_URL}/zmen/san-pham/ngay?ngay=${TEST_DATE}`
+          );
+          if (response.ok) {
+            const data = await response.json();
+            const hasData = data.length > 0;
+            const status = hasData ? "success" : "warning";
+            const icon = hasData ? "✅" : "⚠️";
+            resultDiv.innerHTML = `<div class="result ${status}">${icon} /zmen/san-pham/ngay SUCCESS\n📄 Items: ${
+              data.length
+            }\n📄 Response: ${JSON.stringify(data, null, 2)}</div>`;
+          } else {
+            const errorText = await response.text();
+            resultDiv.innerHTML = `<div class="result error">❌ /zmen/san-pham/ngay ERROR (${response.status})\n📄 Error: ${errorText}</div>`;
+          }
+        } catch (error) {
+          resultDiv.innerHTML = `<div class="result error">❌ /zmen/san-pham/ngay NETWORK ERROR\n📄 Error: ${error.message}</div>`;
+        }
+      }
+
+      async function testDoanhThuNgay() {
+        const resultDiv = document.getElementById("doanhthu-result");
+        resultDiv.innerHTML =
+          '<div class="result loading">Đang test /zmen/doanh-thu/ngay...</div>';
+
+        try {
+          const response = await fetch(
+            `${BASE_URL}/zmen/doanh-thu/ngay?ngay=${TEST_DATE}`
+          );
+          if (response.ok) {
+            const data = await response.json();
+            const hasData = data.tongDoanhThu > 0;
+            const status = hasData ? "success" : "warning";
+            const icon = hasData ? "✅" : "⚠️";
+            resultDiv.innerHTML = `<div class="result ${status}">${icon} /zmen/doanh-thu/ngay SUCCESS\n📄 Response: ${JSON.stringify(
+              data,
+              null,
+              2
+            )}</div>`;
+          } else {
+            const errorText = await response.text();
+            resultDiv.innerHTML = `<div class="result error">❌ /zmen/doanh-thu/ngay ERROR (${response.status})\n📄 Error: ${errorText}</div>`;
+          }
+        } catch (error) {
+          resultDiv.innerHTML = `<div class="result error">❌ /zmen/doanh-thu/ngay NETWORK ERROR\n📄 Error: ${error.message}</div>`;
+        }
+      }
+
+      async function testNhanVienNgay() {
+        const resultDiv = document.getElementById("nhanvien-result");
+        resultDiv.innerHTML =
+          '<div class="result loading">Đang test /zmen/nhan-vien/ngay...</div>';
+
+        try {
+          const response = await fetch(
+            `${BASE_URL}/zmen/nhan-vien/ngay?ngay=${TEST_DATE}`
+          );
+          if (response.ok) {
+            const data = await response.json();
+            const hasData = data.length > 0;
+            const status = hasData ? "success" : "warning";
+            const icon = hasData ? "✅" : "⚠️";
+            resultDiv.innerHTML = `<div class="result ${status}">${icon} /zmen/nhan-vien/ngay SUCCESS\n📄 Items: ${
+              data.length
+            }\n📄 Response: ${JSON.stringify(data, null, 2)}</div>`;
+          } else {
+            const errorText = await response.text();
+            resultDiv.innerHTML = `<div class="result error">❌ /zmen/nhan-vien/ngay ERROR (${response.status})\n📄 Error: ${errorText}</div>`;
+          }
+        } catch (error) {
+          resultDiv.innerHTML = `<div class="result error">❌ /zmen/nhan-vien/ngay NETWORK ERROR\n📄 Error: ${error.message}</div>`;
+        }
+      }
+
+      async function testAllSpecificEndpoints() {
+        const resultDiv = document.getElementById("all-results");
+        resultDiv.innerHTML =
+          '<div class="result loading">Đang test tất cả endpoints cụ thể...</div>';
+
+        const endpoints = [
+          {
+            name: "Biểu đồ doanh thu",
+            url: "/zmen/bieu-do/doanh-thu?loai=ngay",
+          },
+          {
+            name: "Danh mục doanh thu",
+            url: "/zmen/danh-muc/doanh-thu?nam=2025&thang=8",
+          },
+          {
+            name: "Thanh toán thống kê",
+            url: "/zmen/thanh-toan/thong-ke?nam=2025&thang=8",
+          },
+          {
+            name: "Sản phẩm bán chạy",
+            url: `/zmen/san-pham/ngay?ngay=${TEST_DATE}`,
+          },
+          {
+            name: "Doanh thu ngày",
+            url: `/zmen/doanh-thu/ngay?ngay=${TEST_DATE}`,
+          },
+          {
+            name: "Nhân viên ngày",
+            url: `/zmen/nhan-vien/ngay?ngay=${TEST_DATE}`,
+          },
+        ];
+
+        let results = [];
+        let successCount = 0;
+        let dataCount = 0;
+
+        for (const endpoint of endpoints) {
+          try {
+            const response = await fetch(`${BASE_URL}${endpoint.url}`);
+            if (response.ok) {
+              const data = await response.json();
+              const hasData = Array.isArray(data)
+                ? data.length > 0
+                : data.tongDoanhThu > 0;
+              const status = hasData ? "✅" : "⚠️";
+              results.push(
+                `${status} ${endpoint.name}: ${
+                  hasData ? "Có dữ liệu" : "Không có dữ liệu"
+                }`
+              );
+              successCount++;
+              if (hasData) dataCount++;
+            } else {
+              results.push(`❌ ${endpoint.name}: ERROR ${response.status}`);
+            }
+          } catch (error) {
+            results.push(`❌ ${endpoint.name}: NETWORK ERROR`);
+          }
+        }
+
+        const summary = `\n📊 Tổng kết: ${successCount}/${endpoints.length} endpoints thành công, ${dataCount} có dữ liệu`;
+        resultDiv.innerHTML = `<div class="result ${
+          dataCount > 0 ? "success" : "warning"
+        }">${results.join("\n")}${summary}</div>`;
+      }
+
+      // Auto test on load
+      window.onload = function () {
+        testAllSpecificEndpoints();
+      };
+    </script>
+  </body>
+</html>

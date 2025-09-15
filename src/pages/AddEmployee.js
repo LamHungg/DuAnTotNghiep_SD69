@@ -202,7 +202,7 @@ const AddEmployee = () => {
     marginTop: "16px",
     fontFamily: "Roboto, Arial, sans-serif",
     boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
-    transition: "background 0.2s, box-shadow 0.2s",
+    transition: "background 0.2s, box-shadow-md 0.2s",
   };
 
   const buttonHoverStyle = {
@@ -211,7 +211,14 @@ const AddEmployee = () => {
   };
 
   return (
-    <div style={{ maxWidth: "800px", margin: "0 auto", padding: "24px", fontFamily: "Roboto, Arial, sans-serif" }}>
+    <div
+      style={{
+        maxWidth: "800px",
+        margin: "0 auto",
+        padding: "24px",
+        fontFamily: "Roboto, Arial, sans-serif",
+      }}
+    >
       {/* Header */}
       <div
         style={{
@@ -242,10 +249,22 @@ const AddEmployee = () => {
             <FaArrowLeft /> Quay lại
           </button>
           <div>
-            <h2 style={{ fontWeight: "700", margin: "0 0 8px 0", fontFamily: "Roboto, Arial, sans-serif" }}>
+            <h2
+              style={{
+                fontWeight: "700",
+                margin: "0 0 8px 0",
+                fontFamily: "Roboto, Arial, sans-serif",
+              }}
+            >
               Thêm Nhân Viên
             </h2>
-            <p style={{ margin: "0", color: "#6b7280", fontFamily: "Roboto, Arial, sans-serif" }}>
+            <p
+              style={{
+                margin: "0",
+                color: "#6b7280",
+                fontFamily: "Roboto, Arial, sans-serif",
+              }}
+            >
               Điền thông tin để tạo tài khoản nhân viên mới
             </p>
           </div>
@@ -300,7 +319,9 @@ const AddEmployee = () => {
               style={errors.tenDangNhap ? errorInputStyle : inputStyle}
               placeholder="Nhập tên đăng nhập..."
             />
-            {errors.tenDangNhap && <div style={errorStyle}>{errors.tenDangNhap}</div>}
+            {errors.tenDangNhap && (
+              <div style={errorStyle}>{errors.tenDangNhap}</div>
+            )}
           </div>
 
           {/* Mật khẩu */}
@@ -318,7 +339,7 @@ const AddEmployee = () => {
             />
             <button
               type="button"
-              onClick={() => setShowPassword(v => !v)}
+              onClick={() => setShowPassword((v) => !v)}
               style={{
                 position: "absolute",
                 right: "16px",
@@ -366,20 +387,39 @@ const AddEmployee = () => {
               style={errors.soDienThoai ? errorInputStyle : inputStyle}
               placeholder="Nhập số điện thoại..."
             />
-            {errors.soDienThoai && <div style={errorStyle}>{errors.soDienThoai}</div>}
+            {errors.soDienThoai && (
+              <div style={errorStyle}>{errors.soDienThoai}</div>
+            )}
           </div>
         </div>
 
-        <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 32 }}>
+        <div
+          style={{ display: "flex", justifyContent: "flex-end", marginTop: 32 }}
+        >
           <button
             type="submit"
             style={buttonStyle}
-            onMouseOver={e => e.currentTarget.style.background = buttonHoverStyle.background}
-            onMouseOut={e => e.currentTarget.style.background = buttonStyle.background}
+            onMouseOver={(e) =>
+              (e.currentTarget.style.background = buttonHoverStyle.background)
+            }
+            onMouseOut={(e) =>
+              (e.currentTarget.style.background = buttonStyle.background)
+            }
             disabled={loading}
           >
             {loading ? (
-              <span className="spinner" style={{ width: 20, height: 20, border: "3px solid #fff", borderTop: "3px solid #007bff", borderRadius: "50%", display: "inline-block", animation: "spin 1s linear infinite" }} />
+              <span
+                className="spinner"
+                style={{
+                  width: 20,
+                  height: 20,
+                  border: "3px solid #fff",
+                  borderTop: "3px solid #007bff",
+                  borderRadius: "50%",
+                  display: "inline-block",
+                  animation: "spin 1s linear infinite",
+                }}
+              />
             ) : (
               <FaSave />
             )}

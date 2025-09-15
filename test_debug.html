@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Test Debug POS</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        margin: 20px;
+        background: #f5f5f5;
+      }
+      .container {
+        max-width: 600px;
+        margin: 0 auto;
+        background: white;
+        padding: 20px;
+        border-radius: 10px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      }
+      button {
+        background: #007bff;
+        color: white;
+        border: none;
+        padding: 15px 30px;
+        border-radius: 5px;
+        cursor: pointer;
+        margin: 10px;
+        font-size: 16px;
+      }
+      button:hover {
+        background: #0056b3;
+      }
+      .result {
+        margin-top: 20px;
+        padding: 15px;
+        background: #f8f9fa;
+        border-radius: 5px;
+        border-left: 4px solid #007bff;
+      }
+      .success {
+        border-left-color: #28a745;
+        background: #d4edda;
+      }
+      .error {
+        border-left-color: #dc3545;
+        background: #f8d7da;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>🧪 Test Debug POS System</h1>
+
+      <div>
+        <h3>1️⃣ Test Console Log</h3>
+        <button onclick="testConsoleLog()">Test Console Log</button>
+        <div id="console-result" class="result"></div>
+      </div>
+
+      <div>
+        <h3>2️⃣ Test API Connection</h3>
+        <button onclick="testAPIConnection()">Test API Connection</button>
+        <div id="api-result" class="result"></div>
+      </div>
+
+      <div>
+        <h3>3️⃣ Test POS Order Creation</h3>
+        <button onclick="testPOSOrder()">Test POS Order</button>
+        <div id="pos-result" class="result"></div>
+      </div>
+
+      <div>
+        <h3>4️⃣ Instructions</h3>
+        <div class="result">
+          <h4>Để debug POS system:</h4>
+          <ol>
+            <li>Mở <strong>http://localhost:3000/dashboard/pos</strong></li>
+            <li>Nhấn <strong>F12</strong> để mở Developer Tools</li>
+            <li>Chuyển sang tab <strong>Console</strong></li>
+            <li>Thêm sản phẩm vào giỏ hàng</li>
+            <li>Click <strong>"Hoàn Tất Đơn Hàng"</strong></li>
+            <li>Theo dõi logs trong console</li>
+          </ol>
+
+          <h4>Logs mong đợi:</h4>
+          <pre>
+🚀 === BẮT ĐẦU XỬ LÝ HOÀN TẤT ĐƠN HÀNG ===
+🔍 1. Thông tin đơn hàng hiện tại:
+🔍 2. Thông tin thanh toán:
+🔍 3. Thông tin khách hàng:
+🔍 4. Validation - Kiểm tra giỏ hàng:
+🔍 5. Validation - Kiểm tra tiền khách trả:
+🔍 6. Bắt đầu tạo đơn hàng...
+🔍 7. Chuẩn bị dữ liệu đơn hàng:
+🔍 8. Gọi API tạo đơn hàng...
+🔍 9. Kết quả API:
+🔍 10. ✅ Đơn hàng tạo thành công!
+🔍 11. Reset form và tạo đơn hàng mới:
+🎉 === HOÀN THÀNH XỬ LÝ ĐƠN HÀNG ===
+                </pre
+          >
+        </div>
+      </div>
+    </div>
+
+    <script>
+      const API_URL = "http://localhost:8080/api";
+
+      function testConsoleLog() {
+        const resultDiv = document.getElementById("console-result");
+
+        console.log("🧪 Test Console Log - Bắt đầu");
+        console.log("📋 Thông tin test:", {
+          timestamp: new Date().toISOString(),
+          userAgent: navigator.userAgent,
+          url: window.location.href,
+        });
+        console.log("🔍 Debug message test");
+        console.log("✅ Test Console Log - Hoàn thành");
+
+        resultDiv.textContent =
+          "✅ Console logs đã được gửi. Kiểm tra Developer Tools > Console tab.";
+        resultDiv.className = "result success";
+      }
+
+      async function testAPIConnection() {
+        const resultDiv = document.getElementById("api-result");
+        resultDiv.textContent = "🔄 Đang test API connection...";
+
+        try {
+          const response = await fetch(`${API_URL}/auth/test`);
+          const data = await response.text();
+
+          console.log("🔍 API Test Result:", {
+            status: response.status,
+            data: data,
+          });
+
+          resultDiv.textContent = `✅ API Connection OK!\nStatus: ${response.status}\nResponse: ${data}`;
+          resultDiv.className = "result success";
+        } catch (error) {
+          console.error("❌ API Test Error:", error);
+
+          resultDiv.textContent = `❌ API Connection Failed!\nError: ${error.message}`;
+          resultDiv.className = "result error";
+        }
+      }
+
+      async function testPOSOrder() {
+        const resultDiv = document.getElementById("pos-result");
+        resultDiv.textContent = "🔄 Đang test POS order creation...";
+
+        try {
+          // Get products first
+          const productsResponse = await fetch(`${API_URL}/pos/products`);
+          const products = await productsResponse.json();
+
+          if (products.length === 0) {
+            throw new Error("Không có sản phẩm nào");
+          }
+
+          const product = products[0];
+          console.log("🔍 Test Product:", product);
+
+          // Create test order
+          const orderData = {
+            maDonHang: `POS-TEST-DEBUG-${Date.now()}`,
+            khachHangId: null,
+            voucherId: null,
+            phuongThucThanhToan: "Tiền mặt",
+            tongThanhToan: product.gia || 0,
+            ghiChu: "Test debug order",
+            chiTietDonHang: [
+              {
+                chiTietSanPhamId: product.id,
+                soLuong: 1,
+                giaBan: product.gia || 0,
+              },
+            ],
+          };
+
+          console.log("🔍 Test Order Data:", orderData);
+
+          const orderResponse = await fetch(`${API_URL}/pos/orders`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify(orderData),
+          });
+
+          const orderResult = await orderResponse.json();
+          console.log("🔍 Test Order Result:", orderResult);
+
+          if (orderResult.success) {
+            resultDiv.textContent = `✅ POS Order Test Success!\nOrder ID: ${orderResult.donHangId}\nMessage: ${orderResult.message}`;
+            resultDiv.className = "result success";
+          } else {
+            throw new Error(orderResult.message || "Unknown error");
+          }
+        } catch (error) {
+          console.error("❌ POS Order Test Error:", error);
+
+          resultDiv.textContent = `❌ POS Order Test Failed!\nError: ${error.message}`;
+          resultDiv.className = "result error";
+        }
+      }
+
+      // Auto test on page load
+      window.onload = function () {
+        console.log("🧪 Test Debug Page Loaded");
+        console.log("📋 Page URL:", window.location.href);
+        console.log("📋 API URL:", API_URL);
+      };
+    </script>
+  </body>
+</html>

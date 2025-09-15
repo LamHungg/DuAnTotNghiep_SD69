@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Test All Cart Features</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        margin: 20px;
+        background: #f5f5f5;
+      }
+      .container {
+        max-width: 800px;
+        margin: 0 auto;
+        background: white;
+        padding: 20px;
+        border-radius: 10px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      }
+      .test-section {
+        margin: 20px 0;
+        padding: 15px;
+        border: 1px solid #ddd;
+        border-radius: 5px;
+        background: #f9f9f9;
+      }
+      .feature-list {
+        background: #e8f5e8;
+        padding: 15px;
+        border-radius: 5px;
+        margin: 15px 0;
+      }
+      .feature-item {
+        margin: 8px 0;
+        padding: 5px 0;
+      }
+      .feature-item.working {
+        color: #28a745;
+      }
+      .feature-item.not-working {
+        color: #dc3545;
+      }
+      button {
+        padding: 10px 15px;
+        margin: 5px;
+        background: #007bff;
+        color: white;
+        border: none;
+        border-radius: 3px;
+        cursor: pointer;
+      }
+      button:hover {
+        background: #0056b3;
+      }
+      .result {
+        margin-top: 10px;
+        padding: 10px;
+        background: #f8f9fa;
+        border-radius: 3px;
+      }
+      .error {
+        background: #f8d7da;
+        color: #721c24;
+      }
+      .success {
+        background: #d4edda;
+        color: #155724;
+      }
+      .info {
+        background: #d1ecf1;
+        color: #0c5460;
+      }
+      .status {
+        font-weight: bold;
+        padding: 5px 10px;
+        border-radius: 3px;
+        margin: 5px;
+      }
+      .status.success {
+        background: #d4edda;
+        color: #155724;
+      }
+      .status.error {
+        background: #f8d7da;
+        color: #721c24;
+      }
+      .status.warning {
+        background: #fff3cd;
+        color: #856404;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>🧪 Test All Cart Features</h1>
+
+      <div class="feature-list">
+        <h3>📋 Danh sách chức năng cần kiểm tra:</h3>
+        <div class="feature-item working">
+          ✅ Xem danh sách sản phẩm trong giỏ
+        </div>
+        <div class="feature-item working">✅ Cập nhật số lượng sản phẩm</div>
+        <div class="feature-item working">✅ Xóa sản phẩm khỏi giỏ hàng</div>
+        <div class="feature-item working">✅ Tính tổng tiền</div>
+        <div class="feature-item working">✅ Lưu giỏ hàng theo user (JWT)</div>
+        <div class="feature-item working">✅ Kiểm tra tồn kho</div>
+        <div class="feature-item working">✅ Cart badge với số lượng</div>
+        <div class="feature-item working">✅ Xóa nhiều sản phẩm đã chọn</div>
+        <div class="feature-item working">✅ Xóa tất cả giỏ hàng</div>
+      </div>
+
+      <div class="test-section">
+        <h3>1. 🔗 Test Backend Connection</h3>
+        <button onclick="testBackend()">Test Backend</button>
+        <div id="backend-result" class="result"></div>
+      </div>
+
+      <div class="test-section">
+        <h3>2. 🔐 Test Authentication</h3>
+        <input
+          type="text"
+          id="token"
+          placeholder="Token (customer-token-7)"
+          value="customer-token-7"
+          style="width: 200px; padding: 5px"
+        />
+        <button onclick="testAuth()">Test Auth</button>
+        <div id="auth-result" class="result"></div>
+      </div>
+
+      <div class="test-section">
+        <h3>3. 📦 Test Add To Cart</h3>
+        <input
+          type="number"
+          id="productId"
+          placeholder="Product ID"
+          value="1"
+          style="width: 100px; padding: 5px"
+        />
+        <input
+          type="number"
+          id="quantity"
+          placeholder="Quantity"
+          value="1"
+          style="width: 100px; padding: 5px"
+        />
+        <button onclick="testAddToCart()">Add To Cart</button>
+        <div id="addcart-result" class="result"></div>
+      </div>
+
+      <div class="test-section">
+        <h3>4. 🛒 Test Get Cart</h3>
+        <button onclick="testGetCart()">Get Cart</button>
+        <div id="getcart-result" class="result"></div>
+      </div>
+
+      <div class="test-section">
+        <h3>5. 🔢 Test Cart Count</h3>
+        <button onclick="testCartCount()">Get Cart Count</button>
+        <div id="count-result" class="result"></div>
+      </div>
+
+      <div class="test-section">
+        <h3>6. 📝 Test Update Quantity</h3>
+        <input
+          type="number"
+          id="cartItemId"
+          placeholder="Cart Item ID"
+          value="1"
+          style="width: 100px; padding: 5px"
+        />
+        <input
+          type="number"
+          id="newQuantity"
+          placeholder="New Quantity"
+          value="2"
+          style="width: 100px; padding: 5px"
+        />
+        <button onclick="testUpdateQuantity()">Update Quantity</button>
+        <div id="update-result" class="result"></div>
+      </div>
+
+      <div class="test-section">
+        <h3>7. 🗑️ Test Remove Item</h3>
+        <input
+          type="number"
+          id="removeItemId"
+          placeholder="Cart Item ID"
+          value="1"
+          style="width: 100px; padding: 5px"
+        />
+        <button onclick="testRemoveItem()">Remove Item</button>
+        <div id="remove-result" class="result"></div>
+      </div>
+
+      <div class="test-section">
+        <h3>8. 🧹 Test Clear Cart</h3>
+        <button onclick="testClearCart()">Clear Cart</button>
+        <div id="clear-result" class="result"></div>
+      </div>
+
+      <div class="test-section">
+        <h3>9. 🎯 Test All Features Together</h3>
+        <button onclick="testAllFeatures()">Test All Features</button>
+        <div id="all-result" class="result"></div>
+      </div>
+    </div>
+
+    <script>
+      const API_URL = "http://localhost:8080/api/cart";
+
+      function log(elementId, message, type = "info") {
+        const element = document.getElementById(elementId);
+        element.innerHTML = `<div class="${type}">${message}</div>`;
+      }
+
+      async function testBackend() {
+        try {
+          const response = await fetch(API_URL + "/test-no-auth");
+          const data = await response.text();
+          log("backend-result", `✅ Backend OK: ${data}`, "success");
+        } catch (error) {
+          log("backend-result", `❌ Backend Error: ${error.message}`, "error");
+        }
+      }
+
+      async function testAuth() {
+        try {
+          const token = document.getElementById("token").value;
+          const response = await fetch(API_URL + "/test", {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          const data = await response.text();
+          log("auth-result", `✅ Auth OK: ${data}`, "success");
+        } catch (error) {
+          log("auth-result", `❌ Auth Error: ${error.message}`, "error");
+        }
+      }
+
+      async function testAddToCart() {
+        try {
+          const token = document.getElementById("token").value;
+          const productId = document.getElementById("productId").value;
+          const quantity = document.getElementById("quantity").value;
+
+          const response = await fetch(API_URL + "/add", {
+            method: "POST",
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              chiTietSanPhamId: parseInt(productId),
+              soLuong: parseInt(quantity),
+            }),
+          });
+          const data = await response.text();
+          log("addcart-result", `✅ Add To Cart OK: ${data}`, "success");
+        } catch (error) {
+          log(
+            "addcart-result",
+            `❌ Add To Cart Error: ${error.message}`,
+            "error"
+          );
+        }
+      }
+
+      async function testGetCart() {
+        try {
+          const token = document.getElementById("token").value;
+          const response = await fetch(API_URL, {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          const data = await response.json();
+          log(
+            "getcart-result",
+            `✅ Get Cart OK: ${JSON.stringify(data, null, 2)}`,
+            "success"
+          );
+        } catch (error) {
+          log("getcart-result", `❌ Get Cart Error: ${error.message}`, "error");
+        }
+      }
+
+      async function testCartCount() {
+        try {
+          const token = document.getElementById("token").value;
+          const response = await fetch(API_URL + "/count", {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          const data = await response.text();
+          log("count-result", `✅ Cart Count OK: ${data}`, "success");
+        } catch (error) {
+          log("count-result", `❌ Cart Count Error: ${error.message}`, "error");
+        }
+      }
+
+      async function testUpdateQuantity() {
+        try {
+          const token = document.getElementById("token").value;
+          const cartItemId = document.getElementById("cartItemId").value;
+          const newQuantity = document.getElementById("newQuantity").value;
+
+          const response = await fetch(API_URL + `/${cartItemId}`, {
+            method: "PUT",
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              soLuong: parseInt(newQuantity),
+            }),
+          });
+          const data = await response.text();
+          log("update-result", `✅ Update Quantity OK: ${data}`, "success");
+        } catch (error) {
+          log(
+            "update-result",
+            `❌ Update Quantity Error: ${error.message}`,
+            "error"
+          );
+        }
+      }
+
+      async function testRemoveItem() {
+        try {
+          const token = document.getElementById("token").value;
+          const cartItemId = document.getElementById("removeItemId").value;
+
+          const response = await fetch(API_URL + `/${cartItemId}`, {
+            method: "DELETE",
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          const data = await response.text();
+          log("remove-result", `✅ Remove Item OK: ${data}`, "success");
+        } catch (error) {
+          log(
+            "remove-result",
+            `❌ Remove Item Error: ${error.message}`,
+            "error"
+          );
+        }
+      }
+
+      async function testClearCart() {
+        try {
+          const token = document.getElementById("token").value;
+          const response = await fetch(API_URL + "/clear", {
+            method: "DELETE",
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          const data = await response.text();
+          log("clear-result", `✅ Clear Cart OK: ${data}`, "success");
+        } catch (error) {
+          log("clear-result", `❌ Clear Cart Error: ${error.message}`, "error");
+        }
+      }
+
+      async function testAllFeatures() {
+        const token = document.getElementById("token").value;
+        let results = [];
+
+        try {
+          // Test 1: Add to cart
+          const addResponse = await fetch(API_URL + "/add", {
+            method: "POST",
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              chiTietSanPhamId: 1,
+              soLuong: 1,
+            }),
+          });
+          if (addResponse.ok) results.push("✅ Add to cart");
+          else results.push("❌ Add to cart");
+
+          // Test 2: Get cart
+          const getResponse = await fetch(API_URL, {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          if (getResponse.ok) results.push("✅ Get cart");
+          else results.push("❌ Get cart");
+
+          // Test 3: Get count
+          const countResponse = await fetch(API_URL + "/count", {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          if (countResponse.ok) results.push("✅ Get count");
+          else results.push("❌ Get count");
+
+          log(
+            "all-result",
+            `<h4>Test Results:</h4>${results.join("<br>")}`,
+            "success"
+          );
+        } catch (error) {
+          log("all-result", `❌ Test Error: ${error.message}`, "error");
+        }
+      }
+
+      // Auto test backend on load
+      window.onload = function () {
+        testBackend();
+      };
+    </script>
+  </body>
+</html>

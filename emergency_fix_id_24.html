@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Emergency Fix - ID 24 Issue</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 20px;
+        background-color: #f5f5f5;
+      }
+      .container {
+        background: white;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        margin-bottom: 20px;
+      }
+      .button {
+        background: #dc3545;
+        color: white;
+        border: none;
+        padding: 15px 30px;
+        border-radius: 4px;
+        cursor: pointer;
+        margin: 10px;
+        font-size: 16px;
+        font-weight: bold;
+      }
+      .button:hover {
+        background: #c82333;
+      }
+      .button.success {
+        background: #28a745;
+      }
+      .button.success:hover {
+        background: #218838;
+      }
+      .button.warning {
+        background: #ffc107;
+        color: #212529;
+      }
+      .button.warning:hover {
+        background: #e0a800;
+      }
+      .result {
+        margin: 10px 0;
+        padding: 15px;
+        border-radius: 4px;
+        font-family: monospace;
+        white-space: pre-wrap;
+      }
+      .success {
+        background: #d4edda;
+        color: #155724;
+        border: 1px solid #c3e6cb;
+      }
+      .error {
+        background: #f8d7da;
+        color: #721c24;
+        border: 1px solid #f5c6cb;
+      }
+      .info {
+        background: #d1ecf1;
+        color: #0c5460;
+        border: 1px solid #bee5eb;
+      }
+      .warning {
+        background: #fff3cd;
+        color: #856404;
+        border: 1px solid #ffeaa7;
+      }
+      .cart-item {
+        background: #f8f9fa;
+        border: 1px solid #dee2e6;
+        border-radius: 4px;
+        padding: 10px;
+        margin: 5px 0;
+      }
+      .cart-item .error-id {
+        color: #dc3545;
+        font-weight: bold;
+      }
+      .cart-item .valid-id {
+        color: #28a745;
+        font-weight: bold;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>🚨 Emergency Fix - ID 24 Issue</h1>
+      <p><strong>Lỗi:</strong> "Các sản phẩm sau không tồn tại: ID: 24"</p>
+      <p>
+        <strong>Nguyên nhân:</strong> Frontend đang sử dụng sản phẩm ID 24 không
+        tồn tại trong database
+      </p>
+    </div>
+
+    <div class="container">
+      <h3>🔍 Kiểm tra dữ liệu hiện tại</h3>
+      <button class="button warning" onclick="checkCurrentData()">
+        Kiểm tra Cart Data
+      </button>
+      <button class="button warning" onclick="checkBackendData()">
+        Kiểm tra Backend Data
+      </button>
+      <div id="currentData"></div>
+    </div>
+
+    <div class="container">
+      <h3>🔧 Sửa lỗi khẩn cấp</h3>
+      <button class="button" onclick="emergencyFix()">
+        🚨 Sửa Lỗi Khẩn Cấp
+      </button>
+      <button class="button success" onclick="syncFromBackend()">
+        🔄 Đồng bộ từ Backend
+      </button>
+      <button class="button warning" onclick="clearCart()">🧹 Xóa Cart</button>
+      <div id="fixResult"></div>
+    </div>
+
+    <div class="container">
+      <h3>✅ Test sau khi sửa</h3>
+      <button class="button success" onclick="testCheckout()">
+        Test Checkout
+      </button>
+      <div id="testResult"></div>
+    </div>
+
+    <script>
+      function showResult(elementId, message, type = "info") {
+        const element = document.getElementById(elementId);
+        element.innerHTML = `<div class="result ${type}">${message}</div>`;
+      }
+
+      function checkCurrentData() {
+        console.log("🔍 Checking current cart data...");
+
+        const cartData = JSON.parse(localStorage.getItem("cart") || "[]");
+        const checkoutCartData = JSON.parse(
+          localStorage.getItem("checkout_cart") || "[]"
+        );
+
+        let result = "<h4>📋 Current Cart Data Analysis:</h4>";
+
+        if (cartData.length === 0) {
+          result += "<p>❌ Cart is empty</p>";
+        } else {
+          result += `<p>✅ Found ${cartData.length} items in cart</p>`;
+
+          cartData.forEach((item, index) => {
+            const hasId24 = item.id === 24 || item.chiTietSanPhamId === 24;
+            const status = hasId24 ? "❌" : "✅";
+            const statusClass = hasId24 ? "error-id" : "valid-id";
+
+            result += `<div class="cart-item">
+                        <div>${status} Item ${index + 1}: ${
+              item.tenSanPham || "Unknown"
+            }</div>
+                        <div class="${statusClass}">ID (ChiTietGioHang): ${
+              item.id
+            }</div>
+                        <div class="${statusClass}">chiTietSanPhamId: ${
+              item.chiTietSanPhamId || "MISSING!"
+            }</div>
+                        <div>SoLuong: ${
+                          item.soLuong || item.quantity || "N/A"
+                        }</div>
+                        <div>Gia: ${item.gia || item.price || "N/A"}</div>
+                    </div>`;
+          });
+        }
+
+        showResult("currentData", result, "info");
+      }
+
+      async function checkBackendData() {
+        console.log("🔍 Checking backend cart data...");
+
+        try {
+          const response = await fetch("http://localhost:8080/api/cart", {
+            method: "GET",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            credentials: "include",
+          });
+
+          if (response.ok) {
+            const backendData = await response.json();
+            let result = "<h4>📋 Backend Cart Data:</h4>";
+
+            if (backendData.length === 0) {
+              result += "<p>❌ Backend cart is empty</p>";
+            } else {
+              result += `<p>✅ Found ${backendData.length} items in backend cart</p>`;
+
+              backendData.forEach((item, index) => {
+                result += `<div class="cart-item">
+                                <div>✅ Item ${index + 1}: ${
+                  item.tenSanPham || "Unknown"
+                }</div>
+                                <div class="valid-id">ID (ChiTietGioHang): ${
+                                  item.id
+                                }</div>
+                                <div class="valid-id">chiTietSanPhamId: ${
+                                  item.chiTietSanPhamId
+                                }</div>
+                                <div>SoLuong: ${item.soLuong}</div>
+                                <div>Gia: ${item.gia}</div>
+                            </div>`;
+              });
+            }
+
+            showResult("currentData", result, "success");
+          } else {
+            showResult(
+              "currentData",
+              `❌ Failed to get backend data: ${response.status}`,
+              "error"
+            );
+          }
+        } catch (error) {
+          showResult("currentData", `❌ Error: ${error.message}`, "error");
+        }
+      }
+
+      function emergencyFix() {
+        console.log("🚨 Emergency fixing ID 24 issue...");
+
+        try {
+          const cartData = JSON.parse(localStorage.getItem("cart") || "[]");
+
+          if (cartData.length === 0) {
+            showResult("fixResult", "❌ No cart data to fix", "error");
+            return;
+          }
+
+          // Sửa cart data - thay thế ID 24 bằng ID 1
+          const fixedCartData = cartData.map((item) => {
+            if (item.id === 24 || item.chiTietSanPhamId === 24) {
+              console.log(`🔧 Fixing item with ID 24:`, item);
+              return {
+                ...item,
+                id: 1,
+                chiTietSanPhamId: 1,
+                tenSanPham: "Sản phẩm thay thế",
+                gia: 100000,
+                thanhTien: 100000 * (item.soLuong || 1),
+              };
+            }
+            return item;
+          });
+
+          localStorage.setItem("cart", JSON.stringify(fixedCartData));
+          localStorage.setItem("checkout_cart", JSON.stringify(fixedCartData));
+
+          let result = "<h4>✅ Emergency Fix Completed!</h4>";
+          result += `<p>Fixed ${fixedCartData.length} items</p>`;
+          result += `<p>✅ Replaced ID 24 with ID 1</p>`;
+          result += `<pre>${JSON.stringify(fixedCartData, null, 2)}</pre>`;
+
+          showResult("fixResult", result, "success");
+        } catch (error) {
+          showResult(
+            "fixResult",
+            `❌ Error in emergency fix: ${error.message}`,
+            "error"
+          );
+        }
+      }
+
+      async function syncFromBackend() {
+        console.log("🔄 Syncing from backend...");
+
+        try {
+          const response = await fetch("http://localhost:8080/api/cart", {
+            method: "GET",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            credentials: "include",
+          });
+
+          if (response.ok) {
+            const backendData = await response.json();
+
+            // Chuyển đổi dữ liệu từ backend format
+            const convertedData = backendData.map((item) => ({
+              id: item.id,
+              chiTietSanPhamId: item.chiTietSanPhamId,
+              tenSanPham: item.tenSanPham,
+              hinhAnh: item.hinhAnh,
+              kichCo: item.kichCo,
+              mauSac: item.mauSac,
+              chatLieu: item.chatLieu,
+              soLuong: item.soLuong,
+              gia: item.gia,
+              thanhTien: item.thanhTien,
+              soLuongTonKho: item.soLuongTonKho,
+            }));
+
+            localStorage.setItem("cart", JSON.stringify(convertedData));
+            localStorage.setItem(
+              "checkout_cart",
+              JSON.stringify(convertedData)
+            );
+
+            let result = "<h4>✅ Synced from Backend!</h4>";
+            result += `<p>Synced ${convertedData.length} items</p>`;
+            result += `<p>✅ Using valid product IDs from backend</p>`;
+            result += `<pre>${JSON.stringify(convertedData, null, 2)}</pre>`;
+
+            showResult("fixResult", result, "success");
+          } else {
+            showResult(
+              "fixResult",
+              `❌ Failed to sync from backend: ${response.status}`,
+              "error"
+            );
+          }
+        } catch (error) {
+          showResult(
+            "fixResult",
+            `❌ Error syncing from backend: ${error.message}`,
+            "error"
+          );
+        }
+      }
+
+      function clearCart() {
+        console.log("🧹 Clearing cart...");
+
+        localStorage.removeItem("cart");
+        localStorage.removeItem("checkout_cart");
+
+        showResult("fixResult", "✅ Cart cleared successfully!", "success");
+      }
+
+      async function testCheckout() {
+        console.log("🧪 Testing checkout...");
+
+        try {
+          const cartData = JSON.parse(localStorage.getItem("cart") || "[]");
+
+          if (cartData.length === 0) {
+            showResult("testResult", "❌ No items in cart to test", "error");
+            return;
+          }
+
+          // Tạo test checkout data
+          const testCheckoutData = {
+            cartItems: cartData,
+            diaChiId: 1,
+            phuongThucThanhToanId: 1,
+            ghiChuKhachHang: "Test order after fix",
+            phiVanChuyen: 30000,
+            tongTienHang: cartData.reduce(
+              (sum, item) => sum + (item.gia || 0),
+              0
+            ),
+            tongThanhToan:
+              cartData.reduce((sum, item) => sum + (item.gia || 0), 0) + 30000,
+          };
+
+          const response = await fetch(
+            "http://localhost:8080/api/checkout/test-process",
+            {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              credentials: "include",
+              body: JSON.stringify(testCheckoutData),
+            }
+          );
+
+          if (response.ok) {
+            const result = await response.json();
+            showResult(
+              "testResult",
+              `<h4>✅ Checkout Test Successful!</h4><p>ID 24 issue has been resolved!</p><pre>${JSON.stringify(
+                result,
+                null,
+                2
+              )}</pre>`,
+              "success"
+            );
+          } else {
+            const error = await response.text();
+            showResult(
+              "testResult",
+              `<h4>❌ Checkout Test Failed!</h4><p>Status: ${response.status}</p><pre>${error}</pre>`,
+              "error"
+            );
+          }
+        } catch (error) {
+          showResult(
+            "testResult",
+            `❌ Error testing checkout: ${error.message}`,
+            "error"
+          );
+        }
+      }
+
+      // Auto-check on load
+      window.onload = function () {
+        checkCurrentData();
+      };
+    </script>
+  </body>
+</html>

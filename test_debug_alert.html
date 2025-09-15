@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Test Debug Alert</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        margin: 20px;
+        background: #f5f5f5;
+      }
+      .container {
+        max-width: 600px;
+        margin: 0 auto;
+        background: white;
+        padding: 20px;
+        border-radius: 10px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      }
+      button {
+        background: #007bff;
+        color: white;
+        border: none;
+        padding: 15px 30px;
+        border-radius: 5px;
+        cursor: pointer;
+        margin: 10px;
+        font-size: 16px;
+      }
+      button:hover {
+        background: #0056b3;
+      }
+      .info {
+        background: #d1ecf1;
+        border: 1px solid #bee5eb;
+        color: #0c5460;
+        padding: 15px;
+        border-radius: 5px;
+        margin: 20px 0;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>🧪 Test Debug Alert</h1>
+
+      <div class="info">
+        <h3>🔍 Vấn Đề Debug</h3>
+        <p>
+          Console logs không hiển thị trong POS system. Hãy thử các cách sau:
+        </p>
+      </div>
+
+      <div>
+        <h3>1️⃣ Test Console Log</h3>
+        <button onclick="testConsole()">Test Console Log</button>
+        <p>Kiểm tra console có hoạt động không</p>
+      </div>
+
+      <div>
+        <h3>2️⃣ Test Alert</h3>
+        <button onclick="testAlert()">Test Alert</button>
+        <p>Kiểm tra alert có hoạt động không</p>
+      </div>
+
+      <div>
+        <h3>3️⃣ Test POS API</h3>
+        <button onclick="testPOSAPI()">Test POS API</button>
+        <p>Kiểm tra API có hoạt động không</p>
+      </div>
+
+      <div>
+        <h3>4️⃣ Hướng Dẫn Khắc Phục</h3>
+        <div class="info">
+          <h4>🔧 Các Bước Khắc Phục:</h4>
+          <ol>
+            <li><strong>Hard Reload:</strong> Nhấn Ctrl+Shift+R</li>
+            <li><strong>Clear Cache:</strong> F12 → Network → Disable cache</li>
+            <li><strong>Check Console:</strong> F12 → Console → All levels</li>
+            <li>
+              <strong>Test Alert:</strong> Click button "Test Alert" ở trên
+            </li>
+            <li>
+              <strong>Check Network:</strong> F12 → Network → Click "Hoàn Tất
+              Đơn Hàng"
+            </li>
+          </ol>
+
+          <h4>🎯 Nếu Vẫn Không Hoạt Động:</h4>
+          <ul>
+            <li>
+              Thêm <code>alert("DEBUG: handleCompleteOrder called");</code> vào
+              đầu function
+            </li>
+            <li>Kiểm tra Network tab xem có API call không</li>
+            <li>Kiểm tra Sources tab xem code có được load không</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      function testConsole() {
+        console.log("🧪 Test Console Log - Bắt đầu");
+        console.log("📋 Thông tin test:", {
+          timestamp: new Date().toISOString(),
+          userAgent: navigator.userAgent,
+          url: window.location.href,
+        });
+        console.log("🔍 Debug message test");
+        console.log("✅ Test Console Log - Hoàn thành");
+
+        alert(
+          "✅ Console logs đã được gửi. Kiểm tra Developer Tools > Console tab."
+        );
+      }
+
+      function testAlert() {
+        alert("🧪 Test Alert - Hoạt động bình thường!");
+        console.log("🧪 Alert test completed");
+      }
+
+      async function testPOSAPI() {
+        try {
+          const response = await fetch(
+            "http://localhost:8080/api/pos/products"
+          );
+          const data = await response.json();
+
+          console.log("🔍 POS API Test Result:", {
+            status: response.status,
+            dataLength: data.length,
+            firstProduct: data[0],
+          });
+
+          alert(
+            `✅ POS API OK!\nStatus: ${response.status}\nProducts: ${data.length}`
+          );
+        } catch (error) {
+          console.error("❌ POS API Test Error:", error);
+          alert(`❌ POS API Failed!\nError: ${error.message}`);
+        }
+      }
+
+      // Auto test on page load
+      window.onload = function () {
+        console.log("🧪 Test Debug Alert Page Loaded");
+        console.log("📋 Page URL:", window.location.href);
+      };
+    </script>
+  </body>
+</html>

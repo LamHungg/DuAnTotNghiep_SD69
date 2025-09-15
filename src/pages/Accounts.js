@@ -238,7 +238,7 @@ const Accounts = () => {
 
   return (
     <div className="container-fluid p-4">
-      <div className="d-flex justify-content-between align-items-center mb-4">
+      <div className="d-flex justify-between align-center mb-4">
         <h2>Quản lý tài khoản</h2>
         <div className="d-flex gap-2">
           <Link
@@ -269,7 +269,7 @@ const Accounts = () => {
             fontWeight: 500,
             outline: 'none',
             boxShadow: '0 1px 4px rgba(124,60,237,0.06)',
-            transition: 'border 0.2s, box-shadow 0.2s',
+            transition: 'border 0.2s, box-shadow-md 0.2s',
             cursor: 'pointer',
           }}
           onMouseOver={e => e.currentTarget.style.border = '1.5px solid #a78bfa'}

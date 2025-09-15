@@ -50,7 +50,7 @@ const khachHangService = {
   },
   addKhachHang: async (data) => {
     try {
-      const response = await axiosInstance.post('', data);
+      const response = await axiosInstance.post("", data);
       return response.data;
     } catch (error) {
       throw error;
@@ -58,7 +58,9 @@ const khachHangService = {
   },
   updateTrangThaiKhachHang: async (id, trangThai) => {
     try {
-      const response = await axiosInstance.put(`/${id}/trang-thai?trangThai=${trangThai}`);
+      const response = await axiosInstance.put(
+        `/${id}/trang-thai?trangThai=${trangThai}`
+      );
       return response.data;
     } catch (error) {
       throw error;

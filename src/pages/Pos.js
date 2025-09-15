@@ -34,140 +34,9 @@ function Pos() {
   // Customer states
   const [customerModal, setCustomerModal] = useState(false);
 
-  // --- Mock Data (Có thể thay thế bằng dữ liệu từ Backend sau) ---
-  const mockProducts = [
-    {
-      id: 1,
-      name: "Áo thun ZMEN",
-      category: "Áo",
-      color: "Trắng",
-      size: "M",
-      material: "Cotton",
-      price: 150000,
-      stock: 10,
-    },
-    {
-      id: 2,
-      name: "Quần short ZMEN",
-      category: "Quần",
-      color: "Đen",
-      size: "L",
-      material: "Jean",
-      price: 200000,
-      stock: 7,
-    },
-    {
-      id: 3,
-      name: "Áo sơ mi ZMEN",
-      category: "Áo",
-      color: "Xanh",
-      size: "XL",
-      material: "Linen",
-      price: 250000,
-      stock: 5,
-    },
-    {
-      id: 4,
-      name: "Quần dài ZMEN",
-      category: "Quần",
-      color: "Be",
-      size: "M",
-      material: "Kaki",
-      price: 300000,
-      stock: 8,
-    },
-    {
-      id: 5,
-      name: "Áo khoác ZMEN",
-      category: "Áo",
-      color: "Đen",
-      size: "L",
-      material: "Polyester",
-      price: 400000,
-      stock: 3,
-    },
-  ];
+  // Không còn demo data - chỉ sử dụng dữ liệu thực tế từ backend
 
-  const demoVouchers = [
-    {
-      code: "VBS01",
-      desc: "Giảm 10% tối đa 50k, đơn trên 200k",
-      discount: 0.1,
-      value: 50000,
-      min: 200000,
-    },
-    {
-      code: "VBS02",
-      desc: "Giảm 20% tối đa 80k, đơn trên 300k",
-      discount: 0.2,
-      value: 80000,
-      min: 300000,
-    },
-    {
-      code: "VBS03",
-      desc: "Giảm 15% tối đa 60k, đơn trên 250k",
-      discount: 0.15,
-      value: 60000,
-      min: 250000,
-    },
-    {
-      code: "VBS04",
-      desc: "Giảm 5% tối đa 20k, đơn trên 100k",
-      discount: 0.05,
-      value: 20000,
-      min: 100000,
-    },
-    {
-      code: "VBS05",
-      desc: "Giảm 30% tối đa 120k, đơn trên 500k",
-      discount: 0.3,
-      value: 120000,
-      min: 500000,
-    },
-  ];
-
-  const mockCustomers = [
-    {
-      id: 1,
-      code: "KH001",
-      name: "Lê Thị B",
-      phone: "0909009001",
-      email: "le.b@example.com",
-      dob: "6/15/1995",
-    },
-    {
-      id: 2,
-      code: "KH002",
-      name: "Nguyễn Văn X",
-      phone: "0909009002",
-      email: "nguyen.x@example.com",
-      dob: "1/1/1990",
-    },
-    {
-      id: 3,
-      code: "KH003",
-      name: "Trần Thị Y",
-      phone: "0909009003",
-      email: "tran.y@example.com",
-      dob: "2/2/1992",
-    },
-    {
-      id: 4,
-      code: "KH004",
-      name: "Phạm Văn Z",
-      phone: "0909009004",
-      email: "pham.z@example.com",
-      dob: "3/3/1988",
-    },
-    {
-      id: 5,
-      code: "KH005",
-      name: "Đinh Thị W",
-      phone: "0909009005",
-      email: "dinh.w@example.com",
-      dob: "4/4/1998",
-    },
-  ];
+  // Không còn demo data - chỉ sử dụng dữ liệu thực tế từ backend
 
   // --- Helper Functions ---
 
@@ -227,8 +96,8 @@ function Pos() {
 
   // Hàm áp dụng voucher
   const handleApplyVoucher = () => {
-    const found = demoVouchers.find((v) => v.code === voucherCode);
-    setVoucherApplied(found || null);
+    // Không còn demo data - chỉ sử dụng dữ liệu thực tế từ backend
+    setVoucherApplied(null);
   };
 
   // Hàm xử lý hiển thị QR code
@@ -950,7 +819,7 @@ function Pos() {
                 <>
                   <p>Quét mã QR để thanh toán:</p>
                   {/* SỬ DỤNG COMPONENT QRCODECANVAS */}
-                  <QRCodeCanvas value={qrData} size={250} level="H" />
+                  <QRCodeCanvas value={qrData} size={400} level="H" />
                 </>
               ) : (
                 <p>Không có mã QR để hiển thị.</p>
@@ -1115,24 +984,12 @@ function Pos() {
                   </tr>
                 </thead>
                 <tbody>
-                  {mockCustomers.map((c) => (
-                    <tr key={c.id}>
-                      <td>{c.id}</td>
-                      <td>{c.code}</td>
-                      <td>{c.name}</td>
-                      <td>{c.phone}</td>
-                      <td>{c.email}</td>
-                      <td>{c.dob}</td>
-                      <td>
-                        <button
-                          className="btn btn-outline-primary btn-sm"
-                          onClick={() => handleChooseCustomer(c)}
-                        >
-                          Chọn
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
+                  {/* Không còn demo data - chỉ sử dụng dữ liệu thực tế từ backend */}
+                  <tr>
+                    <td colSpan="7" className="text-center text-muted">
+                      Không có dữ liệu khách hàng
+                    </td>
+                  </tr>
                 </tbody>
               </table>
             </div>
@@ -1189,26 +1046,12 @@ function Pos() {
                   </tr>
                 </thead>
                 <tbody>
-                  {mockProducts.map((p) => (
-                    <tr key={p.id}>
-                      <td>{p.id}</td>
-                      <td>{p.name}</td>
-                      <td>{p.category}</td>
-                      <td>{p.color}</td>
-                      <td>{p.size}</td>
-                      <td>{p.material}</td>
-                      <td>{p.price.toLocaleString()} đ</td>
-                      <td>{p.stock}</td>
-                      <td>
-                        <button
-                          className="btn btn-primary btn-sm"
-                          onClick={() => handleSelectProduct(p)}
-                        >
-                          Chọn
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
+                  {/* Không còn demo data - chỉ sử dụng dữ liệu thực tế từ backend */}
+                  <tr>
+                    <td colSpan="9" className="text-center text-muted">
+                      Không có dữ liệu sản phẩm
+                    </td>
+                  </tr>
                 </tbody>
               </table>
             </div>

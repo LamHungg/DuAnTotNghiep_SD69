@@ -1,0 +1,711 @@
+<!DOCTYPE html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Test Hệ Thống Giỏ Hàng Mới</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 20px;
+        background-color: #f5f5f5;
+      }
+      .container {
+        background: white;
+        padding: 30px;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        margin-bottom: 20px;
+      }
+      .form-group {
+        margin-bottom: 20px;
+      }
+      label {
+        display: block;
+        margin-bottom: 5px;
+        font-weight: bold;
+        color: #333;
+      }
+      input[type="number"] {
+        width: 100%;
+        padding: 12px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        font-size: 16px;
+        box-sizing: border-box;
+      }
+      .button-group {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 20px;
+        flex-wrap: wrap;
+      }
+      .btn {
+        padding: 12px 20px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 16px;
+        font-weight: bold;
+        transition: background-color 0.3s;
+      }
+      .btn:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+      }
+      .btn-info {
+        background: #17a2b8;
+        color: white;
+      }
+      .btn-info:hover:not(:disabled) {
+        background: #138496;
+      }
+      .btn-success {
+        background: #28a745;
+        color: white;
+      }
+      .btn-success:hover:not(:disabled) {
+        background: #218838;
+      }
+      .btn-warning {
+        background: #ffc107;
+        color: #212529;
+      }
+      .btn-warning:hover:not(:disabled) {
+        background: #e0a800;
+      }
+      .btn-danger {
+        background: #dc3545;
+        color: white;
+      }
+      .btn-danger:hover:not(:disabled) {
+        background: #c82333;
+      }
+      .result {
+        margin: 15px 0;
+        padding: 15px;
+        border-radius: 4px;
+        font-family: monospace;
+        white-space: pre-wrap;
+      }
+      .success {
+        background: #d4edda;
+        color: #155724;
+        border: 1px solid #c3e6cb;
+      }
+      .error {
+        background: #f8d7da;
+        color: #721c24;
+        border: 1px solid #f5c6cb;
+      }
+      .info {
+        background: #d1ecf1;
+        color: #0c5460;
+        border: 1px solid #bee5eb;
+      }
+      .warning {
+        background: #fff3cd;
+        color: #856404;
+        border: 1px solid #ffeaa7;
+      }
+      .stock-info {
+        background: #e8f5e8;
+        border: 1px solid #4caf50;
+        padding: 10px;
+        border-radius: 4px;
+        margin: 10px 0;
+      }
+      .stock-item {
+        display: flex;
+        justify-content: space-between;
+        margin: 5px 0;
+      }
+      .stock-label {
+        font-weight: bold;
+        color: #333;
+      }
+      .stock-value {
+        color: #28a745;
+        font-weight: bold;
+      }
+      .cart-items {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: 15px;
+        margin-top: 20px;
+      }
+      .cart-item {
+        background: #f8f9fa;
+        border: 1px solid #dee2e6;
+        border-radius: 4px;
+        padding: 15px;
+      }
+      .cart-item-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 10px;
+      }
+      .cart-item-name {
+        font-weight: bold;
+        color: #333;
+      }
+      .cart-item-price {
+        color: #28a745;
+        font-weight: bold;
+      }
+      .cart-item-details {
+        font-size: 14px;
+        color: #666;
+        margin-bottom: 10px;
+      }
+      .cart-item-actions {
+        display: flex;
+        gap: 10px;
+      }
+      .btn-sm {
+        padding: 5px 10px;
+        font-size: 12px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>🛒 Test Hệ Thống Giỏ Hàng Mới với Quản Lý Tồn Kho</h1>
+      <p>
+        Hệ thống giỏ hàng và mua hàng được cải thiện với kiểm tra tồn kho
+        real-time
+      </p>
+    </div>
+
+    <div class="container">
+      <h3>🔍 Kiểm Tra Tồn Kho</h3>
+
+      <div class="form-group">
+        <label for="stockProductId">ID Sản Phẩm:</label>
+        <input
+          type="number"
+          id="stockProductId"
+          placeholder="Nhập ID sản phẩm..."
+          min="1"
+        />
+      </div>
+
+      <div class="button-group">
+        <button class="btn btn-info" onclick="checkStock()" id="checkStockBtn">
+          🔍 Kiểm Tra Tồn Kho
+        </button>
+        <button
+          class="btn btn-success"
+          onclick="addToCartWithStockCheck()"
+          id="addToCartBtn"
+        >
+          🛒 Thêm Vào Giỏ Hàng
+        </button>
+        <button class="btn btn-warning" onclick="loadCart()" id="loadCartBtn">
+          📋 Tải Giỏ Hàng
+        </button>
+        <button
+          class="btn btn-danger"
+          onclick="testCheckout()"
+          id="checkoutBtn"
+        >
+          💳 Test Checkout
+        </button>
+      </div>
+
+      <div id="stockResult"></div>
+    </div>
+
+    <div class="container">
+      <h3>📋 Giỏ Hàng Hiện Tại</h3>
+      <div id="cartItems" class="cart-items"></div>
+    </div>
+
+    <div class="container">
+      <h3>🧪 Test Tự Động</h3>
+      <div class="button-group">
+        <button class="btn btn-info" onclick="runCompleteTest()">
+          🚀 Chạy Test Toàn Bộ Hệ Thống
+        </button>
+        <button class="btn btn-warning" onclick="clearResults()">
+          🧹 Xóa Kết Quả
+        </button>
+      </div>
+      <div id="testResults"></div>
+    </div>
+
+    <script>
+      let isLoading = false;
+
+      function showResult(message, type = "info", containerId = "stockResult") {
+        const container = document.getElementById(containerId);
+        const resultDiv = document.createElement("div");
+        resultDiv.className = `result ${type}`;
+        resultDiv.innerHTML = message;
+        container.appendChild(resultDiv);
+        container.scrollIntoView({ behavior: "smooth" });
+      }
+
+      function setLoading(loading) {
+        isLoading = loading;
+        const buttons = [
+          "checkStockBtn",
+          "addToCartBtn",
+          "loadCartBtn",
+          "checkoutBtn",
+        ];
+        buttons.forEach((id) => {
+          const btn = document.getElementById(id);
+          if (btn) {
+            btn.disabled = loading;
+            if (loading) {
+              btn.innerHTML = "⏳ Đang xử lý...";
+            } else {
+              // Reset button text
+              if (id === "checkStockBtn") btn.innerHTML = "🔍 Kiểm Tra Tồn Kho";
+              if (id === "addToCartBtn") btn.innerHTML = "🛒 Thêm Vào Giỏ Hàng";
+              if (id === "loadCartBtn") btn.innerHTML = "📋 Tải Giỏ Hàng";
+              if (id === "checkoutBtn") btn.innerHTML = "💳 Test Checkout";
+            }
+          }
+        });
+      }
+
+      async function checkStock() {
+        const productId = document.getElementById("stockProductId").value;
+        if (!productId) {
+          showResult("❌ Vui lòng nhập ID sản phẩm!", "error");
+          return;
+        }
+
+        setLoading(true);
+        try {
+          const response = await fetch(
+            `http://localhost:8080/api/cart/check-stock/${productId}`,
+            {
+              method: "GET",
+              headers: { "Content-Type": "application/json" },
+              credentials: "include",
+            }
+          );
+
+          if (response.ok) {
+            const result = await response.json();
+            displayStockInfo(result);
+          } else {
+            const error = await response.text();
+            showResult(`❌ Kiểm tra tồn kho thất bại: ${error}`, "error");
+          }
+        } catch (error) {
+          showResult(`❌ Lỗi kiểm tra tồn kho: ${error.message}`, "error");
+        } finally {
+          setLoading(false);
+        }
+      }
+
+      function displayStockInfo(stockInfo) {
+        const status = stockInfo.available ? "✅ Còn hàng" : "❌ Hết hàng";
+        const statusColor = stockInfo.available ? "#28a745" : "#dc3545";
+
+        const html = `
+                <div class="stock-info">
+                    <h4 style="color: ${statusColor}">${status}</h4>
+                    <div class="stock-item">
+                        <span class="stock-label">Tên sản phẩm:</span>
+                        <span class="stock-value">${
+                          stockInfo.productName || "N/A"
+                        }</span>
+                    </div>
+                    <div class="stock-item">
+                        <span class="stock-label">Tồn kho:</span>
+                        <span class="stock-value">${stockInfo.stock}</span>
+                    </div>
+                    <div class="stock-item">
+                        <span class="stock-label">Trong giỏ:</span>
+                        <span class="stock-value">${stockInfo.inCart}</span>
+                    </div>
+                    <div class="stock-item">
+                        <span class="stock-label">Có thể thêm:</span>
+                        <span class="stock-value">${stockInfo.canAdd}</span>
+                    </div>
+                    <div class="stock-item">
+                        <span class="stock-label">Thông báo:</span>
+                        <span class="stock-value">${stockInfo.message}</span>
+                    </div>
+                </div>
+            `;
+
+        showResult(html, "success");
+      }
+
+      async function addToCartWithStockCheck() {
+        const productId = document.getElementById("stockProductId").value;
+        if (!productId) {
+          showResult("❌ Vui lòng nhập ID sản phẩm!", "error");
+          return;
+        }
+
+        setLoading(true);
+        try {
+          // 1. Kiểm tra tồn kho trước
+          const stockResponse = await fetch(
+            `http://localhost:8080/api/cart/check-stock/${productId}`,
+            {
+              method: "GET",
+              headers: { "Content-Type": "application/json" },
+              credentials: "include",
+            }
+          );
+
+          if (!stockResponse.ok) {
+            showResult("❌ Không thể kiểm tra tồn kho", "error");
+            return;
+          }
+
+          const stockInfo = await stockResponse.json();
+          if (!stockInfo.available) {
+            showResult(
+              `❌ Không thể thêm vào giỏ: ${stockInfo.message}`,
+              "error"
+            );
+            return;
+          }
+
+          if (stockInfo.canAdd < 1) {
+            showResult(
+              `❌ Không đủ số lượng. Có thể thêm: ${stockInfo.canAdd}`,
+              "error"
+            );
+            return;
+          }
+
+          // 2. Thêm vào giỏ hàng
+          const addToCartData = {
+            chiTietSanPhamId: parseInt(productId),
+            soLuong: 1,
+          };
+
+          const response = await fetch("http://localhost:8080/api/cart/add", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            credentials: "include",
+            body: JSON.stringify(addToCartData),
+          });
+
+          if (response.ok) {
+            showResult("✅ Đã thêm vào giỏ hàng thành công!", "success");
+            loadCart(); // Tải lại giỏ hàng
+          } else {
+            const error = await response.text();
+            showResult(`❌ Thêm vào giỏ hàng thất bại: ${error}`, "error");
+          }
+        } catch (error) {
+          showResult(`❌ Lỗi thêm vào giỏ hàng: ${error.message}`, "error");
+        } finally {
+          setLoading(false);
+        }
+      }
+
+      async function loadCart() {
+        setLoading(true);
+        try {
+          const response = await fetch("http://localhost:8080/api/cart", {
+            method: "GET",
+            headers: { "Content-Type": "application/json" },
+            credentials: "include",
+          });
+
+          if (response.ok) {
+            const cartItems = await response.json();
+            displayCartItems(cartItems);
+          } else {
+            showResult("❌ Không thể tải giỏ hàng", "error");
+          }
+        } catch (error) {
+          showResult(`❌ Lỗi tải giỏ hàng: ${error.message}`, "error");
+        } finally {
+          setLoading(false);
+        }
+      }
+
+      function displayCartItems(cartItems) {
+        const container = document.getElementById("cartItems");
+
+        if (cartItems.length === 0) {
+          container.innerHTML =
+            '<p style="text-align: center; color: #666;">Giỏ hàng trống</p>';
+          return;
+        }
+
+        container.innerHTML = cartItems
+          .map(
+            (item) => `
+                <div class="cart-item">
+                    <div class="cart-item-header">
+                        <span class="cart-item-name">${item.tenSanPham}</span>
+                        <span class="cart-item-price">${item.thanhTien.toLocaleString()}đ</span>
+                    </div>
+                    <div class="cart-item-details">
+                        <div>Kích cỡ: ${item.kichCo}</div>
+                        <div>Màu sắc: ${item.mauSac}</div>
+                        <div>Số lượng: ${item.soLuong}</div>
+                        <div>Tồn kho: ${item.soLuongTonKho}</div>
+                    </div>
+                    <div class="cart-item-actions">
+                        <button class="btn btn-sm btn-warning" onclick="updateQuantity(${
+                          item.id
+                        }, ${item.soLuong - 1})">
+                            ➖ Giảm
+                        </button>
+                        <button class="btn btn-sm btn-success" onclick="updateQuantity(${
+                          item.id
+                        }, ${item.soLuong + 1})">
+                            ➕ Tăng
+                        </button>
+                        <button class="btn btn-sm btn-danger" onclick="removeFromCart(${
+                          item.id
+                        })">
+                            🗑️ Xóa
+                        </button>
+                    </div>
+                </div>
+            `
+          )
+          .join("");
+      }
+
+      async function updateQuantity(cartItemId, newQuantity) {
+        if (newQuantity < 1) {
+          removeFromCart(cartItemId);
+          return;
+        }
+
+        try {
+          const response = await fetch(
+            `http://localhost:8080/api/cart/update/${cartItemId}`,
+            {
+              method: "PUT",
+              headers: { "Content-Type": "application/json" },
+              credentials: "include",
+              body: JSON.stringify({ soLuong: newQuantity }),
+            }
+          );
+
+          if (response.ok) {
+            loadCart();
+          } else {
+            const error = await response.text();
+            showResult(`❌ Cập nhật số lượng thất bại: ${error}`, "error");
+          }
+        } catch (error) {
+          showResult(`❌ Lỗi cập nhật số lượng: ${error.message}`, "error");
+        }
+      }
+
+      async function removeFromCart(cartItemId) {
+        try {
+          const response = await fetch(
+            `http://localhost:8080/api/cart/remove/${cartItemId}`,
+            {
+              method: "DELETE",
+              headers: { "Content-Type": "application/json" },
+              credentials: "include",
+            }
+          );
+
+          if (response.ok) {
+            loadCart();
+          } else {
+            const error = await response.text();
+            showResult(`❌ Xóa sản phẩm thất bại: ${error}`, "error");
+          }
+        } catch (error) {
+          showResult(`❌ Lỗi xóa sản phẩm: ${error.message}`, "error");
+        }
+      }
+
+      async function testCheckout() {
+        setLoading(true);
+        try {
+          // 1. Lấy giỏ hàng
+          const cartResponse = await fetch("http://localhost:8080/api/cart", {
+            method: "GET",
+            headers: { "Content-Type": "application/json" },
+            credentials: "include",
+          });
+
+          if (!cartResponse.ok) {
+            showResult("❌ Không thể lấy giỏ hàng", "error");
+            return;
+          }
+
+          const cartItems = await cartResponse.json();
+          if (cartItems.length === 0) {
+            showResult("❌ Giỏ hàng trống, không thể checkout", "error");
+            return;
+          }
+
+          // 2. Kiểm tra tồn kho
+          const productIds = cartItems.map((item) => item.chiTietSanPhamId);
+          const stockResponse = await fetch(
+            "http://localhost:8080/api/cart/check-stock-batch",
+            {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              credentials: "include",
+              body: JSON.stringify(productIds),
+            }
+          );
+
+          if (!stockResponse.ok) {
+            showResult("❌ Không thể kiểm tra tồn kho", "error");
+            return;
+          }
+
+          const stockData = await stockResponse.json();
+          const invalidItems = stockData.stockInfo.filter(
+            (info) => !info.available
+          );
+
+          if (invalidItems.length > 0) {
+            showResult(
+              `❌ Có sản phẩm không đủ số lượng: ${invalidItems
+                .map((item) => item.productName)
+                .join(", ")}`,
+              "error"
+            );
+            return;
+          }
+
+          // 3. Thực hiện checkout
+          const checkoutData = {
+            cartItems: cartItems.map((item) => ({
+              chiTietSanPhamId: item.chiTietSanPhamId,
+              soLuong: item.soLuong,
+              gia: item.gia,
+              thanhTien: item.thanhTien,
+            })),
+            diaChiId: 1,
+            phuongThucThanhToanId: 1,
+            ghiChuKhachHang: "Test checkout từ trang web",
+            phiVanChuyen: 30000,
+            tongTienHang: cartItems.reduce(
+              (sum, item) => sum + parseFloat(item.thanhTien),
+              0
+            ),
+            tongThanhToan:
+              cartItems.reduce(
+                (sum, item) => sum + parseFloat(item.thanhTien),
+                0
+              ) + 30000,
+          };
+
+          const checkoutResponse = await fetch(
+            "http://localhost:8080/api/checkout/process",
+            {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              credentials: "include",
+              body: JSON.stringify(checkoutData),
+            }
+          );
+
+          if (checkoutResponse.ok) {
+            const result = await checkoutResponse.json();
+            showResult(
+              `✅ Checkout thành công!\n\nMã đơn hàng: ${
+                result.maDonHang
+              }\nTổng tiền: ${result.tongThanhToan.toLocaleString()}đ\nTrạng thái: ${
+                result.trangThai
+              }`,
+              "success",
+              "testResults"
+            );
+
+            // Xóa giỏ hàng sau khi checkout thành công
+            setTimeout(() => {
+              loadCart();
+            }, 1000);
+          } else {
+            const error = await checkoutResponse.text();
+            showResult(
+              `❌ Checkout thất bại: ${error}`,
+              "error",
+              "testResults"
+            );
+          }
+        } catch (error) {
+          showResult(
+            `❌ Lỗi checkout: ${error.message}`,
+            "error",
+            "testResults"
+          );
+        } finally {
+          setLoading(false);
+        }
+      }
+
+      async function runCompleteTest() {
+        setLoading(true);
+        try {
+          showResult(
+            "🚀 Bắt đầu test toàn bộ hệ thống...",
+            "info",
+            "testResults"
+          );
+
+          // Test 1: Kiểm tra tồn kho
+          showResult(
+            "=== Test 1: Kiểm tra tồn kho sản phẩm ID 1 ===",
+            "info",
+            "testResults"
+          );
+          await checkStock();
+
+          // Test 2: Thêm vào giỏ hàng
+          showResult(
+            "=== Test 2: Thêm vào giỏ hàng ===",
+            "info",
+            "testResults"
+          );
+          await addToCartWithStockCheck();
+
+          // Test 3: Tải giỏ hàng
+          showResult("=== Test 3: Tải giỏ hàng ===", "info", "testResults");
+          await loadCart();
+
+          // Test 4: Checkout
+          showResult("=== Test 4: Test checkout ===", "info", "testResults");
+          await testCheckout();
+
+          showResult(
+            "✅ Hoàn thành test toàn bộ hệ thống!",
+            "success",
+            "testResults"
+          );
+        } catch (error) {
+          showResult(
+            `❌ Lỗi trong test: ${error.message}`,
+            "error",
+            "testResults"
+          );
+        } finally {
+          setLoading(false);
+        }
+      }
+
+      function clearResults() {
+        document.getElementById("stockResult").innerHTML = "";
+        document.getElementById("testResults").innerHTML = "";
+      }
+
+      // Auto-load cart on page load
+      window.onload = function () {
+        loadCart();
+      };
+    </script>
+  </body>
+</html>

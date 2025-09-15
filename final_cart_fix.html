@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Final Cart Fix - ID Mapping</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        max-width: 1000px;
+        margin: 0 auto;
+        padding: 20px;
+        background-color: #f5f5f5;
+      }
+      .container {
+        background: white;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        margin-bottom: 20px;
+      }
+      .button {
+        background: #007bff;
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 4px;
+        cursor: pointer;
+        margin: 5px;
+      }
+      .button:hover {
+        background: #0056b3;
+      }
+      .button.success {
+        background: #28a745;
+      }
+      .button.success:hover {
+        background: #218838;
+      }
+      .button.danger {
+        background: #dc3545;
+      }
+      .button.danger:hover {
+        background: #c82333;
+      }
+      .button.warning {
+        background: #ffc107;
+        color: #212529;
+      }
+      .button.warning:hover {
+        background: #e0a800;
+      }
+      .result {
+        margin: 10px 0;
+        padding: 10px;
+        border-radius: 4px;
+        font-family: monospace;
+        white-space: pre-wrap;
+      }
+      .success {
+        background: #d4edda;
+        color: #155724;
+        border: 1px solid #c3e6cb;
+      }
+      .error {
+        background: #f8d7da;
+        color: #721c24;
+        border: 1px solid #f5c6cb;
+      }
+      .info {
+        background: #d1ecf1;
+        color: #0c5460;
+        border: 1px solid #bee5eb;
+      }
+      .warning {
+        background: #fff3cd;
+        color: #856404;
+        border: 1px solid #ffeaa7;
+      }
+      .cart-item {
+        background: #f8f9fa;
+        border: 1px solid #dee2e6;
+        border-radius: 4px;
+        padding: 10px;
+        margin: 5px 0;
+      }
+      .cart-item .id-info {
+        font-weight: bold;
+        color: #007bff;
+      }
+      .cart-item .error-id {
+        color: #dc3545;
+        font-weight: bold;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>🔧 Final Cart Fix - ID Mapping Issue</h1>
+      <p>
+        <strong>Vấn đề:</strong> Frontend đang sử dụng ID của ChiTietGioHang
+        thay vì chiTietSanPhamId cho checkout
+      </p>
+      <p>
+        <strong>Giải pháp:</strong> Đảm bảo sử dụng đúng chiTietSanPhamId từ
+        backend
+      </p>
+    </div>
+
+    <div class="container">
+      <h3>1. Kiểm tra dữ liệu hiện tại</h3>
+      <button class="button" onclick="checkCurrentData()">
+        Kiểm tra Cart Data
+      </button>
+      <button class="button warning" onclick="checkBackendData()">
+        Kiểm tra Backend Data
+      </button>
+      <div id="currentData"></div>
+    </div>
+
+    <div class="container">
+      <h3>2. Sửa lỗi ID Mapping</h3>
+      <button class="button success" onclick="fixIdMapping()">
+        Sửa ID Mapping
+      </button>
+      <button class="button warning" onclick="syncFromBackend()">
+        Đồng bộ từ Backend
+      </button>
+      <button class="button danger" onclick="clearCart()">Xóa Cart</button>
+      <div id="fixResult"></div>
+    </div>
+
+    <div class="container">
+      <h3>3. Test Checkout</h3>
+      <button class="button" onclick="testCheckout()">Test Checkout</button>
+      <div id="testResult"></div>
+    </div>
+
+    <script>
+      function showResult(elementId, message, type = "info") {
+        const element = document.getElementById(elementId);
+        element.innerHTML = `<div class="result ${type}">${message}</div>`;
+      }
+
+      function checkCurrentData() {
+        console.log("🔍 Checking current cart data...");
+
+        const cartData = JSON.parse(localStorage.getItem("cart") || "[]");
+        const checkoutCartData = JSON.parse(
+          localStorage.getItem("checkout_cart") || "[]"
+        );
+
+        let result = "<h4>📋 Current Cart Data Analysis:</h4>";
+
+        if (cartData.length === 0) {
+          result += "<p>❌ Cart is empty</p>";
+        } else {
+          result += `<p>✅ Found ${cartData.length} items in cart</p>`;
+
+          cartData.forEach((item, index) => {
+            const hasValidMapping =
+              item.chiTietSanPhamId && item.chiTietSanPhamId !== item.id;
+            const status = hasValidMapping ? "✅" : "❌";
+            const statusClass = hasValidMapping ? "id-info" : "error-id";
+
+            result += `<div class="cart-item">
+                        <div>${status} Item ${index + 1}: ${
+              item.tenSanPham || "Unknown"
+            }</div>
+                        <div class="${statusClass}">ID (ChiTietGioHang): ${
+              item.id
+            }</div>
+                        <div class="${statusClass}">chiTietSanPhamId: ${
+              item.chiTietSanPhamId || "MISSING!"
+            }</div>
+                        <div>SoLuong: ${
+                          item.soLuong || item.quantity || "N/A"
+                        }</div>
+                        <div>Gia: ${item.gia || item.price || "N/A"}</div>
+                    </div>`;
+          });
+        }
+
+        result += `<h4>📋 Checkout Cart Data:</h4>`;
+        if (checkoutCartData.length === 0) {
+          result += "<p>❌ Checkout cart is empty</p>";
+        } else {
+          result += `<p>✅ Found ${checkoutCartData.length} items in checkout cart</p>`;
+        }
+
+        showResult("currentData", result, "info");
+      }
+
+      async function checkBackendData() {
+        console.log("🔍 Checking backend cart data...");
+
+        try {
+          const response = await fetch("http://localhost:8080/api/cart", {
+            method: "GET",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            credentials: "include",
+          });
+
+          if (response.ok) {
+            const backendData = await response.json();
+            let result = "<h4>📋 Backend Cart Data:</h4>";
+
+            if (backendData.length === 0) {
+              result += "<p>❌ Backend cart is empty</p>";
+            } else {
+              result += `<p>✅ Found ${backendData.length} items in backend cart</p>`;
+
+              backendData.forEach((item, index) => {
+                result += `<div class="cart-item">
+                                <div>✅ Item ${index + 1}: ${
+                  item.tenSanPham || "Unknown"
+                }</div>
+                                <div class="id-info">ID (ChiTietGioHang): ${
+                                  item.id
+                                }</div>
+                                <div class="id-info">chiTietSanPhamId: ${
+                                  item.chiTietSanPhamId
+                                }</div>
+                                <div>SoLuong: ${item.soLuong}</div>
+                                <div>Gia: ${item.gia}</div>
+                            </div>`;
+              });
+            }
+
+            showResult("currentData", result, "success");
+          } else {
+            showResult(
+              "currentData",
+              `❌ Failed to get backend data: ${response.status}`,
+              "error"
+            );
+          }
+        } catch (error) {
+          showResult("currentData", `❌ Error: ${error.message}`, "error");
+        }
+      }
+
+      function fixIdMapping() {
+        console.log("🔧 Fixing ID mapping...");
+
+        try {
+          const cartData = JSON.parse(localStorage.getItem("cart") || "[]");
+
+          if (cartData.length === 0) {
+            showResult("fixResult", "❌ No cart data to fix", "error");
+            return;
+          }
+
+          const fixedCartData = cartData.map((item) => {
+            // Đảm bảo sử dụng chiTietSanPhamId cho checkout
+            return {
+              ...item,
+              chiTietSanPhamId: item.chiTietSanPhamId || item.id,
+              soLuong: item.soLuong || item.quantity || 1,
+              gia: item.gia || item.price || 100000,
+              thanhTien:
+                item.thanhTien ||
+                (item.gia || item.price || 100000) *
+                  (item.soLuong || item.quantity || 1),
+            };
+          });
+
+          localStorage.setItem("cart", JSON.stringify(fixedCartData));
+          localStorage.setItem("checkout_cart", JSON.stringify(fixedCartData));
+
+          let result = "<h4>✅ ID Mapping Fixed!</h4>";
+          result += `<p>Fixed ${fixedCartData.length} items</p>`;
+          result += `<pre>${JSON.stringify(fixedCartData, null, 2)}</pre>`;
+
+          showResult("fixResult", result, "success");
+        } catch (error) {
+          showResult(
+            "fixResult",
+            `❌ Error fixing ID mapping: ${error.message}`,
+            "error"
+          );
+        }
+      }
+
+      async function syncFromBackend() {
+        console.log("🔄 Syncing from backend...");
+
+        try {
+          const response = await fetch("http://localhost:8080/api/cart", {
+            method: "GET",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            credentials: "include",
+          });
+
+          if (response.ok) {
+            const backendData = await response.json();
+
+            // Chuyển đổi dữ liệu từ backend format
+            const convertedData = backendData.map((item) => ({
+              id: item.id,
+              chiTietSanPhamId: item.chiTietSanPhamId,
+              tenSanPham: item.tenSanPham,
+              hinhAnh: item.hinhAnh,
+              kichCo: item.kichCo,
+              mauSac: item.mauSac,
+              chatLieu: item.chatLieu,
+              soLuong: item.soLuong,
+              gia: item.gia,
+              thanhTien: item.thanhTien,
+              soLuongTonKho: item.soLuongTonKho,
+            }));
+
+            localStorage.setItem("cart", JSON.stringify(convertedData));
+            localStorage.setItem(
+              "checkout_cart",
+              JSON.stringify(convertedData)
+            );
+
+            let result = "<h4>✅ Synced from Backend!</h4>";
+            result += `<p>Synced ${convertedData.length} items</p>`;
+            result += `<pre>${JSON.stringify(convertedData, null, 2)}</pre>`;
+
+            showResult("fixResult", result, "success");
+          } else {
+            showResult(
+              "fixResult",
+              `❌ Failed to sync from backend: ${response.status}`,
+              "error"
+            );
+          }
+        } catch (error) {
+          showResult(
+            "fixResult",
+            `❌ Error syncing from backend: ${error.message}`,
+            "error"
+          );
+        }
+      }
+
+      function clearCart() {
+        console.log("🧹 Clearing cart...");
+
+        localStorage.removeItem("cart");
+        localStorage.removeItem("checkout_cart");
+
+        showResult("fixResult", "✅ Cart cleared successfully!", "success");
+      }
+
+      async function testCheckout() {
+        console.log("🧪 Testing checkout...");
+
+        try {
+          const cartData = JSON.parse(localStorage.getItem("cart") || "[]");
+
+          if (cartData.length === 0) {
+            showResult("testResult", "❌ No items in cart to test", "error");
+            return;
+          }
+
+          // Tạo test checkout data
+          const testCheckoutData = {
+            cartItems: cartData,
+            diaChiId: 1,
+            phuongThucThanhToanId: 1,
+            ghiChuKhachHang: "Test order",
+            phiVanChuyen: 30000,
+            tongTienHang: cartData.reduce(
+              (sum, item) => sum + (item.gia || 0),
+              0
+            ),
+            tongThanhToan:
+              cartData.reduce((sum, item) => sum + (item.gia || 0), 0) + 30000,
+          };
+
+          const response = await fetch(
+            "http://localhost:8080/api/checkout/test-process",
+            {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              credentials: "include",
+              body: JSON.stringify(testCheckoutData),
+            }
+          );
+
+          if (response.ok) {
+            const result = await response.json();
+            showResult(
+              "testResult",
+              `<h4>✅ Checkout Test Successful!</h4><pre>${JSON.stringify(
+                result,
+                null,
+                2
+              )}</pre>`,
+              "success"
+            );
+          } else {
+            const error = await response.text();
+            showResult(
+              "testResult",
+              `<h4>❌ Checkout Test Failed!</h4><p>Status: ${response.status}</p><pre>${error}</pre>`,
+              "error"
+            );
+          }
+        } catch (error) {
+          showResult(
+            "testResult",
+            `❌ Error testing checkout: ${error.message}`,
+            "error"
+          );
+        }
+      }
+
+      // Auto-check on load
+      window.onload = function () {
+        checkCurrentData();
+      };
+    </script>
+  </body>
+</html>

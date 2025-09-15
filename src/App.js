@@ -7,6 +7,7 @@ import {
 } from "react-router-dom";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "./App.css";
+import "./styles/admin-clean.css";
 import AddProduct from "./pages/AddProduct";
 
 // Layout Components
@@ -29,17 +30,21 @@ import Sizes from "./pages/Sizes";
 import Materials from "./pages/Materials";
 import EditProduct from "./pages/EditProduct";
 import Vouchers from "./pages/Vouchers";
+import PromotionManagement from "./pages/PromotionManagement";
 import Statistics from "./pages/Statistics";
-import Pos from "./pages/Pos";
+import PosModern from "./pages/PosModern";
 import OrderDetail from "./pages/OrderDetail";
+import ImageUploadTest from "./components/ImageUploadTest";
 
 // Components
 import ProtectedRoute from "./components/ProtectedRoute";
 import PublicRoute from "./components/PublicRoute";
+import ToastContainer from "./components/ToastContainer";
 
 function App() {
   return (
     <Router>
+      <ToastContainer />
       <Routes>
         {/* Route mặc định - chuyển hướng đến login */}
         <Route path="/" element={<Navigate to="/login" replace />} />
@@ -66,7 +71,7 @@ function App() {
           <Route index element={<Dashboard />} />
           <Route path="stats" element={<Statistics />} />
           <Route path="products" element={<Products />} />
-          <Route path="pos" element={<Pos />} />
+          <Route path="pos" element={<PosModern />} />
           <Route path="products/add" element={<AddProduct />} />
           <Route path="products/edit/:productId" element={<EditProduct />} />
           <Route path="orders" element={<Orders />} />
@@ -80,6 +85,7 @@ function App() {
           <Route path="materials" element={<Materials />} />
           <Route path="settings" element={<Settings />} />
           <Route path="vouchers" element={<Vouchers />} />
+          <Route path="promotions" element={<PromotionManagement />} />
         </Route>
 
         {/* Route cập nhật đơn hàng */}
@@ -98,6 +104,16 @@ function App() {
           element={
             <ProtectedRoute>
               <OrderDetail />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* Route test upload ảnh */}
+        <Route
+          path="/test-upload"
+          element={
+            <ProtectedRoute>
+              <ImageUploadTest />
             </ProtectedRoute>
           }
         />

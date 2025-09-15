@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Debug Charts Data</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        margin: 20px;
+        background-color: #f5f5f5;
+      }
+      .container {
+        max-width: 1200px;
+        margin: 0 auto;
+        background: white;
+        padding: 20px;
+        border-radius: 10px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      }
+      .test-button {
+        background: #007bff;
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 5px;
+        cursor: pointer;
+        margin: 5px;
+        width: 100%;
+      }
+      .test-button:hover {
+        background: #0056b3;
+      }
+      .result {
+        margin-top: 10px;
+        padding: 10px;
+        border-radius: 5px;
+        font-family: monospace;
+        font-size: 12px;
+        white-space: pre-wrap;
+        max-height: 300px;
+        overflow-y: auto;
+      }
+      .success {
+        background: #d4edda;
+        color: #155724;
+        border: 1px solid #c3e6cb;
+      }
+      .error {
+        background: #f8d7da;
+        color: #721c24;
+        border: 1px solid #f5c6cb;
+      }
+      .loading {
+        background: #fff3cd;
+        color: #856404;
+        border: 1px solid #ffeaa7;
+      }
+      .warning {
+        background: #fff3cd;
+        color: #856404;
+        border: 1px solid #ffeaa7;
+      }
+      .highlight {
+        background: #fff3cd;
+        padding: 10px;
+        border-radius: 5px;
+        margin: 10px 0;
+      }
+      .grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 20px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>🔍 Debug Charts Data</h1>
+      <p>Kiểm tra dữ liệu cho biểu đồ tròn và biểu đồ cột</p>
+
+      <div class="highlight">
+        <strong>🎯 Mục tiêu:</strong> Kiểm tra tại sao biểu đồ tròn (Danh Mục)
+        và biểu đồ cột (Thanh Toán) không hiển thị dữ liệu
+      </div>
+
+      <div class="grid">
+        <div>
+          <button class="test-button" onclick="testDanhMucDoanhThu()">
+            Test /zmen/danh-muc/doanh-thu (Biểu đồ tròn)
+          </button>
+          <div id="danhmuc-result"></div>
+
+          <button class="test-button" onclick="testThanhToanThongKe()">
+            Test /zmen/thanh-toan/thong-ke (Biểu đồ cột)
+          </button>
+          <div id="thanhtoan-result"></div>
+        </div>
+
+        <div>
+          <button class="test-button" onclick="testBieuDoDoanhThu()">
+            Test /zmen/bieu-do/doanh-thu (Biểu đồ đường)
+          </button>
+          <div id="bieudo-result"></div>
+
+          <button class="test-button" onclick="testSanPhamBanChay()">
+            Test /zmen/san-pham/ngay (Bảng sản phẩm)
+          </button>
+          <div id="sanpham-result"></div>
+        </div>
+      </div>
+
+      <button
+        class="test-button"
+        onclick="testAllChartsData()"
+        style="background: #28a745"
+      >
+        🚀 Test Tất Cả Dữ Liệu Biểu Đồ
+      </button>
+      <div id="all-results"></div>
+
+      <div class="highlight">
+        <strong>📊 Phân tích dữ liệu:</strong>
+        <div id="data-analysis"></div>
+      </div>
+    </div>
+
+    <script>
+      const BASE_URL = "http://localhost:8080";
+      const TEST_DATE = "2025-08-27";
+
+      async function testDanhMucDoanhThu() {
+        const resultDiv = document.getElementById("danhmuc-result");
+        resultDiv.innerHTML =
+          '<div class="result loading">Đang test /zmen/danh-muc/doanh-thu...</div>';
+
+        try {
+          const response = await fetch(
+            `${BASE_URL}/zmen/danh-muc/doanh-thu?nam=2025&thang=8`
+          );
+          if (response.ok) {
+            const data = await response.json();
+            const hasData = data.length > 0;
+            const status = hasData ? "success" : "warning";
+            const icon = hasData ? "✅" : "⚠️";
+
+            let analysis = "";
+            if (hasData) {
+              const totalRevenue = data.reduce(
+                (sum, item) => sum + item.doanhThu,
+                0
+              );
+              analysis = `\n📊 Phân tích:\n- Tổng doanh thu: ${formatCurrency(
+                totalRevenue
+              )}\n- Số danh mục: ${data.length}\n- Danh mục lớn nhất: ${
+                data[0]?.tenDanhMuc || "N/A"
+              }`;
+            }
+
+            resultDiv.innerHTML = `<div class="result ${status}">${icon} /zmen/danh-muc/doanh-thu SUCCESS\n📄 Items: ${
+              data.length
+            }\n📄 Response: ${JSON.stringify(data, null, 2)}${analysis}</div>`;
+          } else {
+            const errorText = await response.text();
+            resultDiv.innerHTML = `<div class="result error">❌ /zmen/danh-muc/doanh-thu ERROR (${response.status})\n📄 Error: ${errorText}</div>`;
+          }
+        } catch (error) {
+          resultDiv.innerHTML = `<div class="result error">❌ /zmen/danh-muc/doanh-thu NETWORK ERROR\n📄 Error: ${error.message}</div>`;
+        }
+      }
+
+      async function testThanhToanThongKe() {
+        const resultDiv = document.getElementById("thanhtoan-result");
+        resultDiv.innerHTML =
+          '<div class="result loading">Đang test /zmen/thanh-toan/thong-ke...</div>';
+
+        try {
+          const response = await fetch(
+            `${BASE_URL}/zmen/thanh-toan/thong-ke?nam=2025&thang=8`
+          );
+          if (response.ok) {
+            const data = await response.json();
+            const hasData = data.length > 0;
+            const status = hasData ? "success" : "warning";
+            const icon = hasData ? "✅" : "⚠️";
+
+            let analysis = "";
+            if (hasData) {
+              const totalAmount = data.reduce(
+                (sum, item) => sum + item.tongTien,
+                0
+              );
+              const totalOrders = data.reduce(
+                (sum, item) => sum + item.soLuong,
+                0
+              );
+              analysis = `\n📊 Phân tích:\n- Tổng tiền: ${formatCurrency(
+                totalAmount
+              )}\n- Tổng đơn hàng: ${totalOrders}\n- Phương thức phổ biến: ${
+                data[0]?.tenPhuongThuc || "N/A"
+              }`;
+            }
+
+            resultDiv.innerHTML = `<div class="result ${status}">${icon} /zmen/thanh-toan/thong-ke SUCCESS\n📄 Items: ${
+              data.length
+            }\n📄 Response: ${JSON.stringify(data, null, 2)}${analysis}</div>`;
+          } else {
+            const errorText = await response.text();
+            resultDiv.innerHTML = `<div class="result error">❌ /zmen/thanh-toan/thong-ke ERROR (${response.status})\n📄 Error: ${errorText}</div>`;
+          }
+        } catch (error) {
+          resultDiv.innerHTML = `<div class="result error">❌ /zmen/thanh-toan/thong-ke NETWORK ERROR\n📄 Error: ${error.message}</div>`;
+        }
+      }
+
+      async function testBieuDoDoanhThu() {
+        const resultDiv = document.getElementById("bieudo-result");
+        resultDiv.innerHTML =
+          '<div class="result loading">Đang test /zmen/bieu-do/doanh-thu...</div>';
+
+        try {
+          const response = await fetch(
+            `${BASE_URL}/zmen/bieu-do/doanh-thu?loai=ngay`
+          );
+          if (response.ok) {
+            const data = await response.json();
+            const hasData = data.length > 0;
+            const status = hasData ? "success" : "warning";
+            const icon = hasData ? "✅" : "⚠️";
+
+            let analysis = "";
+            if (hasData) {
+              const totalRevenue = data.reduce(
+                (sum, item) => sum + item.doanhThu,
+                0
+              );
+              analysis = `\n📊 Phân tích:\n- Tổng doanh thu: ${formatCurrency(
+                totalRevenue
+              )}\n- Số ngày có dữ liệu: ${data.length}\n- Ngày cao nhất: ${
+                data[data.length - 1]?.thoiGian || "N/A"
+              }`;
+            }
+
+            resultDiv.innerHTML = `<div class="result ${status}">${icon} /zmen/bieu-do/doanh-thu SUCCESS\n📄 Items: ${
+              data.length
+            }\n📄 Response: ${JSON.stringify(data, null, 2)}${analysis}</div>`;
+          } else {
+            const errorText = await response.text();
+            resultDiv.innerHTML = `<div class="result error">❌ /zmen/bieu-do/doanh-thu ERROR (${response.status})\n📄 Error: ${errorText}</div>`;
+          }
+        } catch (error) {
+          resultDiv.innerHTML = `<div class="result error">❌ /zmen/bieu-do/doanh-thu NETWORK ERROR\n📄 Error: ${error.message}</div>`;
+        }
+      }
+
+      async function testSanPhamBanChay() {
+        const resultDiv = document.getElementById("sanpham-result");
+        resultDiv.innerHTML =
+          '<div class="result loading">Đang test /zmen/san-pham/ngay...</div>';
+
+        try {
+          const response = await fetch(
+            `${BASE_URL}/zmen/san-pham/ngay?ngay=${TEST_DATE}`
+          );
+          if (response.ok) {
+            const data = await response.json();
+            const hasData = data.length > 0;
+            const status = hasData ? "success" : "warning";
+            const icon = hasData ? "✅" : "⚠️";
+
+            let analysis = "";
+            if (hasData) {
+              const totalQuantity = data.reduce(
+                (sum, item) => sum + item.soLuongBan,
+                0
+              );
+              const totalRevenue = data.reduce(
+                (sum, item) => sum + item.doanhThu,
+                0
+              );
+              analysis = `\n📊 Phân tích:\n- Tổng số lượng bán: ${totalQuantity}\n- Tổng doanh thu: ${formatCurrency(
+                totalRevenue
+              )}\n- Sản phẩm bán chạy nhất: ${data[0]?.tenSanPham || "N/A"}`;
+            }
+
+            resultDiv.innerHTML = `<div class="result ${status}">${icon} /zmen/san-pham/ngay SUCCESS\n📄 Items: ${
+              data.length
+            }\n📄 Response: ${JSON.stringify(data, null, 2)}${analysis}</div>`;
+          } else {
+            const errorText = await response.text();
+            resultDiv.innerHTML = `<div class="result error">❌ /zmen/san-pham/ngay ERROR (${response.status})\n📄 Error: ${errorText}</div>`;
+          }
+        } catch (error) {
+          resultDiv.innerHTML = `<div class="result error">❌ /zmen/san-pham/ngay NETWORK ERROR\n📄 Error: ${error.message}</div>`;
+        }
+      }
+
+      async function testAllChartsData() {
+        const resultDiv = document.getElementById("all-results");
+        const analysisDiv = document.getElementById("data-analysis");
+        resultDiv.innerHTML =
+          '<div class="result loading">Đang test tất cả dữ liệu biểu đồ...</div>';
+
+        const endpoints = [
+          {
+            name: "Biểu đồ đường (Doanh thu)",
+            url: "/zmen/bieu-do/doanh-thu?loai=ngay",
+            key: "bieudo",
+          },
+          {
+            name: "Biểu đồ tròn (Danh mục)",
+            url: "/zmen/danh-muc/doanh-thu?nam=2025&thang=8",
+            key: "danhmuc",
+          },
+          {
+            name: "Biểu đồ cột (Thanh toán)",
+            url: "/zmen/thanh-toan/thong-ke?nam=2025&thang=8",
+            key: "thanhtoan",
+          },
+          {
+            name: "Bảng sản phẩm",
+            url: `/zmen/san-pham/ngay?ngay=${TEST_DATE}`,
+            key: "sanpham",
+          },
+        ];
+
+        let results = [];
+        let dataSummary = {};
+        let successCount = 0;
+        let dataCount = 0;
+
+        for (const endpoint of endpoints) {
+          try {
+            const response = await fetch(`${BASE_URL}${endpoint.url}`);
+            if (response.ok) {
+              const data = await response.json();
+              const hasData = data.length > 0;
+              const status = hasData ? "✅" : "⚠️";
+              results.push(
+                `${status} ${endpoint.name}: ${
+                  hasData ? "Có dữ liệu" : "Không có dữ liệu"
+                } (${data.length} items)`
+              );
+              successCount++;
+              if (hasData) dataCount++;
+
+              // Lưu dữ liệu để phân tích
+              dataSummary[endpoint.key] = {
+                hasData: hasData,
+                count: data.length,
+                data: data,
+              };
+            } else {
+              results.push(`❌ ${endpoint.name}: ERROR ${response.status}`);
+            }
+          } catch (error) {
+            results.push(`❌ ${endpoint.name}: NETWORK ERROR`);
+          }
+        }
+
+        const summary = `\n📊 Tổng kết: ${successCount}/${endpoints.length} endpoints thành công, ${dataCount} có dữ liệu`;
+        resultDiv.innerHTML = `<div class="result ${
+          dataCount > 0 ? "success" : "warning"
+        }">${results.join("\n")}${summary}</div>`;
+
+        // Phân tích chi tiết
+        let analysis = "";
+        if (dataSummary.bieudo?.hasData) {
+          const totalRevenue = dataSummary.bieudo.data.reduce(
+            (sum, item) => sum + item.doanhThu,
+            0
+          );
+          analysis += `📈 Biểu đồ đường: ${formatCurrency(
+            totalRevenue
+          )} tổng doanh thu\n`;
+        }
+        if (dataSummary.danhmuc?.hasData) {
+          const totalRevenue = dataSummary.danhmuc.data.reduce(
+            (sum, item) => sum + item.doanhThu,
+            0
+          );
+          analysis += `🥧 Biểu đồ tròn: ${
+            dataSummary.danhmuc.count
+          } danh mục, ${formatCurrency(totalRevenue)} tổng doanh thu\n`;
+        }
+        if (dataSummary.thanhtoan?.hasData) {
+          const totalAmount = dataSummary.thanhtoan.data.reduce(
+            (sum, item) => sum + item.tongTien,
+            0
+          );
+          analysis += `📊 Biểu đồ cột: ${
+            dataSummary.thanhtoan.count
+          } phương thức, ${formatCurrency(totalAmount)} tổng tiền\n`;
+        }
+        if (dataSummary.sanpham?.hasData) {
+          const totalQuantity = dataSummary.sanpham.data.reduce(
+            (sum, item) => sum + item.soLuongBan,
+            0
+          );
+          analysis += `📦 Bảng sản phẩm: ${dataSummary.sanpham.count} sản phẩm, ${totalQuantity} tổng số lượng bán\n`;
+        }
+
+        if (!analysis) {
+          analysis = "❌ Không có dữ liệu nào để hiển thị biểu đồ";
+        }
+
+        analysisDiv.innerHTML = analysis;
+      }
+
+      function formatCurrency(amount) {
+        return new Intl.NumberFormat("vi-VN", {
+          style: "currency",
+          currency: "VND",
+        }).format(amount);
+      }
+
+      // Auto test on load
+      window.onload = function () {
+        testAllChartsData();
+      };
+    </script>
+  </body>
+</html>

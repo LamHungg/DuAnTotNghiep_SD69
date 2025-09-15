@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Debug Authentication</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        padding: 20px;
+      }
+      .section {
+        margin: 20px 0;
+        padding: 15px;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+      }
+      .success {
+        background-color: #d4edda;
+        border-color: #c3e6cb;
+      }
+      .error {
+        background-color: #f8d7da;
+        border-color: #f5c6cb;
+      }
+      button {
+        padding: 10px 15px;
+        margin: 5px;
+        cursor: pointer;
+      }
+      pre {
+        background: #f8f9fa;
+        padding: 10px;
+        border-radius: 3px;
+        overflow-x: auto;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>🔍 Debug Authentication</h1>
+
+    <div class="section">
+      <h3>1. Check localStorage</h3>
+      <button onclick="checkLocalStorage()">Check localStorage</button>
+      <pre id="localStorage-result"></pre>
+    </div>
+
+    <div class="section">
+      <h3>2. Test Login</h3>
+      <button onclick="testLogin()">Test Login (test2@example.com)</button>
+      <pre id="login-result"></pre>
+    </div>
+
+    <div class="section">
+      <h3>3. Test Add to Cart</h3>
+      <button onclick="testAddToCart()">Test Add to Cart</button>
+      <pre id="cart-result"></pre>
+    </div>
+
+    <div class="section">
+      <h3>4. Clear localStorage</h3>
+      <button onclick="clearStorage()">
+        Clear localStorage & sessionStorage
+      </button>
+      <pre id="clear-result"></pre>
+    </div>
+
+    <script>
+      const API_URL = "http://localhost:8080/api";
+
+      function checkLocalStorage() {
+        const user = localStorage.getItem("user");
+        const isLoggedIn = localStorage.getItem("isLoggedIn");
+
+        const result = {
+          user: user ? JSON.parse(user) : null,
+          isLoggedIn: isLoggedIn,
+          hasToken: user ? JSON.parse(user).token !== undefined : false,
+        };
+
+        document.getElementById("localStorage-result").textContent =
+          JSON.stringify(result, null, 2);
+      }
+
+      async function testLogin() {
+        try {
+          const response = await fetch(`${API_URL}/auth/login`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            credentials: "include",
+            body: JSON.stringify({
+              email: "test2@example.com",
+              matKhau: "123456",
+            }),
+          });
+
+          const data = await response.json();
+
+          if (response.ok) {
+            // Simulate frontend login logic
+            localStorage.setItem("user", JSON.stringify(data));
+            localStorage.setItem("isLoggedIn", "true");
+
+            document.getElementById(
+              "login-result"
+            ).textContent = `✅ Login successful:\n${JSON.stringify(
+              data,
+              null,
+              2
+            )}`;
+          } else {
+            document.getElementById(
+              "login-result"
+            ).textContent = `❌ Login failed:\n${JSON.stringify(
+              data,
+              null,
+              2
+            )}`;
+          }
+        } catch (error) {
+          document.getElementById(
+            "login-result"
+          ).textContent = `❌ Login error: ${error.message}`;
+        }
+      }
+
+      async function testAddToCart() {
+        try {
+          // Get headers like cartService does
+          const user = localStorage.getItem("user");
+          const headers = {
+            "Content-Type": "application/json",
+          };
+
+          if (user) {
+            const userData = JSON.parse(user);
+            if (userData.token) {
+              headers["Authorization"] = `Bearer ${userData.token}`;
+              console.log("🔑 Using token:", userData.token);
+            }
+          }
+
+          console.log("📤 Sending headers:", headers);
+
+          const response = await fetch(`${API_URL}/cart/add`, {
+            method: "POST",
+            headers: headers,
+            credentials: "include",
+            body: JSON.stringify({
+              chiTietSanPhamId: 1,
+              soLuong: 1,
+            }),
+          });
+
+          const data = await response.text();
+
+          if (response.ok) {
+            document.getElementById(
+              "cart-result"
+            ).textContent = `✅ Add to cart successful:\n${data}`;
+          } else {
+            document.getElementById(
+              "cart-result"
+            ).textContent = `❌ Add to cart failed (${response.status}):\n${data}`;
+          }
+        } catch (error) {
+          document.getElementById(
+            "cart-result"
+          ).textContent = `❌ Add to cart error: ${error.message}`;
+        }
+      }
+
+      function clearStorage() {
+        localStorage.clear();
+        sessionStorage.clear();
+        document.getElementById("clear-result").textContent =
+          "✅ localStorage và sessionStorage đã được xóa";
+      }
+
+      // Auto-check localStorage on page load
+      window.onload = function () {
+        checkLocalStorage();
+      };
+    </script>
+  </body>
+</html>

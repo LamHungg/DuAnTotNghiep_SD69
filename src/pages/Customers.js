@@ -226,10 +226,10 @@ const Customers = () => {
 
   return (
     <div>
-      <div className="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+      <div className="d-flex justify-between align-center mb-4 flex-wrap gap-2">
         <h2 className="fw-bold mb-0">Quản lý khách hàng</h2>
         {!showAddForm && (
-        <div className="d-flex gap-2 align-items-center">
+        <div className="d-flex gap-2 align-center">
             <button className="btn btn-primary" onClick={() => setShowAddForm(true)}>
               Thêm khách hàng
             </button>
@@ -277,7 +277,7 @@ const Customers = () => {
               </div>
               <div className="col-md-2 mb-2">
                 <label className="form-label">Giới tính</label>
-                <select className="form-select" value={newCustomer.gioiTinh} onChange={e => setNewCustomer({...newCustomer, gioiTinh: e.target.value})}>
+                <select className="form-control" value={newCustomer.gioiTinh} onChange={e => setNewCustomer({...newCustomer, gioiTinh: e.target.value})}>
                   <option value="Nam">Nam</option>
                   <option value="Nữ">Nữ</option>
                 </select>

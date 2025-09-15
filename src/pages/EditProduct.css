@@ -1,0 +1,584 @@
+/* EditProduct Modal Styles */
+.edit-product-modal {
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  background-color: rgba(0, 0, 0, 0.5) !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  z-index: 9999 !important;
+  padding: 1rem !important;
+  backdrop-filter: blur(2px) !important;
+}
+
+.edit-product-modal .modal-dialog {
+  max-width: 800px !important;
+  width: 100% !important;
+  margin: 0 auto !important;
+  transform: none !important;
+}
+
+.edit-product-modal .modal-content {
+  border: none !important;
+  border-radius: 16px !important;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2) !important;
+  overflow: hidden !important;
+  background: white !important;
+  position: relative !important;
+  z-index: 10000 !important;
+}
+
+.edit-product-modal .modal-header {
+  border-bottom: 1px solid #e9ecef !important;
+  padding: 1rem 1.5rem !important;
+  background: #fff !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+}
+
+.edit-product-modal .modal-title {
+  margin: 0 !important;
+  font-weight: 600 !important;
+  font-size: 1.1rem !important;
+  color: #333 !important;
+}
+
+.edit-product-modal .btn-close {
+  border: none !important;
+  background: none !important;
+  font-size: 1.5rem !important;
+  cursor: pointer !important;
+  padding: 0 !important;
+  width: auto !important;
+  height: auto !important;
+  opacity: 0.7 !important;
+  transition: opacity 0.2s !important;
+}
+
+.edit-product-modal .btn-close:hover {
+  opacity: 1 !important;
+}
+
+.edit-product-modal .modal-body {
+  padding: 1.5rem !important;
+  max-height: 70vh !important;
+  overflow-y: auto !important;
+  background: #fff !important;
+}
+
+.edit-product-modal .modal-footer {
+  border-top: 1px solid #e9ecef !important;
+  padding: 1rem 1.5rem !important;
+  background: #f8f9fa !important;
+  border-radius: 0 0 16px 16px !important;
+  display: flex !important;
+  justify-content: flex-end !important;
+  gap: 0.5rem !important;
+}
+
+/* Form styles */
+.edit-product-modal .form-label {
+  font-weight: 500 !important;
+  color: #495057 !important;
+  margin-bottom: 0.5rem !important;
+}
+
+.edit-product-modal .form-control {
+  border: 1px solid #ced4da !important;
+  border-radius: 8px !important;
+  padding: 0.5rem 0.75rem !important;
+  transition: border-color 0.2s !important;
+}
+
+.edit-product-modal .form-control:focus {
+  border-color: #80bdff !important;
+  box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25) !important;
+}
+
+/* Button styles */
+.edit-product-modal .btn {
+  border-radius: 8px !important;
+  padding: 0.5rem 1rem !important;
+  font-weight: 500 !important;
+  transition: all 0.2s !important;
+}
+
+.edit-product-modal .btn-secondary {
+  background-color: #6c757d !important;
+  border-color: #6c757d !important;
+  color: white !important;
+}
+
+.edit-product-modal .btn-secondary:hover {
+  background-color: #5a6268 !important;
+  border-color: #545b62 !important;
+}
+
+.edit-product-modal .btn-primary {
+  background-color: #007bff !important;
+  border-color: #007bff !important;
+  color: white !important;
+}
+
+.edit-product-modal .btn-primary:hover {
+  background-color: #0056b3 !important;
+  border-color: #0056b3 !important;
+}
+
+/* Image upload styles */
+.edit-product-modal .image-upload-area {
+  border: 2px dashed #ddd !important;
+  border-radius: 8px !important;
+  cursor: pointer !important;
+  transition: border-color 0.2s !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 80px !important;
+  height: 80px !important;
+}
+
+.edit-product-modal .image-upload-area:hover {
+  border-color: #007bff !important;
+}
+
+.edit-product-modal .product-image {
+  width: 80px !important;
+  height: 80px !important;
+  object-fit: cover !important;
+  border-radius: 8px !important;
+  border: 1px solid #e9ecef !important;
+}
+
+/* Responsive styles */
+@media (max-width: 768px) {
+  .edit-product-modal {
+    padding: 0.5rem !important;
+    align-items: flex-start !important;
+    padding-top: 2rem !important;
+  }
+
+  .edit-product-modal .modal-dialog {
+    max-width: 95% !important;
+    margin: 0 auto !important;
+  }
+
+  .edit-product-modal .modal-content {
+    max-height: 90vh !important;
+    border-radius: 12px !important;
+  }
+
+  .edit-product-modal .modal-title {
+    font-size: 1rem !important;
+  }
+
+  .edit-product-modal .modal-body {
+    padding: 1rem !important;
+  }
+
+  .edit-product-modal .modal-footer {
+    padding: 1rem !important;
+  }
+}
+
+@media (max-width: 576px) {
+  .edit-product-modal {
+    padding: 0.25rem !important;
+    padding-top: 1rem !important;
+  }
+
+  .edit-product-modal .modal-dialog {
+    max-width: 98% !important;
+  }
+
+  .edit-product-modal .modal-content {
+    max-height: 85vh !important;
+  }
+}
+
+/* Additional fixes for modal positioning */
+.edit-product-modal {
+  animation: fadeIn 0.3s ease-in-out !important;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* Ensure modal is above everything */
+.edit-product-modal {
+  isolation: isolate !important;
+}
+
+.edit-product-modal .modal-content {
+  isolation: isolate !important;
+}
+
+/* Fix for potential Bootstrap conflicts */
+.edit-product-modal.modal {
+  display: flex !important;
+}
+
+.edit-product-modal .modal-dialog.modal-lg {
+  max-width: 800px !important;
+  width: 100% !important;
+}
+
+/* Ensure proper stacking context */
+.edit-product-modal {
+  transform: translateZ(0) !important;
+}
+
+.edit-product-modal .modal-content {
+  transform: translateZ(0) !important;
+}
+
+/* Additional fixes for edge cases */
+.edit-product-modal {
+  will-change: opacity !important;
+}
+
+.edit-product-modal .modal-content {
+  will-change: transform !important;
+}
+
+/* Ensure modal is not affected by parent styles */
+.edit-product-modal {
+  contain: layout style paint !important;
+}
+
+.edit-product-modal .modal-content {
+  contain: layout style paint !important;
+}
+
+/* Final fixes for modal display */
+.edit-product-modal {
+  display: flex !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+}
+
+.edit-product-modal .modal-dialog {
+  display: block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+}
+
+.edit-product-modal .modal-content {
+  display: block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+}
+
+/* Override any potential conflicting styles */
+.edit-product-modal {
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  margin: 0 !important;
+  padding: 1rem !important;
+  background-color: rgba(0, 0, 0, 0.5) !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  z-index: 9999 !important;
+  overflow: hidden !important;
+}
+
+/* Ensure modal dialog is properly positioned */
+.edit-product-modal .modal-dialog {
+  position: relative !important;
+  margin: 0 auto !important;
+  max-width: 800px !important;
+  width: 100% !important;
+  transform: none !important;
+  transition: none !important;
+}
+
+/* Ensure modal content is properly styled */
+.edit-product-modal .modal-content {
+  position: relative !important;
+  background: white !important;
+  border: none !important;
+  border-radius: 16px !important;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2) !important;
+  overflow: hidden !important;
+  transform: none !important;
+  transition: none !important;
+}
+
+/* Final override for any remaining issues */
+.edit-product-modal {
+  all: unset !important;
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  background-color: rgba(0, 0, 0, 0.5) !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  z-index: 9999 !important;
+  padding: 1rem !important;
+  box-sizing: border-box !important;
+}
+
+.edit-product-modal * {
+  box-sizing: border-box !important;
+}
+
+/* Final override to ensure modal displays correctly */
+.edit-product-modal {
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  background-color: rgba(0, 0, 0, 0.5) !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  z-index: 99999 !important;
+  padding: 1rem !important;
+  box-sizing: border-box !important;
+  overflow: hidden !important;
+  pointer-events: auto !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+}
+
+.edit-product-modal .modal-dialog {
+  position: relative !important;
+  margin: 0 auto !important;
+  max-width: 800px !important;
+  width: 100% !important;
+  transform: none !important;
+  transition: none !important;
+  pointer-events: auto !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+}
+
+.edit-product-modal .modal-content {
+  position: relative !important;
+  background: white !important;
+  border: none !important;
+  border-radius: 16px !important;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2) !important;
+  overflow: hidden !important;
+  transform: none !important;
+  transition: none !important;
+  pointer-events: auto !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+}
+
+/* Ensure modal is always on top */
+.edit-product-modal {
+  z-index: 99999 !important;
+}
+
+.edit-product-modal .modal-dialog {
+  z-index: 100000 !important;
+}
+
+.edit-product-modal .modal-content {
+  z-index: 100001 !important;
+}
+
+/* Additional fixes for modal positioning */
+.edit-product-modal {
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  background-color: rgba(0, 0, 0, 0.5) !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  z-index: 99999 !important;
+  padding: 1rem !important;
+  box-sizing: border-box !important;
+  overflow: hidden !important;
+  pointer-events: auto !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+}
+
+.edit-product-modal .modal-dialog {
+  position: relative !important;
+  margin: 0 auto !important;
+  max-width: 800px !important;
+  width: 100% !important;
+  transform: none !important;
+  transition: none !important;
+  pointer-events: auto !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+}
+
+.edit-product-modal .modal-content {
+  position: relative !important;
+  background: white !important;
+  border: none !important;
+  border-radius: 16px !important;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2) !important;
+  overflow: hidden !important;
+  transform: none !important;
+  transition: none !important;
+  pointer-events: auto !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+}
+
+/* Prevent body scroll when modal is open */
+body.modal-open {
+  overflow: hidden !important;
+  padding-right: 0 !important;
+}
+
+/* Final override to ensure modal displays correctly */
+.edit-product-modal {
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  background-color: rgba(0, 0, 0, 0.5) !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  z-index: 99999 !important;
+  padding: 1rem !important;
+  box-sizing: border-box !important;
+  overflow: hidden !important;
+  pointer-events: auto !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+}
+
+.edit-product-modal .modal-dialog {
+  position: relative !important;
+  margin: 0 auto !important;
+  max-width: 800px !important;
+  width: 100% !important;
+  transform: none !important;
+  transition: none !important;
+  pointer-events: auto !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+}
+
+.edit-product-modal .modal-content {
+  position: relative !important;
+  background: white !important;
+  border: none !important;
+  border-radius: 16px !important;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2) !important;
+  overflow: hidden !important;
+  transform: none !important;
+  transition: none !important;
+  pointer-events: auto !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+}
+
+/* Additional fixes for modal display */
+.edit-product-modal {
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  background-color: rgba(0, 0, 0, 0.5) !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  z-index: 99999 !important;
+  padding: 1rem !important;
+  box-sizing: border-box !important;
+  overflow: hidden !important;
+}
+
+/* Ensure modal is not affected by any parent styles */
+.edit-product-modal {
+  all: unset !important;
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  background-color: rgba(0, 0, 0, 0.5) !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  z-index: 99999 !important;
+  padding: 1rem !important;
+  box-sizing: border-box !important;
+  overflow: hidden !important;
+}
+
+.edit-product-modal * {
+  box-sizing: border-box !important;
+}
+
+/* Final override to ensure modal displays correctly */
+.edit-product-modal {
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  background-color: rgba(0, 0, 0, 0.5) !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  z-index: 99999 !important;
+  padding: 1rem !important;
+  box-sizing: border-box !important;
+  overflow: hidden !important;
+  pointer-events: auto !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+}
+
+.edit-product-modal .modal-dialog {
+  position: relative !important;
+  margin: 0 auto !important;
+  max-width: 800px !important;
+  width: 100% !important;
+  transform: none !important;
+  transition: none !important;
+  pointer-events: auto !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+}
+
+.edit-product-modal .modal-content {
+  position: relative !important;
+  background: white !important;
+  border: none !important;
+  border-radius: 16px !important;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2) !important;
+  overflow: hidden !important;
+  transform: none !important;
+  transition: none !important;
+  pointer-events: auto !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+}

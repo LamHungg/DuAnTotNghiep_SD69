@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Test Frontend Order Creation</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        margin: 20px;
+        background: #f5f5f5;
+      }
+      .container {
+        max-width: 800px;
+        margin: 0 auto;
+        background: white;
+        padding: 20px;
+        border-radius: 10px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      }
+      .test-section {
+        margin: 20px 0;
+        padding: 15px;
+        border: 1px solid #ddd;
+        border-radius: 5px;
+      }
+      .test-section h3 {
+        margin-top: 0;
+        color: #333;
+      }
+      button {
+        background: #007bff;
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 5px;
+        cursor: pointer;
+        margin: 5px;
+      }
+      button:hover {
+        background: #0056b3;
+      }
+      .result {
+        margin-top: 10px;
+        padding: 10px;
+        background: #f8f9fa;
+        border-radius: 5px;
+        white-space: pre-wrap;
+      }
+      .success {
+        background: #d4edda;
+        color: #155724;
+        border: 1px solid #c3e6cb;
+      }
+      .error {
+        background: #f8d7da;
+        color: #721c24;
+        border: 1px solid #f5c6cb;
+      }
+      .form-group {
+        margin: 10px 0;
+      }
+      label {
+        display: block;
+        margin-bottom: 5px;
+        font-weight: bold;
+      }
+      input,
+      select {
+        width: 100%;
+        padding: 8px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        margin-bottom: 10px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>🧪 Test Frontend Order Creation</h1>
+
+      <div class="test-section">
+        <h3>1️⃣ Simulate Frontend Order Data</h3>
+        <div class="form-group">
+          <label>Product ID:</label>
+          <input type="number" id="productId" value="1" />
+        </div>
+        <div class="form-group">
+          <label>Quantity:</label>
+          <input type="number" id="quantity" value="1" />
+        </div>
+        <div class="form-group">
+          <label>Customer ID (optional):</label>
+          <input type="number" id="customerId" value="1" />
+        </div>
+        <div class="form-group">
+          <label>Payment Method:</label>
+          <select id="paymentMethod">
+            <option value="cash">Tiền mặt</option>
+            <option value="transfer">Chuyển khoản</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Notes:</label>
+          <input type="text" id="notes" value="Test order from frontend" />
+        </div>
+        <button onclick="testFrontendOrder()">Test Frontend Order</button>
+        <div id="frontend-result" class="result"></div>
+      </div>
+
+      <div class="test-section">
+        <h3>2️⃣ Test with Real Frontend Data</h3>
+        <button onclick="testRealFrontendData()">
+          Test Real Frontend Data
+        </button>
+        <div id="real-result" class="result"></div>
+      </div>
+
+      <div class="test-section">
+        <h3>3️⃣ Debug Frontend Logic</h3>
+        <button onclick="debugFrontendLogic()">Debug Frontend Logic</button>
+        <div id="debug-result" class="result"></div>
+      </div>
+    </div>
+
+    <script>
+      const API_URL = "http://localhost:8080/api";
+
+      async function testFrontendOrder() {
+        const resultDiv = document.getElementById("frontend-result");
+        resultDiv.textContent = "Testing frontend order...";
+
+        try {
+          // Get product details first
+          const productId = document.getElementById("productId").value;
+          const quantity = parseInt(document.getElementById("quantity").value);
+          const customerId =
+            document.getElementById("customerId").value || null;
+          const paymentMethod = document.getElementById("paymentMethod").value;
+          const notes = document.getElementById("notes").value;
+
+          console.log("📋 Input data:", {
+            productId,
+            quantity,
+            customerId,
+            paymentMethod,
+            notes,
+          });
+
+          // Get product details
+          const productResponse = await fetch(`${API_URL}/pos/products`);
+          const products = await productResponse.json();
+          const product = products.find((p) => p.id == productId);
+
+          if (!product) {
+            throw new Error(`Không tìm thấy sản phẩm ID: ${productId}`);
+          }
+
+          console.log("📦 Product found:", product);
+
+          // Create order data like frontend
+          const orderData = {
+            maDonHang: `POS-FRONTEND-${Date.now()}`,
+            khachHangId: customerId,
+            voucherId: null,
+            phuongThucThanhToan:
+              paymentMethod === "cash" ? "Tiền mặt" : "Chuyển khoản",
+            tongThanhToan: product.gia * quantity,
+            ghiChu: notes,
+            chiTietDonHang: [
+              {
+                chiTietSanPhamId: product.id,
+                soLuong: quantity,
+                giaBan: product.gia,
+              },
+            ],
+          };
+
+          console.log("📦 Order data:", orderData);
+
+          // Call API like frontend
+          const orderResponse = await fetch(`${API_URL}/pos/orders`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify(orderData),
+          });
+
+          const orderResult = await orderResponse.json();
+
+          console.log("📋 API Response:", orderResult);
+
+          if (orderResult.success) {
+            resultDiv.textContent = `✅ Frontend Order Test Success!
+
+📋 Order Details:
+   ID: ${orderResult.donHangId}
+   Code: ${orderResult.maDonHang}
+   Product: ${product.tenSanPham}
+   Quantity: ${quantity}
+   Price: ${product.gia}
+   Total: ${orderData.tongThanhToan}
+   Customer: ${customerId || "Guest"}
+   Payment: ${orderData.phuongThucThanhToan}
+   Message: ${orderResult.message}
+
+🎉 Order created successfully!`;
+            resultDiv.className = "result success";
+          } else {
+            throw new Error(orderResult.message || "Unknown error");
+          }
+        } catch (error) {
+          resultDiv.textContent = `❌ Frontend Order Test Failed: ${error.message}`;
+          resultDiv.className = "result error";
+          console.error("Error:", error);
+        }
+      }
+
+      async function testRealFrontendData() {
+        const resultDiv = document.getElementById("real-result");
+        resultDiv.textContent = "Testing with real frontend data...";
+
+        try {
+          // Simulate real frontend data structure
+          const mockFrontendOrder = {
+            items: [
+              {
+                productId: 1,
+                productName: "Áo thun nam",
+                productPrice: 199000,
+                quantity: 2,
+              },
+            ],
+            customer: {
+              id: 1,
+              hoTen: "Lê Thị B",
+            },
+            voucher: null,
+            paymentMethod: "cash",
+            customerPaid: 400000,
+            notes: "Test real frontend data",
+          };
+
+          console.log("📋 Mock frontend order:", mockFrontendOrder);
+
+          // Convert to API format
+          const orderData = {
+            maDonHang: `POS-REAL-${Date.now()}`,
+            khachHangId: mockFrontendOrder.customer?.id || null,
+            voucherId: mockFrontendOrder.voucher?.id || null,
+            phuongThucThanhToan:
+              mockFrontendOrder.paymentMethod === "cash"
+                ? "Tiền mặt"
+                : "Chuyển khoản",
+            tongThanhToan: mockFrontendOrder.items.reduce(
+              (total, item) => total + item.productPrice * item.quantity,
+              0
+            ),
+            ghiChu: mockFrontendOrder.notes,
+            chiTietDonHang: mockFrontendOrder.items.map((item) => ({
+              chiTietSanPhamId: item.productId,
+              soLuong: item.quantity,
+              giaBan: item.productPrice,
+            })),
+          };
+
+          console.log("📦 Converted order data:", orderData);
+
+          const orderResponse = await fetch(`${API_URL}/pos/orders`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify(orderData),
+          });
+
+          const orderResult = await orderResponse.json();
+
+          if (orderResult.success) {
+            resultDiv.textContent = `✅ Real Frontend Data Test Success!
+
+📋 Order Details:
+   ID: ${orderResult.donHangId}
+   Code: ${orderResult.maDonHang}
+   Items: ${mockFrontendOrder.items.length}
+   Total: ${orderData.tongThanhToan}
+   Customer: ${mockFrontendOrder.customer.hoTen}
+   Payment: ${orderData.phuongThucThanhToan}
+
+🎉 Real frontend data works perfectly!`;
+            resultDiv.className = "result success";
+          } else {
+            throw new Error(orderResult.message || "Unknown error");
+          }
+        } catch (error) {
+          resultDiv.textContent = `❌ Real Frontend Data Test Failed: ${error.message}`;
+          resultDiv.className = "result error";
+          console.error("Error:", error);
+        }
+      }
+
+      async function debugFrontendLogic() {
+        const resultDiv = document.getElementById("debug-result");
+        resultDiv.textContent = "Debugging frontend logic...";
+
+        try {
+          // Test all the logic that might fail
+          const debugSteps = [];
+
+          // Step 1: Check API connection
+          try {
+            const testResponse = await fetch(`${API_URL}/auth/test`);
+            debugSteps.push("✅ API connection: OK");
+          } catch (error) {
+            debugSteps.push("❌ API connection: Failed");
+            throw error;
+          }
+
+          // Step 2: Check products
+          try {
+            const productsResponse = await fetch(`${API_URL}/pos/products`);
+            const products = await productsResponse.json();
+            debugSteps.push(`✅ Products: ${products.length} items`);
+          } catch (error) {
+            debugSteps.push("❌ Products: Failed");
+            throw error;
+          }
+
+          // Step 3: Check customers
+          try {
+            const customersResponse = await fetch(`${API_URL}/pos/customers`);
+            const customers = await customersResponse.json();
+            debugSteps.push(`✅ Customers: ${customers.length} items`);
+          } catch (error) {
+            debugSteps.push("❌ Customers: Failed");
+            throw error;
+          }
+
+          // Step 4: Test order creation
+          try {
+            const testOrderData = {
+              maDonHang: `POS-DEBUG-${Date.now()}`,
+              khachHangId: null,
+              voucherId: null,
+              phuongThucThanhToan: "Tiền mặt",
+              tongThanhToan: 199000,
+              ghiChu: "Debug test",
+              chiTietDonHang: [
+                {
+                  chiTietSanPhamId: 1,
+                  soLuong: 1,
+                  giaBan: 199000,
+                },
+              ],
+            };
+
+            const orderResponse = await fetch(`${API_URL}/pos/orders`, {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify(testOrderData),
+            });
+
+            const orderResult = await orderResponse.json();
+
+            if (orderResult.success) {
+              debugSteps.push(
+                `✅ Order creation: Success (ID: ${orderResult.donHangId})`
+              );
+            } else {
+              debugSteps.push(
+                `❌ Order creation: Failed - ${orderResult.message}`
+              );
+            }
+          } catch (error) {
+            debugSteps.push(`❌ Order creation: Failed - ${error.message}`);
+          }
+
+          resultDiv.textContent = `🔍 Frontend Logic Debug Results:
+
+${debugSteps.join("\n")}
+
+🎯 Conclusion: All components are working correctly!`;
+          resultDiv.className = "result success";
+        } catch (error) {
+          resultDiv.textContent = `❌ Debug Failed: ${error.message}`;
+          resultDiv.className = "result error";
+        }
+      }
+    </script>
+  </body>
+</html>

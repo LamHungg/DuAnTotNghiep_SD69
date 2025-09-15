@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Test Cart API</title>
+  </head>
+  <body>
+    <h1>Test Cart API</h1>
+
+    <div>
+      <h2>Test Endpoints</h2>
+      <button onclick="testNoAuth()">Test No Auth</button>
+      <button onclick="testWithAuth()">Test With Auth</button>
+      <button onclick="testGetCart()">Test Get Cart</button>
+      <button onclick="testAddToCart()">Test Add To Cart</button>
+    </div>
+
+    <div id="results"></div>
+
+    <script>
+      const API_URL = "http://localhost:8080/api/cart";
+
+      function log(message) {
+        document.getElementById("results").innerHTML +=
+          "<p>" + message + "</p>";
+      }
+
+      async function testNoAuth() {
+        try {
+          const response = await fetch(API_URL + "/test-no-auth");
+          const data = await response.text();
+          log("Test No Auth: " + data);
+        } catch (error) {
+          log("Test No Auth Error: " + error.message);
+        }
+      }
+
+      async function testWithAuth() {
+        try {
+          const response = await fetch(API_URL + "/test", {
+            headers: {
+              Authorization: "Bearer customer-token-7",
+            },
+          });
+          const data = await response.text();
+          log("Test With Auth: " + data);
+        } catch (error) {
+          log("Test With Auth Error: " + error.message);
+        }
+      }
+
+      async function testGetCart() {
+        try {
+          const response = await fetch(API_URL, {
+            headers: {
+              Authorization: "Bearer customer-token-7",
+            },
+          });
+          const data = await response.json();
+          log("Get Cart: " + JSON.stringify(data));
+        } catch (error) {
+          log("Get Cart Error: " + error.message);
+        }
+      }
+
+      async function testAddToCart() {
+        try {
+          const response = await fetch(API_URL + "/add", {
+            method: "POST",
+            headers: {
+              Authorization: "Bearer customer-token-7",
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              chiTietSanPhamId: 1,
+              soLuong: 1,
+            }),
+          });
+          const data = await response.text();
+          log("Add To Cart: " + data);
+        } catch (error) {
+          log("Add To Cart Error: " + error.message);
+        }
+      }
+    </script>
+  </body>
+</html>

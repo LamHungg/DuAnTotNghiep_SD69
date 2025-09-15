@@ -134,16 +134,23 @@ const nguoiDungService = {
 
   checkEmailTonTai: async (email) => {
     try {
-      const response = await axios.get(`${SERVER_URL}/api/nguoi-dung/check-email?email=${encodeURIComponent(email)}`);
+      const response = await axios.get(
+        `${SERVER_URL}/api/nguoi-dung/check-email?email=${encodeURIComponent(
+          email
+        )}`
+      );
       return response.data; // { exists: true } hoặc { exists: false }
     } catch (error) {
       throw error;
     }
   },
 
-  sendOtpToEmail: async (email, name="User") => {
+  sendOtpToEmail: async (email, name = "User") => {
     try {
-      const response = await axios.post('https://open-api.duonguyen.site/otp/create', { email, name });
+      const response = await axios.post(
+        "https://open-api.duonguyen.site/otp/create",
+        { email, name }
+      );
       return response.data;
     } catch (error) {
       throw error;
@@ -152,7 +159,10 @@ const nguoiDungService = {
 
   validateOtp: async (email, otp) => {
     try {
-      const response = await axios.post('https://open-api.duonguyen.site/otp/validate', { email, otp });
+      const response = await axios.post(
+        "https://open-api.duonguyen.site/otp/validate",
+        { email, otp }
+      );
       return response.data;
     } catch (error) {
       throw error;
@@ -162,10 +172,13 @@ const nguoiDungService = {
   // Đặt lại mật khẩu qua email (quên mật khẩu)
   resetPasswordByEmail: async (email, matKhauMoi) => {
     try {
-      const response = await axios.post('http://localhost:8080/api/nguoi-dung/reset-password', {
-        email,
-        matKhauMoi,
-      });
+      const response = await axios.post(
+        "http://localhost:8080/api/nguoi-dung/reset-password",
+        {
+          email,
+          matKhauMoi,
+        }
+      );
       return response.data;
     } catch (error) {
       throw error;

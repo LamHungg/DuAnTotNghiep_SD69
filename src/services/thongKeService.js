@@ -1,205 +1,179 @@
 import axios from "axios";
-import {
-  demoDoanhThu,
-  demoSanPhamBanChay,
-  demoHieuSuatNV,
-  demoKhachHangChiTieu,
-} from "../data/demoStatistics";
 import SERVER_URL from "../configs/server.config";
 
+// Import ExcelJS trực tiếp
+import ExcelJS from "exceljs";
+
+// Dynamic import cho jsPDF để tránh lỗi babel runtime
+let jsPDF = null;
+const loadJsPDF = async () => {
+  if (!jsPDF) {
+    const jsPDFModule = await import("jspdf");
+    jsPDF = jsPDFModule.default || jsPDFModule.jsPDF;
+  }
+  return jsPDF;
+};
+
 const API_URL = `${SERVER_URL}/zmen`;
+
+// Helper function để format currency
+const formatCurrency = (value) => {
+  if (value == null) return "0 VNĐ";
+  if (typeof value === "number") {
+    return new Intl.NumberFormat("vi-VN", {
+      style: "currency",
+      currency: "VND",
+    }).format(value);
+  }
+  return `${value} VNĐ`;
+};
 
 // Helper function để check API có khả dụng không
 const isApiAvailable = async () => {
   try {
-    await axios.get(`${API_URL}/san-pham/ngay?ngay=2024-01-20`, {
+    await axios.get(`${API_URL}/test`, {
       timeout: 3000,
     });
     return true;
   } catch (error) {
-    console.warn("API không khả dụng, sử dụng demo data:", error.message);
+    console.warn("API không khả dụng:", error.message);
     return false;
   }
 };
 
 const thongKeService = {
-  // API Sản phẩm bán chạy
+  // ==================== SẢN PHẨM BÁN CHẠY ====================
   getSanPhamBanChayTheoNgay: async (ngay) => {
     try {
-      if (await isApiAvailable()) {
-        const response = await axios.get(`${API_URL}/san-pham/ngay`, {
-          params: { ngay },
-        });
-        return response.data;
-      } else {
-        // Fallback to demo data
-        return demoSanPhamBanChay;
-      }
+      const response = await axios.get(`${API_URL}/san-pham/ngay`, {
+        params: { ngay },
+      });
+      return response.data;
     } catch (error) {
       console.error("Error fetching san pham ban chay theo ngay:", error);
-      return demoSanPhamBanChay;
+      return [];
     }
   },
 
   getSanPhamBanChayTheoThang: async (thang, nam) => {
     try {
-      if (await isApiAvailable()) {
-        const response = await axios.get(`${API_URL}/san-pham/thang`, {
-          params: { thang, nam },
-        });
-        return response.data;
-      } else {
-        return demoSanPhamBanChay;
-      }
+      const response = await axios.get(`${API_URL}/san-pham/thang`, {
+        params: { thang, nam },
+      });
+      return response.data;
     } catch (error) {
       console.error("Error fetching san pham ban chay theo thang:", error);
-      return demoSanPhamBanChay;
+      return [];
     }
   },
 
   getSanPhamBanChayTheoNam: async (nam) => {
     try {
-      if (await isApiAvailable()) {
-        const response = await axios.get(`${API_URL}/san-pham/nam`, {
-          params: { nam },
-        });
-        return response.data;
-      } else {
-        return demoSanPhamBanChay;
-      }
+      const response = await axios.get(`${API_URL}/san-pham/nam`, {
+        params: { nam },
+      });
+      return response.data;
     } catch (error) {
       console.error("Error fetching san pham ban chay theo nam:", error);
-      return demoSanPhamBanChay;
+      return [];
     }
   },
 
   getSanPhamBanChayKhoangNgay: async (tuNgay, denNgay) => {
     try {
-      if (await isApiAvailable()) {
-        const response = await axios.get(`${API_URL}/san-pham/khoang-ngay`, {
-          params: { tuNgay, denNgay },
-        });
-        return response.data;
-      } else {
-        return demoSanPhamBanChay;
-      }
+      const response = await axios.get(`${API_URL}/san-pham/khoang-ngay`, {
+        params: { tuNgay, denNgay },
+      });
+      return response.data;
     } catch (error) {
       console.error("Error fetching san pham ban chay khoang ngay:", error);
-      return demoSanPhamBanChay;
+      return [];
     }
   },
 
-  // API Doanh thu
+  // ==================== DOANH THU ====================
   getDoanhThuTheoNgay: async (ngay) => {
     try {
-      if (await isApiAvailable()) {
-        const response = await axios.get(`${API_URL}/doanh-thu/ngay`, {
-          params: { ngay },
-        });
-        return response.data;
-      } else {
-        return { ...demoDoanhThu, moTa: ngay };
-      }
+      const response = await axios.get(`${API_URL}/doanh-thu/ngay`, {
+        params: { ngay },
+      });
+      return response.data;
     } catch (error) {
       console.error("Error fetching doanh thu theo ngay:", error);
-      return { ...demoDoanhThu, moTa: ngay };
+      return [];
     }
   },
 
   getDoanhThuTheoThang: async (thang, nam) => {
     try {
-      if (await isApiAvailable()) {
-        const response = await axios.get(`${API_URL}/doanh-thu/thang`, {
-          params: { thang, nam },
-        });
-        return response.data;
-      } else {
-        return { ...demoDoanhThu, moTa: `Tháng ${thang}/${nam}` };
-      }
+      const response = await axios.get(`${API_URL}/doanh-thu/thang`, {
+        params: { thang, nam },
+      });
+      return response.data;
     } catch (error) {
       console.error("Error fetching doanh thu theo thang:", error);
-      return { ...demoDoanhThu, moTa: `Tháng ${thang}/${nam}` };
+      return [];
     }
   },
 
   getDoanhThuTheoNam: async (nam) => {
     try {
-      if (await isApiAvailable()) {
-        const response = await axios.get(`${API_URL}/doanh-thu/nam`, {
-          params: { nam },
-        });
-        return response.data;
-      } else {
-        return { ...demoDoanhThu, moTa: `Năm ${nam}` };
-      }
+      const response = await axios.get(`${API_URL}/doanh-thu/nam`, {
+        params: { nam },
+      });
+      return response.data;
     } catch (error) {
       console.error("Error fetching doanh thu theo nam:", error);
-      return { ...demoDoanhThu, moTa: `Năm ${nam}` };
+      return [];
     }
   },
 
   getDoanhThuKhoangNgay: async (tuNgay, denNgay) => {
     try {
-      if (await isApiAvailable()) {
-        const response = await axios.get(`${API_URL}/doanh-thu/khoang-ngay`, {
-          params: { tuNgay, denNgay },
-        });
-        return response.data;
-      } else {
-        return { ...demoDoanhThu, moTa: `${tuNgay} - ${denNgay}` };
-      }
+      const response = await axios.get(`${API_URL}/doanh-thu/khoang-ngay`, {
+        params: { tuNgay, denNgay },
+      });
+      return response.data;
     } catch (error) {
       console.error("Error fetching doanh thu khoang ngay:", error);
-      return { ...demoDoanhThu, moTa: `${tuNgay} - ${denNgay}` };
+      return [];
     }
   },
 
-  // API Hiệu suất nhân viên
+  // ==================== HIỆU SUẤT NHÂN VIÊN ====================
   getHieuSuatNVTheoNgay: async (ngay) => {
     try {
-      if (await isApiAvailable()) {
-        const response = await axios.get(`${API_URL}/nhan-vien/ngay`, {
-          params: { ngay },
-        });
-        return response.data;
-      } else {
-        return demoHieuSuatNV;
-      }
+      const response = await axios.get(`${API_URL}/nhan-vien/ngay`, {
+        params: { ngay },
+      });
+      return response.data;
     } catch (error) {
       console.error("Error fetching hieu suat nhan vien theo ngay:", error);
-      return demoHieuSuatNV;
+      return [];
     }
   },
 
   getHieuSuatNVTheoThang: async (thang, nam) => {
     try {
-      if (await isApiAvailable()) {
-        const response = await axios.get(`${API_URL}/nhan-vien/thang`, {
-          params: { thang, nam },
-        });
-        return response.data;
-      } else {
-        return demoHieuSuatNV;
-      }
+      const response = await axios.get(`${API_URL}/nhan-vien/thang`, {
+        params: { thang, nam },
+      });
+      return response.data;
     } catch (error) {
       console.error("Error fetching hieu suat nhan vien theo thang:", error);
-      return demoHieuSuatNV;
+      return [];
     }
   },
 
   getHieuSuatNVTheoNam: async (nam) => {
     try {
-      if (await isApiAvailable()) {
-        const response = await axios.get(`${API_URL}/nhan-vien/nam`, {
-          params: { nam },
-        });
-        return response.data;
-      } else {
-        return demoHieuSuatNV;
-      }
+      const response = await axios.get(`${API_URL}/nhan-vien/nam`, {
+        params: { nam },
+      });
+      return response.data;
     } catch (error) {
       console.error("Error fetching hieu suat nhan vien theo nam:", error);
-      return demoHieuSuatNV;
+      return [];
     }
   },
 
@@ -211,241 +185,214 @@ const thongKeService = {
         });
         return response.data;
       } else {
-        return demoHieuSuatNV;
+        return null; // Return null if API is not available
       }
     } catch (error) {
       console.error("Error fetching hieu suat nhan vien khoang ngay:", error);
-      return demoHieuSuatNV;
+      return null; // Return null if API is not available
     }
   },
 
-  // API Khách hàng chi tiêu
+  // ==================== KHÁCH HÀNG CHI TIÊU ====================
   getKhachHangChiTieuTheoNgay: async (ngay) => {
     try {
-      if (await isApiAvailable()) {
-        const response = await axios.get(`${API_URL}/khach-hang/ngay`, {
-          params: { ngay },
-        });
-        return response.data;
-      } else {
-        return demoKhachHangChiTieu;
-      }
+      const response = await axios.get(`${API_URL}/khach-hang/ngay`, {
+        params: { ngay },
+      });
+      return response.data;
     } catch (error) {
       console.error("Error fetching khach hang chi tieu theo ngay:", error);
-      return demoKhachHangChiTieu;
+      return [];
     }
   },
 
   getKhachHangChiTieuTheoThang: async (thang, nam) => {
     try {
-      if (await isApiAvailable()) {
-        const response = await axios.get(`${API_URL}/khach-hang/thang`, {
-          params: { thang, nam },
-        });
-        return response.data;
-      } else {
-        return demoKhachHangChiTieu;
-      }
+      const response = await axios.get(`${API_URL}/khach-hang/thang`, {
+        params: { thang, nam },
+      });
+      return response.data;
     } catch (error) {
       console.error("Error fetching khach hang chi tieu theo thang:", error);
-      return demoKhachHangChiTieu;
+      return [];
     }
   },
 
   getKhachHangChiTieuTheoNam: async (nam) => {
     try {
-      if (await isApiAvailable()) {
-        const response = await axios.get(`${API_URL}/khach-hang/nam`, {
-          params: { nam },
-        });
-        return response.data;
-      } else {
-        return demoKhachHangChiTieu;
-      }
+      const response = await axios.get(`${API_URL}/khach-hang/nam`, {
+        params: { nam },
+      });
+      return response.data;
     } catch (error) {
       console.error("Error fetching khach hang chi tieu theo nam:", error);
-      return demoKhachHangChiTieu;
+      return [];
     }
   },
 
   getKhachHangChiTieuKhoangNgay: async (tuNgay, denNgay) => {
     try {
-      if (await isApiAvailable()) {
-        const response = await axios.get(`${API_URL}/khach-hang/khoang-ngay`, {
-          params: { tuNgay, denNgay },
-        });
-        return response.data;
-      } else {
-        return demoKhachHangChiTieu;
-      }
+      const response = await axios.get(`${API_URL}/khach-hang/khoang-ngay`, {
+        params: { tuNgay, denNgay },
+      });
+      return response.data;
     } catch (error) {
       console.error("Error fetching khach hang chi tieu khoang ngay:", error);
-      return demoKhachHangChiTieu;
+      return [];
     }
   },
 
-  // Export Excel functions
-  exportSanPhamBanChayExcel: async (type, params) => {
+  // ==================== THỐNG KÊ TỔNG QUAN ====================
+  getThongKeTongQuan: async () => {
     try {
-      if (!(await isApiAvailable())) {
-        throw new Error("API không khả dụng");
-      }
-
-      let url = "";
-      switch (type) {
-        case "ngay":
-          url = `${API_URL}/san-pham/ngay/export-excel?ngay=${params.ngay}`;
-          break;
-        case "thang":
-          url = `${API_URL}/san-pham/thang/export-excel?thang=${params.thang}&nam=${params.nam}`;
-          break;
-        case "nam":
-          url = `${API_URL}/san-pham/nam/export-excel?nam=${params.nam}`;
-          break;
-        case "khoang-ngay":
-          url = `${API_URL}/san-pham/khoang-ngay/export-excel?tuNgay=${params.tuNgay}&denNgay=${params.denNgay}`;
-          break;
-        default:
-          throw new Error("Invalid export type");
-      }
-
-      const response = await axios.get(url, {
-        responseType: "blob",
-      });
-
-      const url2 = window.URL.createObjectURL(new Blob([response.data]));
-      const link = document.createElement("a");
-      link.href = url2;
-      link.setAttribute("download", `san-pham-ban-chay-${type}.xlsx`);
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
+      const response = await axios.get(`${API_URL}/tong-quan`);
+      return response.data;
     } catch (error) {
-      console.error("Error exporting excel:", error);
+      console.error("Error fetching thong ke tong quan:", error);
+      return null;
+    }
+  },
+
+  // ==================== BIỂU ĐỒ DOANH THU ====================
+  getBieuDoDoanhThu: async (filterType, year, month) => {
+    try {
+      const response = await axios.get(`${API_URL}/doanh-thu/bieu-do`, {
+        params: { filterType, year, month },
+      });
+      return response.data;
+    } catch (error) {
+      console.error("Error fetching bieu do doanh thu:", error);
+      return [];
+    }
+  },
+
+  // ==================== DOANH THU THEO DANH MỤC ====================
+  getDoanhThuTheoDanhMuc: async (year, month) => {
+    try {
+      const response = await axios.get(`${API_URL}/danh-muc/doanh-thu`, {
+        params: { year, month },
+      });
+      return response.data;
+    } catch (error) {
+      console.error("Error fetching doanh thu theo danh muc:", error);
+      return [];
+    }
+  },
+
+  // ==================== THỐNG KÊ THANH TOÁN ====================
+  getThongKeThanhToan: async (nam, thang) => {
+    try {
+      const response = await axios.get(`${API_URL}/thanh-toan/thong-ke`, {
+        params: { nam, thang },
+      });
+      return response.data;
+    } catch (error) {
+      console.error("Error fetching thong ke thanh toan:", error);
+      return [];
+    }
+  },
+
+  // ==================== DANH SÁCH ĐƠN HÀNG ====================
+  getDonHangList: async (
+    filterType,
+    selectedDate,
+    selectedMonth,
+    selectedYear,
+    dateFrom,
+    dateTo
+  ) => {
+    try {
+      const response = await axios.get(`${API_URL}/don-hang/list`, {
+        params: {
+          filterType,
+          selectedDate,
+          selectedMonth,
+          selectedYear,
+          dateFrom,
+          dateTo,
+        },
+      });
+      return response.data;
+    } catch (error) {
+      console.error("Error fetching don hang list:", error);
+      return [];
+    }
+  },
+
+  // ==================== EXPORT EXCEL ====================
+  exportSanPhamBanChayExcel: async (ngay) => {
+    try {
+      const response = await axios.get(
+        `${API_URL}/san-pham/ngay/export-excel`,
+        {
+          params: { ngay },
+          responseType: "blob",
+        }
+      );
+      return response.data;
+    } catch (error) {
+      console.error("Error exporting san pham ban chay excel:", error);
       throw error;
     }
   },
 
-  exportDoanhThuExcel: async (type, params) => {
+  exportDoanhThuExcel: async (loai, ngay, thang, nam) => {
     try {
-      if (!(await isApiAvailable())) {
-        throw new Error("API không khả dụng");
-      }
-
-      let url = "";
-      switch (type) {
-        case "ngay":
-          url = `${API_URL}/doanh-thu/ngay/export-excel?ngay=${params.ngay}`;
-          break;
-        case "thang":
-          url = `${API_URL}/doanh-thu/thang/export-excel?thang=${params.thang}&nam=${params.nam}`;
-          break;
-        case "nam":
-          url = `${API_URL}/doanh-thu/nam/export-excel?nam=${params.nam}`;
-          break;
-        case "khoang-ngay":
-          url = `${API_URL}/doanh-thu/khoang-ngay/export-excel?tuNgay=${params.tuNgay}&denNgay=${params.denNgay}`;
-          break;
-        default:
-          throw new Error("Invalid export type");
-      }
-
-      const response = await axios.get(url, {
+      const response = await axios.get(`${API_URL}/doanh-thu/export-excel`, {
+        params: { loai, ngay, thang, nam },
         responseType: "blob",
       });
-
-      const url2 = window.URL.createObjectURL(new Blob([response.data]));
-      const link = document.createElement("a");
-      link.href = url2;
-      link.setAttribute("download", `doanh-thu-${type}.xlsx`);
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
+      return response.data;
     } catch (error) {
-      console.error("Error exporting excel:", error);
+      console.error("Error exporting doanh thu excel:", error);
       throw error;
     }
   },
 
-  exportHieuSuatNVExcel: async (type, params) => {
+  exportTongQuanExcel: async () => {
     try {
-      if (!(await isApiAvailable())) {
-        throw new Error("API không khả dụng");
-      }
-
-      let url = "";
-      switch (type) {
-        case "ngay":
-          url = `${API_URL}/nhan-vien/ngay/export-excel?ngay=${params.ngay}`;
-          break;
-        case "thang":
-          url = `${API_URL}/nhan-vien/thang/export-excel?thang=${params.thang}&nam=${params.nam}`;
-          break;
-        case "nam":
-          url = `${API_URL}/nhan-vien/nam/export-excel?nam=${params.nam}`;
-          break;
-        case "khoang-ngay":
-          url = `${API_URL}/nhan-vien/khoang-ngay/export-excel?tuNgay=${params.tuNgay}&denNgay=${params.denNgay}`;
-          break;
-        default:
-          throw new Error("Invalid export type");
-      }
-
-      const response = await axios.get(url, {
+      const response = await axios.get(`${API_URL}/tong-quan/export-excel`, {
         responseType: "blob",
       });
-
-      const url2 = window.URL.createObjectURL(new Blob([response.data]));
-      const link = document.createElement("a");
-      link.href = url2;
-      link.setAttribute("download", `hieu-suat-nhan-vien-${type}.xlsx`);
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
+      return response.data;
     } catch (error) {
-      console.error("Error exporting excel:", error);
+      console.error("Error exporting tong quan excel:", error);
       throw error;
     }
   },
 
-  exportKhachHangChiTieuExcel: async (type, params) => {
+  // ==================== EXPORT THỐNG KÊ MỚI ====================
+  // Export Excel với dữ liệu đầy đủ
+  exportThongKeExcel: async (data) => {
     try {
-      if (!(await isApiAvailable())) {
-        throw new Error("API không khả dụng");
-      }
-
-      let url = "";
-      switch (type) {
-        case "ngay":
-          url = `${API_URL}/khach-hang/ngay/export-excel?ngay=${params.ngay}`;
-          break;
-        case "thang":
-          url = `${API_URL}/khach-hang/thang/export-excel?thang=${params.thang}&nam=${params.nam}`;
-          break;
-        case "nam":
-          url = `${API_URL}/khach-hang/nam/export-excel?nam=${params.nam}`;
-          break;
-        case "khoang-ngay":
-          url = `${API_URL}/khach-hang/khoang-ngay/export-excel?tuNgay=${params.tuNgay}&denNgay=${params.denNgay}`;
-          break;
-        default:
-          throw new Error("Invalid export type");
-      }
-
-      const response = await axios.get(url, {
-        responseType: "blob",
-      });
-
-      const url2 = window.URL.createObjectURL(new Blob([response.data]));
-      const link = document.createElement("a");
-      link.href = url2;
-      link.setAttribute("download", `khach-hang-chi-tieu-${type}.xlsx`);
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
+      const response = await axios.post(
+        `${API_URL}/export/thong-ke-excel`,
+        data,
+        {
+          responseType: "blob",
+        }
+      );
+      return response.data;
     } catch (error) {
-      console.error("Error exporting excel:", error);
-      throw error;
+      console.error("Error exporting Excel:", error);
+      return null;
+    }
+  },
+
+  // Export PDF với dữ liệu đầy đủ
+  exportThongKePDF: async (data) => {
+    try {
+      const response = await axios.post(
+        `${API_URL}/export/thong-ke-pdf`,
+        data,
+        {
+          responseType: "blob",
+        }
+      );
+      return response.data;
+    } catch (error) {
+      console.error("Error exporting PDF:", error);
+      return null;
     }
   },
 };

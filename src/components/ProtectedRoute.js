@@ -13,11 +13,7 @@ const ProtectedRoute = ({ children }) => {
     currentUser.ma &&
     currentUser.trangThai === true;
 
-  console.log("ProtectedRoute check:", {
-    isLoggedIn,
-    currentUser,
-    isValidUser,
-  });
+
 
   // Nếu chưa đăng nhập hoặc thông tin user không hợp lệ, chuyển hướng đến trang login
   if (!isLoggedIn || !isValidUser) {

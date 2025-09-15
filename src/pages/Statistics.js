@@ -2,10 +2,19 @@ import React, { useEffect, useState } from "react";
 import {
   FaWallet,
   FaChartLine,
-  FaPiggyBank,
+  FaShoppingCart,
+  FaUsers,
   FaDownload,
+  FaFilePdf,
   FaSync,
   FaCalendarAlt,
+  FaFilter,
+  FaSearch,
+  FaArrowUp,
+  FaArrowDown,
+  FaTimes,
+  FaEye,
+  FaPrint,
 } from "react-icons/fa";
 import {
   LineChart,
@@ -17,12 +26,12 @@ import {
   ResponsiveContainer,
   BarChart,
   Bar,
-  Radar,
-  RadarChart,
-  PolarGrid,
-  PolarAngleAxis,
-  PolarRadiusAxis,
-  Legend,
+  PieChart,
+  Pie,
+  Cell,
+  AreaChart,
+  Area,
+  ComposedChart,
 } from "recharts";
 import thongKeService from "../services/thongKeService";
 import Toast from "../components/Toast";
@@ -30,7 +39,7 @@ import "./Statistics.css";
 
 const Statistics = () => {
   // Filter state
-  const [filterType, setFilterType] = useState("ngay");
+  const [filterType, setFilterType] = useState("hom-nay");
   const [selectedDate, setSelectedDate] = useState(
     new Date().toISOString().split("T")[0]
   );
@@ -40,12 +49,9 @@ const Statistics = () => {
     new Date().toISOString().split("T")[0]
   );
   const [dateTo, setDateTo] = useState(new Date().toISOString().split("T")[0]);
+  const [showCustomRange, setShowCustomRange] = useState(false);
 
   // Data state
-  const [doanhThu, setDoanhThu] = useState(null);
-  const [sanPhamBanChay, setSanPhamBanChay] = useState([]);
-  const [hieuSuatNV, setHieuSuatNV] = useState([]);
-  const [khachHangChiTieu, setKhachHangChiTieu] = useState([]);
   const [loading, setLoading] = useState(false);
   const [toast, setToast] = useState({
     visible: false,
@@ -53,105 +59,55 @@ const Statistics = () => {
     message: "",
   });
 
-  // Chart data state
-  const [lineData, setLineData] = useState([]);
-  const [radarData, setRadarData] = useState([]);
-  const [activityData, setActivityData] = useState([]);
-  const [yearlyExpenseData, setYearlyExpenseData] = useState([]);
+  // KPI Data
+  const [kpiData, setKpiData] = useState({
+    doanhThuHomNay: 0,
+    doanhThuThangNay: 0,
+    tongDonHang: 0,
+    khachHangMoi: 0,
+    tyLeHuy: 0,
+    tangTruong: 0,
+  });
 
-  // KPI cards
-  const kpiData = [
-    {
-      title: "Trạng thái số dư",
-      value: doanhThu ? doanhThu.tongDoanhThu : 0,
-      icon: <FaWallet className="kpi-icon" />,
-      percent: 85,
-      desc: doanhThu ? doanhThu.moTa : "",
-      color: "#4f8cff",
-    },
-    {
-      title: "Doanh thu",
-      value: doanhThu ? doanhThu.tongDoanhThu : 0,
-      icon: <FaChartLine className="kpi-icon" />,
-      percent: 75,
-      desc: "Tổng doanh thu",
-      color: "#00c49f",
-    },
-    {
-      title: "Tiết kiệm/Lợi nhuận",
-      value: doanhThu ? Math.round(doanhThu.tongDoanhThu * 0.35) : 0,
-      icon: <FaPiggyBank className="kpi-icon" />,
-      percent: 60,
-      desc: "Ước tính lợi nhuận",
-      color: "#ffbb28",
-    },
+  // Chart Data
+  const [doanhThuChart, setDoanhThuChart] = useState([]);
+  const [doanhThuTheoDanhMuc, setDoanhThuTheoDanhMuc] = useState([]);
+  const [topSanPham, setTopSanPham] = useState([]);
+  const [topKhachHang, setTopKhachHang] = useState([]);
+  // const [donHangList, setDonHangList] = useState([]); // Đã ẩn phần danh sách đơn hàng
+
+  // Table states - Đã ẩn phần đơn hàng
+  // const [searchTerm, setSearchTerm] = useState("");
+  // const [currentPage, setCurrentPage] = useState(1);
+  // const [itemsPerPage] = useState(10);
+  // const [sortField, setSortField] = useState("ngayDat");
+  // const [sortDirection, setSortDirection] = useState("desc");
+
+  // Colors for charts
+  const COLORS = [
+    "#0088FE",
+    "#00C49F",
+    "#FFBB28",
+    "#FF8042",
+    "#8884D8",
+    "#82CA9D",
+    "#FF6B6B",
+    "#4ECDC4",
+    "#45B7D1",
+    "#96CEB4",
   ];
 
-  // Load data khi filter thay đổi
+  // Load data when component mounts and filters change
   useEffect(() => {
-    loadData();
-    // eslint-disable-next-line
+    loadAllData();
   }, [filterType, selectedDate, selectedMonth, selectedYear, dateFrom, dateTo]);
 
-  const loadData = async () => {
+  const loadAllData = async () => {
     setLoading(true);
     try {
-      let promises = [];
-      switch (filterType) {
-        case "ngay":
-          promises = [
-            thongKeService.getDoanhThuTheoNgay(selectedDate),
-            thongKeService.getSanPhamBanChayTheoNgay(selectedDate),
-            thongKeService.getHieuSuatNVTheoNgay(selectedDate),
-            thongKeService.getKhachHangChiTieuTheoNgay(selectedDate),
-          ];
-          break;
-        case "thang":
-          promises = [
-            thongKeService.getDoanhThuTheoThang(selectedMonth, selectedYear),
-            thongKeService.getSanPhamBanChayTheoThang(
-              selectedMonth,
-              selectedYear
-            ),
-            thongKeService.getHieuSuatNVTheoThang(selectedMonth, selectedYear),
-            thongKeService.getKhachHangChiTieuTheoThang(
-              selectedMonth,
-              selectedYear
-            ),
-          ];
-          break;
-        case "nam":
-          promises = [
-            thongKeService.getDoanhThuTheoNam(selectedYear),
-            thongKeService.getSanPhamBanChayTheoNam(selectedYear),
-            thongKeService.getHieuSuatNVTheoNam(selectedYear),
-            thongKeService.getKhachHangChiTieuTheoNam(selectedYear),
-          ];
-          break;
-        case "khoang-ngay":
-          promises = [
-            thongKeService.getDoanhThuKhoangNgay(dateFrom, dateTo),
-            thongKeService.getSanPhamBanChayKhoangNgay(dateFrom, dateTo),
-            thongKeService.getHieuSuatNVKhoangNgay(dateFrom, dateTo),
-            thongKeService.getKhachHangChiTieuKhoangNgay(dateFrom, dateTo),
-          ];
-          break;
-        default:
-          break;
-      }
-      const [doanhThuData, sanPhamData, hieuSuatData, khachHangData] =
-        await Promise.all(promises);
-      setDoanhThu(doanhThuData);
-      setSanPhamBanChay(sanPhamData || []);
-      setHieuSuatNV(hieuSuatData || []);
-      setKhachHangChiTieu(khachHangData || []);
-
-      // Chuẩn hóa dữ liệu cho biểu đồ
-      setLineData(genLineData(sanPhamData));
-      setRadarData(genRadarData(doanhThuData, hieuSuatData, khachHangData));
-      setActivityData(genActivityData(sanPhamData));
-      setYearlyExpenseData(genYearlyExpenseData(doanhThuData));
+      await Promise.all([loadKPIData(), loadChartData(), loadTableData()]);
     } catch (error) {
+      console.error("Error loading data:", error);
       setToast({
         visible: true,
         type: "error",
@@ -162,484 +118,853 @@ const Statistics = () => {
     }
   };
 
-  // Hàm chuẩn hóa dữ liệu cho các biểu đồ
-  const genLineData = (sanPhamData) => {
-    // Giả sử sanPhamData là mảng các sản phẩm bán chạy theo tháng
-    // Có thể custom lại nếu backend trả về khác
-    if (!sanPhamData || sanPhamData.length === 0) return [];
-    // Demo: mỗi sản phẩm là 1 tháng
-    return sanPhamData.map((sp, idx) => ({
-      month: `T${idx + 1}`,
-      income: sp.soLuongBan * 100, // demo
-      earning: sp.soLuongBan * 80, // demo
-    }));
-  };
-  const genRadarData = (doanhThuData, hieuSuatData, khachHangData) => {
-    return [
-      {
-        subject: "Doanh thu",
-        A: doanhThuData?.tongDoanhThu || 0,
-        B: doanhThuData?.tongDoanhThu ? doanhThuData.tongDoanhThu * 0.8 : 0,
-        fullMark: doanhThuData?.tongDoanhThu || 100,
-      },
-      {
-        subject: "Đơn hàng",
-        A: hieuSuatData?.reduce?.((a, b) => a + (b.soLuongDon || 0), 0) || 0,
-        B: 100,
-        fullMark: 150,
-      },
-      {
-        subject: "Khách hàng",
-        A: khachHangData?.length || 0,
-        B: 100,
-        fullMark: 150,
-      },
-      {
-        subject: "Lợi nhuận",
-        A: doanhThuData?.tongDoanhThu ? doanhThuData.tongDoanhThu * 0.35 : 0,
-        B: 100,
-        fullMark: 150,
-      },
-      {
-        subject: "Chi phí",
-        A: doanhThuData?.tongDoanhThu ? doanhThuData.tongDoanhThu * 0.65 : 0,
-        B: 100,
-        fullMark: 150,
-      },
-      { subject: "Tăng trưởng", A: 65, B: 85, fullMark: 150 },
-    ];
-  };
-  const genActivityData = (sanPhamData) => {
-    // Demo: lấy 3 sản phẩm gần nhất
-    if (!sanPhamData || sanPhamData.length === 0) return [];
-    return sanPhamData
-      .slice(0, 3)
-      .map((sp, idx) => ({ name: sp.tenSanPham, value: sp.soLuongBan }));
-  };
-  const genYearlyExpenseData = (doanhThuData) => {
-    // Demo: tạo dữ liệu giả cho 3 năm
-    return [
-      {
-        year: "2022",
-        a: doanhThuData?.tongDoanhThu * 0.7 || 0,
-        b: doanhThuData?.tongDoanhThu * 0.8 || 0,
-        c: doanhThuData?.tongDoanhThu * 0.9 || 0,
-      },
-      {
-        year: "2023",
-        a: doanhThuData?.tongDoanhThu * 0.8 || 0,
-        b: doanhThuData?.tongDoanhThu * 0.9 || 0,
-        c: doanhThuData?.tongDoanhThu || 0,
-      },
-      {
-        year: "2024",
-        a: doanhThuData?.tongDoanhThu || 0,
-        b: doanhThuData?.tongDoanhThu * 0.95 || 0,
-        c: doanhThuData?.tongDoanhThu * 0.98 || 0,
-      },
-    ];
-  };
-
-  // Export Excel
-  const handleExport = async (type) => {
+  const loadKPIData = async () => {
     try {
-      let params = {};
-      switch (filterType) {
-        case "ngay":
-          params = { ngay: selectedDate };
-          break;
-        case "thang":
-          params = { thang: selectedMonth, nam: selectedYear };
-          break;
-        case "nam":
-          params = { nam: selectedYear };
-          break;
-        case "khoang-ngay":
-          params = { tuNgay: dateFrom, denNgay: dateTo };
-          break;
-        default:
-          break;
-      }
-      switch (type) {
-        case "doanh-thu":
-          await thongKeService.exportDoanhThuExcel(filterType, params);
-          break;
-        case "san-pham":
-          await thongKeService.exportSanPhamBanChayExcel(filterType, params);
-          break;
-        case "nhan-vien":
-          await thongKeService.exportHieuSuatNVExcel(filterType, params);
-          break;
-        case "khach-hang":
-          await thongKeService.exportKhachHangChiTieuExcel(filterType, params);
-          break;
-        default:
-          break;
-      }
-      setToast({
-        visible: true,
-        type: "success",
-        message: "Xuất Excel thành công!",
+      const data = await thongKeService.getThongKeTongQuan();
+      setKpiData({
+        doanhThuHomNay: data?.doanhThuHomNay || 0,
+        doanhThuThangNay: data?.doanhThuThangNay || 0,
+        tongDonHang: data?.tongDonHang || 0,
+        khachHangMoi: data?.khachHangMoi || 0,
+        tyLeHuy: data?.tyLeHuy || 0,
+        tangTruong: data?.tangTruongThang || 0,
       });
     } catch (error) {
-      setToast({
-        visible: true,
-        type: "error",
-        message: "Không thể xuất Excel. Vui lòng thử lại!",
+      console.error("Error loading KPI data:", error);
+      setKpiData({
+        doanhThuHomNay: 0,
+        doanhThuThangNay: 0,
+        tongDonHang: 0,
+        khachHangMoi: 0,
+        tyLeHuy: 0,
+        tangTruong: 0,
       });
     }
   };
 
-  // Format
-  const formatCurrency = (amount) => {
+  const loadChartData = async () => {
+    try {
+      // Load doanh thu chart data
+      const doanhThuData = await thongKeService.getBieuDoDoanhThu(
+        filterType,
+        selectedYear,
+        selectedMonth
+      );
+      setDoanhThuChart(doanhThuData || []);
+
+      // Load doanh thu theo danh mục
+      const danhMucData = await thongKeService.getDoanhThuTheoDanhMuc(
+        selectedYear,
+        selectedMonth
+      );
+      setDoanhThuTheoDanhMuc(danhMucData || []);
+    } catch (error) {
+      console.error("Error loading chart data:", error);
+      setDoanhThuChart([]);
+      setDoanhThuTheoDanhMuc([]);
+    }
+  };
+
+  const loadTableData = async () => {
+    try {
+      console.log('🔄 Loading table data with filterType:', filterType);
+      
+      // Load top sản phẩm theo filter type
+      let sanPhamData = [];
+      if (filterType === 'hom-nay') {
+        console.log('📅 Loading top sản phẩm theo ngày:', selectedDate);
+        sanPhamData = await thongKeService.getSanPhamBanChayTheoNgay(selectedDate);
+      } else if (filterType === 'thang-nay') {
+        console.log('📅 Loading top sản phẩm theo tháng:', selectedMonth, selectedYear);
+        sanPhamData = await thongKeService.getSanPhamBanChayTheoThang(selectedMonth, selectedYear);
+      } else if (filterType === 'nam-nay') {
+        console.log('📅 Loading top sản phẩm theo năm:', selectedYear);
+        sanPhamData = await thongKeService.getSanPhamBanChayTheoNam(selectedYear);
+      } else if (filterType === 'khoang-ngay') {
+        console.log('📅 Loading top sản phẩm theo khoảng ngày:', dateFrom, dateTo);
+        sanPhamData = await thongKeService.getSanPhamBanChayKhoangNgay(dateFrom, dateTo);
+      }
+      console.log('✅ Top sản phẩm data:', sanPhamData);
+      setTopSanPham(sanPhamData || []);
+
+      // Load top khách hàng theo filter type
+      let khachHangData = [];
+      if (filterType === 'hom-nay') {
+        console.log('📅 Loading top khách hàng theo ngày:', selectedDate);
+        khachHangData = await thongKeService.getKhachHangChiTieuTheoNgay(selectedDate);
+      } else if (filterType === 'thang-nay') {
+        console.log('📅 Loading top khách hàng theo tháng:', selectedMonth, selectedYear);
+        khachHangData = await thongKeService.getKhachHangChiTieuTheoThang(selectedMonth, selectedYear);
+      } else if (filterType === 'nam-nay') {
+        console.log('📅 Loading top khách hàng theo năm:', selectedYear);
+        khachHangData = await thongKeService.getKhachHangChiTieuTheoNam(selectedYear);
+      } else if (filterType === 'khoang-ngay') {
+        console.log('📅 Loading top khách hàng theo khoảng ngày:', dateFrom, dateTo);
+        khachHangData = await thongKeService.getKhachHangChiTieuKhoangNgay(dateFrom, dateTo);
+      }
+      console.log('✅ Top khách hàng data:', khachHangData);
+      setTopKhachHang(khachHangData || []);
+
+      // Load danh sách đơn hàng - Đã ẩn
+      // const donHangData = await thongKeService.getDonHangList(
+      //   filterType,
+      //   selectedDate,
+      //   selectedMonth,
+      //   selectedYear,
+      //   dateFrom,
+      //   dateTo
+      // );
+      // setDonHangList(donHangData || []);
+    } catch (error) {
+      console.error("Error loading table data:", error);
+      setTopSanPham([]);
+      setTopKhachHang([]);
+      // setDonHangList([]); // Đã ẩn phần danh sách đơn hàng
+    }
+  };
+
+  // Format functions
+  const formatCurrency = (value) => {
     return new Intl.NumberFormat("vi-VN", {
       style: "currency",
       currency: "VND",
-    }).format(amount || 0);
+    }).format(value);
   };
-  const getFilterDescription = () => {
-    switch (filterType) {
-      case "ngay":
-        return `Ngày ${selectedDate}`;
-      case "thang":
-        return `Tháng ${selectedMonth}/${selectedYear}`;
-      case "nam":
-        return `Năm ${selectedYear}`;
-      case "khoang-ngay":
-        return `Từ ${dateFrom} đến ${dateTo}`;
-      default:
-        return "";
+
+  const formatNumber = (value) => {
+    return new Intl.NumberFormat("vi-VN").format(value);
+  };
+
+  const formatPercentage = (value) => {
+    return `${value > 0 ? "+" : ""}${value.toFixed(1)}%`;
+  };
+
+  const formatDate = (dateString) => {
+    return new Date(dateString).toLocaleDateString("vi-VN");
+  };
+
+  // Export functions
+  const handleExportExcel = async () => {
+    try {
+      setToast({
+        visible: true,
+        type: "info",
+        message: "Đang xuất file Excel...",
+      });
+
+      const data = await thongKeService.exportThongKeExcel({
+        filterType,
+        selectedDate,
+        selectedMonth,
+        selectedYear,
+        dateFrom,
+        dateTo,
+        kpiData,
+        doanhThuChart,
+        doanhThuTheoDanhMuc,
+        topSanPham,
+        topKhachHang,
+        // donHangList, // Đã ẩn phần danh sách đơn hàng
+      });
+
+      const url = window.URL.createObjectURL(new Blob([data]));
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute(
+        "download",
+        `thong-ke-${filterType}-${new Date().toISOString().split("T")[0]}.xlsx`
+      );
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+
+      setToast({
+        visible: true,
+        type: "success",
+        message: "Xuất file Excel thành công!",
+      });
+    } catch (error) {
+      console.error("Error exporting Excel:", error);
+      setToast({
+        visible: true,
+        type: "error",
+        message: "Lỗi khi xuất file Excel!",
+      });
+    }
+  };
+
+  const handleExportPDF = async () => {
+    try {
+      setToast({
+        visible: true,
+        type: "info",
+        message: "Đang xuất file PDF...",
+      });
+
+      const data = await thongKeService.exportThongKePDF({
+        filterType,
+        selectedDate,
+        selectedMonth,
+        selectedYear,
+        dateFrom,
+        dateTo,
+        kpiData,
+        doanhThuChart,
+        doanhThuTheoDanhMuc,
+        topSanPham,
+        topKhachHang,
+        // donHangList, // Đã ẩn phần danh sách đơn hàng
+      });
+
+      const url = window.URL.createObjectURL(new Blob([data]));
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute(
+        "download",
+        `bao-cao-thong-ke-${filterType}-${
+          new Date().toISOString().split("T")[0]
+        }.pdf`
+      );
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+
+      setToast({
+        visible: true,
+        type: "success",
+        message: "Xuất file PDF thành công!",
+      });
+    } catch (error) {
+      console.error("Error exporting PDF:", error);
+      setToast({
+        visible: true,
+        type: "error",
+        message: "Lỗi khi xuất file PDF!",
+      });
+    }
+  };
+
+  const handleExportTableData = async (type) => {
+    try {
+      setToast({
+        visible: true,
+        type: "info",
+        message: `Đang xuất file Excel cho ${type}...`,
+      });
+
+      const data = await thongKeService.exportThongKeExcel({
+        filterType,
+        selectedDate,
+        selectedMonth,
+        selectedYear,
+        dateFrom,
+        dateTo,
+        kpiData,
+        doanhThuChart,
+        doanhThuTheoDanhMuc,
+        topSanPham,
+        topKhachHang,
+        // donHangList, // Đã ẩn phần danh sách đơn hàng
+      });
+
+      const url = window.URL.createObjectURL(new Blob([data]));
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute(
+        "download",
+        `thong-ke-${type}-${new Date().toISOString().split("T")[0]}.xlsx`
+      );
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+
+      setToast({
+        visible: true,
+        type: "success",
+        message: `Xuất file Excel cho ${type} thành công!`,
+      });
+    } catch (error) {
+      console.error("Error exporting table data:", error);
+      setToast({
+        visible: true,
+        type: "error",
+        message: `Lỗi khi xuất file Excel cho ${type}!`,
+      });
+    }
+  };
+
+  // Table sorting and filtering - Đã ẩn phần đơn hàng
+  // const handleSort = (field) => {
+  //   if (sortField === field) {
+  //     setSortDirection(sortDirection === "asc" ? "desc" : "asc");
+  //   } else {
+  //     setSortField(field);
+  //     setSortDirection("asc");
+  //   }
+  // };
+
+  // const filteredDonHangList = donHangList
+  //   .filter(
+  //     (donHang) =>
+  //       donHang.maDonHang.toLowerCase().includes(searchTerm.toLowerCase()) ||
+  //       donHang.khachHang.toLowerCase().includes(searchTerm.toLowerCase())
+  //   )
+  //   .sort((a, b) => {
+  //     const aValue = a[sortField];
+  //     const bValue = b[sortField];
+  //     if (sortDirection === "asc") {
+  //       return aValue > bValue ? 1 : -1;
+  //     } else {
+  //       return aValue < bValue ? 1 : -1;
+  //     }
+  //   });
+
+  // const paginatedDonHangList = filteredDonHangList.slice(
+  //   (currentPage - 1) * itemsPerPage,
+  //   currentPage * itemsPerPage
+  // );
+
+  // const totalPages = Math.ceil(filteredDonHangList.length / itemsPerPage);
+
+  // KPI Cards Data
+  const kpiCards = [
+    {
+      title: "Doanh thu hôm nay",
+      value: kpiData.doanhThuHomNay,
+      icon: <FaWallet />,
+      change: kpiData.tangTruong,
+      desc: "So với hôm qua",
+      color: "#4f8cff",
+      format: "currency",
+    },
+    {
+      title: "Doanh thu tháng",
+      value: kpiData.doanhThuThangNay,
+      icon: <FaChartLine />,
+      change: kpiData.tangTruong,
+      desc: "Tăng trưởng tháng",
+      color: "#00c49f",
+      format: "currency",
+    },
+    {
+      title: "Tổng đơn hàng",
+      value: kpiData.tongDonHang,
+      icon: <FaShoppingCart />,
+      change: 8.5,
+      desc: "Tổng số đơn hàng",
+      color: "#ffbb28",
+      format: "number",
+    },
+    {
+      title: "Khách hàng mới",
+      value: kpiData.khachHangMoi,
+      icon: <FaUsers />,
+      change: 12.3,
+      desc: "Trong tháng này",
+      color: "#ff8042",
+      format: "number",
+    },
+  ];
+
+  const handleViewDetails = (chartType, data) => {
+    if (data && data.length > 0) {
+      // For now, we'll just show a toast. In a real app, you'd navigate to a new page or modal.
+      setToast({
+        visible: true,
+        type: "info",
+        message: `Đang mở chi tiết biểu đồ ${chartType}...`,
+      });
+    } else {
+      setToast({
+        visible: true,
+        type: "warning",
+        message: `Không có dữ liệu để hiển thị chi tiết biểu đồ ${chartType}.`,
+      });
     }
   };
 
   return (
-    <div className="dashboard-statistics">
-      <div className="dashboard-header">Thống kê tổng quan</div>
+    <div className="statistics-container">
+      {/* Header Section */}
+      <div className="statistics-header">
+        <div className="header-left">
+          <h1>📊 Thống Kê & Báo Cáo</h1>
+          <p className="header-subtitle">
+            Dashboard quản lý và theo dõi hiệu suất kinh doanh
+          </p>
+        </div>
+        <div className="header-actions">
+          <button
+            className="btn btn-success"
+            onClick={handleExportExcel}
+            disabled={loading}
+          >
+            <FaDownload /> Xuất Excel
+          </button>
+          <button
+            className="btn btn-danger"
+            onClick={handleExportPDF}
+            disabled={loading}
+          >
+            <FaFilePdf /> Xuất PDF
+          </button>
+          <button
+            className="btn btn-primary"
+            onClick={loadAllData}
+            disabled={loading}
+          >
+            <FaSync className={loading ? "spinning" : ""} /> Làm mới
+          </button>
+        </div>
+      </div>
+
       {/* Filter Section */}
-      <div className="filter-section mb-4">
-        <div className="card">
-          <div className="card-body">
-            <div className="row g-3 align-items-end">
-              <div className="col-md-2">
-                <label className="form-label fw-semibold">Loại thống kê</label>
-                <select
-                  className="form-select"
-                  value={filterType}
-                  onChange={(e) => setFilterType(e.target.value)}
-                >
-                  <option value="ngay">Theo ngày</option>
-                  <option value="thang">Theo tháng</option>
-                  <option value="nam">Theo năm</option>
-                  <option value="khoang-ngay">Khoảng ngày</option>
-                </select>
-              </div>
-              {filterType === "ngay" && (
-                <div className="col-md-2">
-                  <label className="form-label fw-semibold">Chọn ngày</label>
+      <div className="filter-section">
+        <div className="filter-header">
+          <h3>
+            <FaFilter /> Bộ Lọc Thời Gian
+          </h3>
+        </div>
+        <div className="filter-controls">
+          <div className="quick-filters">
+            <button
+              className={`filter-btn ${
+                filterType === "hom-nay" ? "active" : ""
+              }`}
+              onClick={() => setFilterType("hom-nay")}
+            >
+              Hôm nay
+            </button>
+            <button
+              className={`filter-btn ${
+                filterType === "tuan-nay" ? "active" : ""
+              }`}
+              onClick={() => setFilterType("tuan-nay")}
+            >
+              Tuần này
+            </button>
+            <button
+              className={`filter-btn ${
+                filterType === "thang-nay" ? "active" : ""
+              }`}
+              onClick={() => setFilterType("thang-nay")}
+            >
+              Tháng này
+            </button>
+            <button
+              className={`filter-btn ${
+                filterType === "quy-nay" ? "active" : ""
+              }`}
+              onClick={() => setFilterType("quy-nay")}
+            >
+              Quý này
+            </button>
+            <button
+              className={`filter-btn ${showCustomRange ? "active" : ""}`}
+              onClick={() => setShowCustomRange(!showCustomRange)}
+            >
+              <FaCalendarAlt /> Tùy chọn
+            </button>
+          </div>
+
+          {showCustomRange && (
+            <div className="custom-range">
+              <div className="date-inputs">
+                <div className="input-group">
+                  <label>Từ ngày:</label>
                   <input
                     type="date"
+                    value={dateFrom}
+                    onChange={(e) => setDateFrom(e.target.value)}
                     className="form-control"
-                    value={selectedDate}
-                    onChange={(e) => setSelectedDate(e.target.value)}
                   />
                 </div>
-              )}
-              {filterType === "thang" && (
-                <>
-                  <div className="col-md-2">
-                    <label className="form-label fw-semibold">Tháng</label>
-                    <select
-                      className="form-select"
-                      value={selectedMonth}
-                      onChange={(e) => setSelectedMonth(Number(e.target.value))}
-                    >
-                      {Array.from({ length: 12 }, (_, i) => i + 1).map(
-                        (month) => (
-                          <option key={month} value={month}>
-                            Tháng {month}
-                          </option>
-                        )
-                      )}
-                    </select>
-                  </div>
-                  <div className="col-md-2">
-                    <label className="form-label fw-semibold">Năm</label>
-                    <select
-                      className="form-select"
-                      value={selectedYear}
-                      onChange={(e) => setSelectedYear(Number(e.target.value))}
-                    >
-                      {Array.from(
-                        { length: 5 },
-                        (_, i) => new Date().getFullYear() - 2 + i
-                      ).map((year) => (
-                        <option key={year} value={year}>
-                          {year}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                </>
-              )}
-              {filterType === "nam" && (
-                <div className="col-md-2">
-                  <label className="form-label fw-semibold">Năm</label>
-                  <select
-                    className="form-select"
-                    value={selectedYear}
-                    onChange={(e) => setSelectedYear(Number(e.target.value))}
-                  >
-                    {Array.from(
-                      { length: 5 },
-                      (_, i) => new Date().getFullYear() - 2 + i
-                    ).map((year) => (
-                      <option key={year} value={year}>
-                        {year}
-                      </option>
-                    ))}
-                  </select>
+                <div className="input-group">
+                  <label>Đến ngày:</label>
+                  <input
+                    type="date"
+                    value={dateTo}
+                    onChange={(e) => setDateTo(e.target.value)}
+                    className="form-control"
+                  />
                 </div>
-              )}
-              {filterType === "khoang-ngay" && (
-                <>
-                  <div className="col-md-2">
-                    <label className="form-label fw-semibold">Từ ngày</label>
-                    <input
-                      type="date"
-                      className="form-control"
-                      value={dateFrom}
-                      onChange={(e) => setDateFrom(e.target.value)}
-                    />
-                  </div>
-                  <div className="col-md-2">
-                    <label className="form-label fw-semibold">Đến ngày</label>
-                    <input
-                      type="date"
-                      className="form-control"
-                      value={dateTo}
-                      onChange={(e) => setDateTo(e.target.value)}
-                    />
-                  </div>
-                </>
-              )}
-              <div className="col-md-2">
                 <button
-                  className="btn btn-primary w-100 d-flex align-items-center justify-content-center gap-2"
-                  onClick={loadData}
-                  disabled={loading}
+                  className="btn btn-sm btn-outline-secondary"
+                  onClick={() => setShowCustomRange(false)}
                 >
-                  {loading ? (
-                    <div
-                      className="spinner-border spinner-border-sm"
-                      role="status"
-                    >
-                      <span className="visually-hidden">Đang tải...</span>
-                    </div>
-                  ) : (
-                    <FaSync />
-                  )}
-                  {loading ? "Đang tải..." : "Tải dữ liệu"}
+                  <FaTimes />
                 </button>
               </div>
             </div>
-            {getFilterDescription() && (
-              <div className="mt-3">
-                <span className="badge bg-info fs-6">
-                  <FaCalendarAlt className="me-1" />
-                  {getFilterDescription()}
-                </span>
+          )}
+        </div>
+      </div>
+
+      {/* KPI Cards Section */}
+      <div className="kpi-section">
+        <div className="kpi-grid">
+          {kpiCards.map((kpi, index) => (
+            <div
+              key={index}
+              className="kpi-card"
+              style={{ borderLeftColor: kpi.color }}
+            >
+              <div
+                className="kpi-icon-wrapper"
+                style={{ backgroundColor: kpi.color }}
+              >
+                {kpi.icon}
+              </div>
+              <div className="kpi-content">
+                <h3 className="kpi-title">{kpi.title}</h3>
+                <div className="kpi-value">
+                  {kpi.format === "currency"
+                    ? formatCurrency(kpi.value)
+                    : formatNumber(kpi.value)}
+                </div>
+                <div className="kpi-change">
+                  <span
+                    className={`change-indicator ${
+                      kpi.change >= 0 ? "positive" : "negative"
+                    }`}
+                  >
+                    {kpi.change >= 0 ? <FaArrowUp /> : <FaArrowDown />}
+                    {formatPercentage(Math.abs(kpi.change))}
+                  </span>
+                  <span className="kpi-desc">{kpi.desc}</span>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Charts Section */}
+      <div className="charts-section">
+        {/* Doanh Thu Chart */}
+        <div className="chart-container large">
+          <div className="chart-header">
+            <h3>📈 Biểu Đồ Doanh Thu</h3>
+            <div className="chart-actions">
+              <button
+                className="btn btn-sm btn-outline-primary"
+                onClick={() =>
+                  handleViewDetails("biểu đồ doanh thu", doanhThuChart)
+                }
+              >
+                <FaEye /> Xem chi tiết
+              </button>
+            </div>
+          </div>
+          {doanhThuChart && doanhThuChart.length > 0 ? (
+            <ResponsiveContainer width="100%" height={400}>
+              <AreaChart data={doanhThuChart}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="thoiGian" />
+                <YAxis />
+                <Tooltip
+                  formatter={(value) => formatCurrency(value)}
+                  labelFormatter={(label) => `Thời gian: ${label}`}
+                />
+                <Area
+                  type="monotone"
+                  dataKey="doanhThu"
+                  stroke="#8884d8"
+                  fill="#8884d8"
+                  fillOpacity={0.3}
+                />
+              </AreaChart>
+            </ResponsiveContainer>
+          ) : (
+            <div className="no-data-message">
+              <p>📊 Không có dữ liệu doanh thu để hiển thị</p>
+            </div>
+          )}
+        </div>
+
+        {/* Doanh Thu Theo Danh Mục */}
+        <div className="chart-container">
+          <div className="chart-header">
+            <h3>🥧 Doanh Thu Theo Danh Mục</h3>
+          </div>
+          {doanhThuTheoDanhMuc && doanhThuTheoDanhMuc.length > 0 ? (
+            <ResponsiveContainer width="100%" height={300}>
+              <PieChart>
+                <Pie
+                  data={doanhThuTheoDanhMuc}
+                  cx="50%"
+                  cy="50%"
+                  labelLine={false}
+                  label={({ tenDanhMuc, percent }) =>
+                    `${tenDanhMuc} ${(percent * 100).toFixed(0)}%`
+                  }
+                  outerRadius={80}
+                  fill="#8884d8"
+                  dataKey="doanhThu"
+                >
+                  {doanhThuTheoDanhMuc.map((entry, index) => (
+                    <Cell
+                      key={`cell-${index}`}
+                      fill={COLORS[index % COLORS.length]}
+                    />
+                  ))}
+                </Pie>
+                <Tooltip formatter={(value) => formatCurrency(value)} />
+              </PieChart>
+            </ResponsiveContainer>
+          ) : (
+            <div className="no-data-message">
+              <p>🥧 Không có dữ liệu doanh thu theo danh mục</p>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Data Tables Section */}
+      <div className="tables-section">
+        {/* Top Sản Phẩm Bán Chạy */}
+        <div className="table-container">
+          <div className="table-header">
+            <h3>🏆 Top 10 Sản Phẩm Bán Chạy</h3>
+            <button
+              className="btn btn-sm btn-outline-primary"
+              onClick={() => handleExportTableData("san-pham")}
+              disabled={!topSanPham || topSanPham.length === 0}
+            >
+              <FaDownload /> Xuất Excel
+            </button>
+          </div>
+          <div className="table-responsive">
+            {topSanPham && topSanPham.length > 0 ? (
+              <table className="table table-striped">
+                <thead>
+                  <tr>
+                    <th>STT</th>
+                    <th>Tên Sản Phẩm</th>
+                    <th>Số Lượng Bán</th>
+                    <th>Doanh Thu</th>
+                    <th>Tỷ Lệ</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {topSanPham.slice(0, 10).map((sp, index) => (
+                    <tr key={index}>
+                      <td>{index + 1}</td>
+                      <td>{sp.tenSanPham || 'N/A'}</td>
+                      <td>{formatNumber(sp.soLuongBan || 0)}</td>
+                      <td>{formatCurrency(sp.doanhThu || 0)}</td>
+                      <td>
+                        <div className="progress">
+                          <div
+                            className="progress-bar"
+                            style={{
+                              width: `${(
+                                ((sp.soLuongBan || 0) / (topSanPham[0]?.soLuongBan || 1)) *
+                                100
+                              ).toFixed(1)}%`,
+                            }}
+                          ></div>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            ) : (
+              <div className="no-data-message">
+                <p>🏆 Không có dữ liệu sản phẩm bán chạy</p>
               </div>
             )}
           </div>
         </div>
-      </div>
 
-      {/* KPI Cards */}
-      <div className="dashboard-kpi-row">
-        {kpiData.map((kpi, idx) => (
-          <div
-            className="dashboard-kpi-card"
-            key={idx}
-            style={{ borderTop: `4px solid ${kpi.color}` }}
-          >
-            <div className="dashboard-kpi-title">{kpi.title}</div>
-            <div className="dashboard-kpi-value-row">
-              <span className="dashboard-kpi-value">
-                {formatCurrency(kpi.value)}
-              </span>
-              <span className="dashboard-kpi-icon" style={{ color: kpi.color }}>
-                {kpi.icon}
-              </span>
-            </div>
-            <div className="dashboard-kpi-desc">{kpi.desc}</div>
-            <div className="dashboard-kpi-progress">
-              <div
-                className="dashboard-kpi-progress-bar"
-                style={{ width: `${kpi.percent}%`, background: kpi.color }}
-              ></div>
-            </div>
-            <div className="dashboard-kpi-percent">
-              <span style={{ color: kpi.color }}>{kpi.percent}%</span> sử dụng
-              <span className="text-muted ms-2">
-                {100 - kpi.percent}% còn lại
-              </span>
-            </div>
-          </div>
-        ))}
-      </div>
-
-      {/* Main Charts Row */}
-      <div className="dashboard-main-row">
-        <div className="dashboard-main-chart">
-          <div className="dashboard-chart-title d-flex justify-content-between align-items-center">
-            <span>Thống kê</span>
+        {/* Top Khách Hàng */}
+        <div className="table-container">
+          <div className="table-header">
+            <h3>👥 Top 10 Khách Hàng</h3>
             <button
               className="btn btn-sm btn-outline-primary"
-              onClick={() => handleExport("doanh-thu")}
+              onClick={() => handleExportTableData("khach-hang")}
+              disabled={!topKhachHang || topKhachHang.length === 0}
             >
-              {" "}
-              <FaDownload className="me-1" /> Xuất Excel{" "}
+              <FaDownload /> Xuất Excel
             </button>
           </div>
-          <ResponsiveContainer width="100%" height={260}>
-            <LineChart
-              data={lineData}
-              margin={{ top: 20, right: 30, left: 0, bottom: 0 }}
-            >
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="month" />
-              <YAxis />
-              <Tooltip
-                contentStyle={{ fontSize: 15 }}
-                formatter={(value) => formatCurrency(value)}
-                labelFormatter={(label) => `Tháng: ${label}`}
-              />
-              <Line
-                type="monotone"
-                dataKey="income"
-                stroke="#4f8cff"
-                strokeWidth={3}
-                dot={{ r: 5 }}
-                activeDot={{ r: 8 }}
-                name="Doanh thu"
-              />
-              <Line
-                type="monotone"
-                dataKey="earning"
-                stroke="#00c49f"
-                strokeWidth={3}
-                dot={{ r: 5 }}
-                name="Lợi nhuận"
-              />
-            </LineChart>
-          </ResponsiveContainer>
+          <div className="table-responsive">
+            {topKhachHang && topKhachHang.length > 0 ? (
+              <table className="table table-striped">
+                <thead>
+                  <tr>
+                    <th>STT</th>
+                    <th>Họ Tên</th>
+                    <th>Số Đơn Hàng</th>
+                    <th>Tổng Chi Tiêu</th>
+                    <th>Trung Bình/Đơn</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {topKhachHang.slice(0, 10).map((kh, index) => (
+                    <tr key={index}>
+                      <td>{index + 1}</td>
+                      <td>{kh.hoTen || 'N/A'}</td>
+                      <td>{formatNumber(kh.soLuongDon || 0)}</td>
+                      <td>{formatCurrency(kh.tongChiTieu || 0)}</td>
+                      <td>{formatCurrency(
+                        kh.tongChiTieu && kh.soLuongDon
+                          ? kh.tongChiTieu / kh.soLuongDon
+                          : 0
+                      )}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            ) : (
+              <div className="no-data-message">
+                <p>👥 Không có dữ liệu khách hàng</p>
+              </div>
+            )}
+          </div>
         </div>
-        <div className="dashboard-radar-chart">
-          <div className="dashboard-chart-title d-flex justify-content-between align-items-center">
-            <span>Hiệu suất</span>
+
+        {/* Danh Sách Đơn Hàng - Đã ẩn */}
+        {/* 
+        <div className="table-container full-width">
+          <div className="table-header">
+            <h3>📋 Danh Sách Đơn Hàng</h3>
+            <div className="table-actions">
+              <div className="search-box">
+                <FaSearch />
+                <input
+                  type="text"
+                  placeholder="Tìm kiếm đơn hàng..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="form-control"
+                />
+              </div>
+              <button
+                className="btn btn-sm btn-outline-primary"
+                onClick={() => handleExportTableData("don-hang")}
+                disabled={!donHangList || donHangList.length === 0}
+              >
+                <FaDownload /> Xuất Excel
+              </button>
+            </div>
+          </div>
+          <div className="table-responsive">
+            {donHangList && donHangList.length > 0 ? (
+              <table className="table table-striped">
+                <thead>
+                  <tr>
+                    <th onClick={() => handleSort("maDonHang")}>
+                      Mã Đơn Hàng
+                      {sortField === "maDonHang" && (
+                        <span className="sort-icon">
+                          {sortDirection === "asc" ? "↑" : "↓"}
+                        </span>
+                      )}
+                    </th>
+                    <th onClick={() => handleSort("khachHang")}>
+                      Khách Hàng
+                      {sortField === "khachHang" && (
+                        <span className="sort-icon">
+                          {sortDirection === "asc" ? "↑" : "↓"}
+                        </span>
+                      )}
+                    </th>
+                    <th onClick={() => handleSort("ngayDat")}>
+                      Ngày Đặt
+                      {sortField === "ngayDat" && (
+                        <span className="sort-icon">
+                          {sortDirection === "asc" ? "↑" : "↓"}
+                        </span>
+                      )}
+                    </th>
+                    <th onClick={() => handleSort("tongTien")}>
+                      Tổng Tiền
+                      {sortField === "tongTien" && (
+                        <span className="sort-icon">
+                          {sortDirection === "asc" ? "↑" : "↓"}
+                        </span>
+                      )}
+                    </th>
+                    <th>Trạng Thái</th>
+                    <th>Hành Động</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {paginatedDonHangList.map((donHang, index) => (
+                    <tr key={index}>
+                      <td>{donHang.maDonHang}</td>
+                      <td>{donHang.khachHang}</td>
+                      <td>{formatDate(donHang.ngayDat)}</td>
+                      <td>{formatCurrency(donHang.tongTien)}</td>
+                      <td>
+                        <span
+                          className={`status-badge ${
+                            donHang.trangThai === "Đã giao"
+                              ? "success"
+                              : donHang.trangThai === "Đang xử lý"
+                              ? "warning"
+                              : "danger"
+                          }`}
+                        >
+                          {donHang.trangThai}
+                        </span>
+                      </td>
+                      <td>
+                        <button
+                          className="btn btn-sm btn-outline-primary"
+                          onClick={() => handleViewDetails("đơn hàng", donHang)}
+                          title="Xem chi tiết đơn hàng"
+                        >
+                          <FaEye />
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            ) : (
+              <div className="no-data-message">
+                <p>📋 Không có dữ liệu đơn hàng</p>
+              </div>
+            )}
+          </div>
+
+          <div className="pagination-container">
             <button
-              className="btn btn-sm btn-outline-info"
-              onClick={() => handleExport("nhan-vien")}
+              className="btn btn-sm btn-outline-primary"
+              onClick={() => setCurrentPage(currentPage - 1)}
+              disabled={currentPage === 1}
             >
-              {" "}
-              <FaDownload className="me-1" /> Xuất Excel{" "}
+              Trước
+            </button>
+            <span className="page-info">
+              Trang {currentPage} / {totalPages}
+            </span>
+            <button
+              className="btn btn-sm btn-outline-primary"
+              onClick={() => setCurrentPage(currentPage + 1)}
+              disabled={currentPage === totalPages}
+            >
+              Sau
             </button>
           </div>
-          <ResponsiveContainer width="100%" height={260}>
-            <RadarChart cx="50%" cy="50%" outerRadius="80%" data={radarData}>
-              <PolarGrid />
-              <PolarAngleAxis dataKey="subject" />
-              <PolarRadiusAxis />
-              <Radar
-                name="Chỉ số A"
-                dataKey="A"
-                stroke="#4f8cff"
-                fill="#4f8cff"
-                fillOpacity={0.6}
-              />
-              <Radar
-                name="Chỉ số B"
-                dataKey="B"
-                stroke="#00c49f"
-                fill="#00c49f"
-                fillOpacity={0.4}
-              />
-              <Legend />
-            </RadarChart>
-          </ResponsiveContainer>
         </div>
+        */}
       </div>
 
-      {/* Bottom Charts Row */}
-      <div className="dashboard-bottom-row">
-        <div className="dashboard-activity">
-          <div className="dashboard-chart-title d-flex justify-content-between align-items-center">
-            <span>Hoạt động</span>
-            <button
-              className="btn btn-sm btn-outline-success"
-              onClick={() => handleExport("san-pham")}
-            >
-              {" "}
-              <FaDownload className="me-1" /> Xuất Excel{" "}
-            </button>
-          </div>
-          <ResponsiveContainer width="100%" height={120}>
-            <LineChart data={activityData}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="name" />
-              <YAxis />
-              <Tooltip
-                contentStyle={{ fontSize: 15 }}
-                formatter={(value) => `${value} sản phẩm`}
-              />
-              <Line
-                type="monotone"
-                dataKey="value"
-                stroke="#4f8cff"
-                strokeWidth={3}
-                dot={{ r: 5 }}
-                name="Số lượng bán"
-              />
-            </LineChart>
-          </ResponsiveContainer>
-        </div>
-        <div className="dashboard-yearly-expense">
-          <div className="dashboard-chart-title d-flex justify-content-between align-items-center">
-            <span>Chi phí theo năm</span>
-            <button
-              className="btn btn-sm btn-outline-warning"
-              onClick={() => handleExport("khach-hang")}
-            >
-              {" "}
-              <FaDownload className="me-1" /> Xuất Excel{" "}
-            </button>
-          </div>
-          <ResponsiveContainer width="100%" height={120}>
-            <BarChart data={yearlyExpenseData}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="year" />
-              <YAxis />
-              <Tooltip
-                contentStyle={{ fontSize: 15 }}
-                formatter={(value) => formatCurrency(value)}
-              />
-              <Bar dataKey="a" fill="#4f8cff" name="Năm 1" />
-              <Bar dataKey="b" fill="#00c49f" name="Năm 2" />
-              <Bar dataKey="c" fill="#ffbb28" name="Năm 3" />
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
-      </div>
-
-      {/* Toast */}
-      {toast.visible && (
-        <Toast
-          type={toast.type}
-          message={toast.message}
-          visible={toast.visible}
-          onClose={() => setToast((t) => ({ ...t, visible: false }))}
-        />
-      )}
+      {/* Toast Notification */}
+      <Toast
+        visible={toast.visible}
+        type={toast.type}
+        message={toast.message}
+        onClose={() => setToast({ ...toast, visible: false })}
+      />
     </div>
   );
 };

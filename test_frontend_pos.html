@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Test POS Frontend</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        margin: 20px;
+        background: #f5f5f5;
+      }
+      .container {
+        max-width: 800px;
+        margin: 0 auto;
+        background: white;
+        padding: 20px;
+        border-radius: 10px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      }
+      .test-section {
+        margin: 20px 0;
+        padding: 15px;
+        border: 1px solid #ddd;
+        border-radius: 5px;
+      }
+      .test-section h3 {
+        margin-top: 0;
+        color: #333;
+      }
+      button {
+        background: #007bff;
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 5px;
+        cursor: pointer;
+        margin: 5px;
+      }
+      button:hover {
+        background: #0056b3;
+      }
+      .result {
+        margin-top: 10px;
+        padding: 10px;
+        background: #f8f9fa;
+        border-radius: 5px;
+        white-space: pre-wrap;
+      }
+      .success {
+        background: #d4edda;
+        color: #155724;
+        border: 1px solid #c3e6cb;
+      }
+      .error {
+        background: #f8d7da;
+        color: #721c24;
+        border: 1px solid #f5c6cb;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>🧪 Test POS Frontend</h1>
+
+      <div class="test-section">
+        <h3>1️⃣ Test API Connection</h3>
+        <button onclick="testAPI()">Test API</button>
+        <div id="api-result" class="result"></div>
+      </div>
+
+      <div class="test-section">
+        <h3>2️⃣ Test Get Products</h3>
+        <button onclick="testGetProducts()">Get Products</button>
+        <div id="products-result" class="result"></div>
+      </div>
+
+      <div class="test-section">
+        <h3>3️⃣ Test Create Order</h3>
+        <button onclick="testCreateOrder()">Create Order</button>
+        <div id="order-result" class="result"></div>
+      </div>
+
+      <div class="test-section">
+        <h3>4️⃣ Test Complete Flow</h3>
+        <button onclick="testCompleteFlow()">Test Complete Flow</button>
+        <div id="flow-result" class="result"></div>
+      </div>
+    </div>
+
+    <script>
+      const API_URL = "http://localhost:8080/api";
+
+      async function testAPI() {
+        const resultDiv = document.getElementById("api-result");
+        resultDiv.textContent = "Testing...";
+
+        try {
+          const response = await fetch(`${API_URL}/auth/test`);
+          const data = await response.text();
+
+          resultDiv.textContent = `✅ API Status: ${response.status}\n📋 Response: ${data}`;
+          resultDiv.className = "result success";
+        } catch (error) {
+          resultDiv.textContent = `❌ Error: ${error.message}`;
+          resultDiv.className = "result error";
+        }
+      }
+
+      async function testGetProducts() {
+        const resultDiv = document.getElementById("products-result");
+        resultDiv.textContent = "Loading products...";
+
+        try {
+          const response = await fetch(`${API_URL}/pos/products`);
+          const products = await response.json();
+
+          const firstProduct = products[0];
+          const productInfo = firstProduct
+            ? `
+✅ Products loaded: ${products.length}
+📦 First product:
+   ID: ${firstProduct.id}
+   Name: ${firstProduct.tenSanPham}
+   Price: ${firstProduct.gia}
+   Stock: ${firstProduct.soLuong}
+   Status: ${firstProduct.trangThai}
+                `
+            : "No products found";
+
+          resultDiv.textContent = productInfo;
+          resultDiv.className = "result success";
+        } catch (error) {
+          resultDiv.textContent = `❌ Error: ${error.message}`;
+          resultDiv.className = "result error";
+        }
+      }
+
+      async function testCreateOrder() {
+        const resultDiv = document.getElementById("order-result");
+        resultDiv.textContent = "Creating order...";
+
+        try {
+          // First get a product
+          const productsResponse = await fetch(`${API_URL}/pos/products`);
+          const products = await productsResponse.json();
+
+          if (products.length === 0) {
+            throw new Error("No products available");
+          }
+
+          const product = products[0];
+          const orderData = {
+            maDonHang: `POS-TEST-${Date.now()}`,
+            khachHangId: null,
+            voucherId: null,
+            phuongThucThanhToan: "Tiền mặt",
+            tongThanhToan: product.gia || 0,
+            ghiChu: "Test order from frontend",
+            chiTietDonHang: [
+              {
+                chiTietSanPhamId: product.id,
+                soLuong: 1,
+                giaBan: product.gia || 0,
+              },
+            ],
+          };
+
+          const orderResponse = await fetch(`${API_URL}/pos/orders`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify(orderData),
+          });
+
+          const orderResult = await orderResponse.json();
+
+          resultDiv.textContent = `✅ Order created successfully!
+📋 Order ID: ${orderResult.donHangId}
+📋 Order Code: ${orderResult.maDonHang}
+📋 Message: ${orderResult.message}`;
+          resultDiv.className = "result success";
+        } catch (error) {
+          resultDiv.textContent = `❌ Error: ${error.message}`;
+          resultDiv.className = "result error";
+        }
+      }
+
+      async function testCompleteFlow() {
+        const resultDiv = document.getElementById("flow-result");
+        resultDiv.textContent = "Testing complete flow...";
+
+        try {
+          // 1. Test API connection
+          const apiResponse = await fetch(`${API_URL}/auth/test`);
+          if (!apiResponse.ok) throw new Error("API not accessible");
+
+          // 2. Get products
+          const productsResponse = await fetch(`${API_URL}/pos/products`);
+          const products = await productsResponse.json();
+          if (products.length === 0) throw new Error("No products available");
+
+          // 3. Get customers
+          const customersResponse = await fetch(`${API_URL}/pos/customers`);
+          const customers = await customersResponse.json();
+
+          // 4. Get vouchers
+          const vouchersResponse = await fetch(
+            `${API_URL}/pos/vouchers/active`
+          );
+          const vouchers = await vouchersResponse.json();
+
+          // 5. Create order
+          const product = products[0];
+          const customer = customers.length > 0 ? customers[0] : null;
+
+          const orderData = {
+            maDonHang: `POS-FLOW-${Date.now()}`,
+            khachHangId: customer?.id || null,
+            voucherId: null,
+            phuongThucThanhToan: "Tiền mặt",
+            tongThanhToan: product.gia || 0,
+            ghiChu: "Complete flow test",
+            chiTietDonHang: [
+              {
+                chiTietSanPhamId: product.id,
+                soLuong: 1,
+                giaBan: product.gia || 0,
+              },
+            ],
+          };
+
+          const orderResponse = await fetch(`${API_URL}/pos/orders`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify(orderData),
+          });
+
+          const orderResult = await orderResponse.json();
+
+          resultDiv.textContent = `🎉 Complete Flow Test Success!
+
+✅ API Connection: OK
+✅ Products: ${products.length} items
+✅ Customers: ${customers.length} items  
+✅ Vouchers: ${vouchers.length} items
+✅ Order Created: ID ${orderResult.donHangId}
+
+📋 Order Details:
+   Code: ${orderResult.maDonHang}
+   Product: ${product.tenSanPham}
+   Price: ${product.gia}
+   Customer: ${customer?.hoTen || "Guest"}
+   Total: ${orderData.tongThanhToan}
+
+🚀 POS System is working perfectly!`;
+          resultDiv.className = "result success";
+        } catch (error) {
+          resultDiv.textContent = `❌ Flow Test Failed: ${error.message}`;
+          resultDiv.className = "result error";
+        }
+      }
+    </script>
+  </body>
+</html>

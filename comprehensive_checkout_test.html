@@ -1,0 +1,1076 @@
+<!DOCTYPE html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Comprehensive Checkout Test</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 20px;
+        background-color: #f5f5f5;
+      }
+      .container {
+        background: white;
+        padding: 30px;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        margin-bottom: 20px;
+      }
+      .status-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 15px;
+        margin: 20px 0;
+      }
+      .status-item {
+        padding: 15px;
+        border-radius: 6px;
+        border: 2px solid #e9ecef;
+        text-align: center;
+      }
+      .status-item.success {
+        background-color: #d4edda;
+        border-color: #c3e6cb;
+        color: #155724;
+      }
+      .status-item.error {
+        background-color: #f8d7da;
+        border-color: #f5c6cb;
+        color: #721c24;
+      }
+      .status-item.warning {
+        background-color: #fff3cd;
+        border-color: #ffeaa7;
+        color: #856404;
+      }
+      .status-item.info {
+        background-color: #d1ecf1;
+        border-color: #bee5eb;
+        color: #0c5460;
+      }
+      .btn {
+        padding: 10px 15px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 14px;
+        font-weight: bold;
+        margin: 5px;
+        transition: background-color 0.3s;
+      }
+      .btn-primary {
+        background: #007bff;
+        color: white;
+      }
+      .btn-primary:hover {
+        background: #0056b3;
+      }
+      .btn-success {
+        background: #28a745;
+        color: white;
+      }
+      .btn-success:hover {
+        background: #218838;
+      }
+      .btn-warning {
+        background: #ffc107;
+        color: #212529;
+      }
+      .btn-warning:hover {
+        background: #e0a800;
+      }
+      .btn-danger {
+        background: #dc3545;
+        color: white;
+      }
+      .btn-danger:hover {
+        background: #c82333;
+      }
+      .btn-info {
+        background: #17a2b8;
+        color: white;
+      }
+      .btn-info:hover {
+        background: #138496;
+      }
+      .result {
+        margin: 15px 0;
+        padding: 15px;
+        border-radius: 4px;
+        font-family: monospace;
+        white-space: pre-wrap;
+        max-height: 300px;
+        overflow-y: auto;
+        font-size: 12px;
+      }
+      .success {
+        background: #d4edda;
+        color: #155724;
+        border: 1px solid #c3e6cb;
+      }
+      .error {
+        background: #f8d7da;
+        color: #721c24;
+        border: 1px solid #f5c6cb;
+      }
+      .info {
+        background: #d1ecf1;
+        color: #0c5460;
+        border: 1px solid #bee5eb;
+      }
+      .warning {
+        background: #fff3cd;
+        color: #856404;
+        border: 1px solid #ffeaa7;
+      }
+      .user-info {
+        background: #e8f5e8;
+        border: 1px solid #4caf50;
+        padding: 15px;
+        border-radius: 4px;
+        margin: 10px 0;
+      }
+      .user-detail {
+        display: flex;
+        justify-content: space-between;
+        margin: 5px 0;
+        padding: 5px 0;
+        border-bottom: 1px solid #e0e0e0;
+      }
+      .user-detail:last-child {
+        border-bottom: none;
+      }
+      .label {
+        font-weight: bold;
+        color: #333;
+      }
+      .value {
+        color: #666;
+      }
+      .loading {
+        text-align: center;
+        padding: 20px;
+        color: #666;
+      }
+      .spinner {
+        border: 4px solid #f3f3f3;
+        border-top: 4px solid #3498db;
+        border-radius: 50%;
+        width: 30px;
+        height: 30px;
+        animation: spin 1s linear infinite;
+        margin: 0 auto 10px;
+      }
+      @keyframes spin {
+        0% {
+          transform: rotate(0deg);
+        }
+        100% {
+          transform: rotate(360deg);
+        }
+      }
+      .test-section {
+        border: 1px solid #dee2e6;
+        border-radius: 6px;
+        padding: 20px;
+        margin: 15px 0;
+      }
+      .test-section h4 {
+        margin-top: 0;
+        color: #495057;
+      }
+      .progress-bar {
+        width: 100%;
+        height: 20px;
+        background-color: #e9ecef;
+        border-radius: 10px;
+        overflow: hidden;
+        margin: 10px 0;
+      }
+      .progress-fill {
+        height: 100%;
+        background-color: #007bff;
+        transition: width 0.3s ease;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>🛒 Comprehensive Checkout Test</h1>
+      <p>
+        Kiểm tra toàn diện hệ thống giỏ hàng và mua hàng với session validation
+      </p>
+    </div>
+
+    <div class="container">
+      <h3>👤 Thông tin người dùng</h3>
+      <div id="userInfo" class="user-info">
+        <div class="loading">
+          <div class="spinner"></div>
+          Đang kiểm tra thông tin người dùng...
+        </div>
+      </div>
+    </div>
+
+    <div class="container">
+      <h3>📊 Trạng thái hệ thống</h3>
+      <div id="statusGrid" class="status-grid">
+        <div class="status-item info">
+          <h4>🔍 Đăng nhập</h4>
+          <p>Chưa kiểm tra</p>
+        </div>
+        <div class="status-item info">
+          <h4>🌐 Session</h4>
+          <p>Chưa kiểm tra</p>
+        </div>
+        <div class="status-item info">
+          <h4>🛒 Giỏ hàng</h4>
+          <p>Chưa kiểm tra</p>
+        </div>
+        <div class="status-item info">
+          <h4>📦 Tồn kho</h4>
+          <p>Chưa kiểm tra</p>
+        </div>
+        <div class="status-item info">
+          <h4>💳 Checkout</h4>
+          <p>Chưa kiểm tra</p>
+        </div>
+        <div class="status-item info">
+          <h4>✅ Tổng thể</h4>
+          <p>Chưa kiểm tra</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="container">
+      <h3>🔧 Các thao tác test</h3>
+
+      <div class="test-section">
+        <h4>🔍 Kiểm tra cơ bản</h4>
+        <button class="btn btn-info" onclick="checkLoginStatus()">
+          Kiểm tra đăng nhập
+        </button>
+        <button class="btn btn-info" onclick="checkSession()">
+          Kiểm tra session
+        </button>
+        <button class="btn btn-info" onclick="checkCart()">
+          Kiểm tra giỏ hàng
+        </button>
+        <button class="btn btn-info" onclick="checkStock()">
+          Kiểm tra tồn kho
+        </button>
+      </div>
+
+      <div class="test-section">
+        <h4>🛒 Thao tác giỏ hàng</h4>
+        <button class="btn btn-success" onclick="addToCart()">
+          Thêm vào giỏ hàng
+        </button>
+        <button class="btn btn-warning" onclick="updateCart()">
+          Cập nhật giỏ hàng
+        </button>
+        <button class="btn btn-danger" onclick="clearCart()">
+          Xóa giỏ hàng
+        </button>
+      </div>
+
+      <div class="test-section">
+        <h4>💳 Test checkout</h4>
+        <button class="btn btn-primary" onclick="testCheckout()">
+          Test checkout cơ bản
+        </button>
+        <button class="btn btn-success" onclick="testCheckoutWithSession()">
+          Test checkout với session
+        </button>
+        <button class="btn btn-warning" onclick="testCheckoutWithStock()">
+          Test checkout với tồn kho
+        </button>
+      </div>
+
+      <div class="test-section">
+        <h4>🚀 Test toàn bộ</h4>
+        <button class="btn btn-primary" onclick="runCompleteTest()">
+          Chạy test toàn bộ
+        </button>
+        <button class="btn btn-warning" onclick="forceUpdateToken()">
+          Force update token
+        </button>
+        <button class="btn btn-danger" onclick="clearResults()">
+          Xóa kết quả
+        </button>
+      </div>
+    </div>
+
+    <div class="container">
+      <h3>📈 Tiến trình test</h3>
+      <div class="progress-bar">
+        <div id="progressFill" class="progress-fill" style="width: 0%"></div>
+      </div>
+      <div id="progressText">Chưa bắt đầu test</div>
+    </div>
+
+    <div class="container">
+      <h3>📝 Kết quả chi tiết</h3>
+      <div id="results"></div>
+    </div>
+
+    <script>
+      let isLoading = false;
+      let testProgress = 0;
+
+      function showResult(message, type = "info") {
+        const container = document.getElementById("results");
+        const resultDiv = document.createElement("div");
+        resultDiv.className = `result ${type}`;
+        resultDiv.innerHTML = message;
+        container.appendChild(resultDiv);
+        container.scrollIntoView({ behavior: "smooth" });
+      }
+
+      function updateStatus(index, status, message) {
+        const items = document.querySelectorAll("#statusGrid .status-item");
+        if (items[index]) {
+          items[index].className = `status-item ${status}`;
+          items[index].innerHTML = `<h4>${
+            items[index].querySelector("h4").textContent
+          }</h4><p>${message}</p>`;
+        }
+      }
+
+      function updateProgress(percent, text) {
+        testProgress = percent;
+        document.getElementById("progressFill").style.width = percent + "%";
+        document.getElementById("progressText").textContent = text;
+      }
+
+      function setLoading(loading) {
+        isLoading = loading;
+        const buttons = document.querySelectorAll(".btn");
+        buttons.forEach((btn) => {
+          btn.disabled = loading;
+        });
+      }
+
+      function displayUserInfo() {
+        const userStr = localStorage.getItem("user");
+        const isLoggedIn = localStorage.getItem("isLoggedIn");
+        const container = document.getElementById("userInfo");
+
+        if (!userStr) {
+          container.innerHTML = `
+                    <h4>❌ Chưa đăng nhập</h4>
+                    <p>Không tìm thấy thông tin người dùng trong localStorage</p>
+                `;
+          return;
+        }
+
+        try {
+          const userData = JSON.parse(userStr);
+          const isAuthenticated = !!(userStr && isLoggedIn === "true");
+
+          container.innerHTML = `
+                    <h4>${
+                      isAuthenticated
+                        ? "✅ Đã đăng nhập"
+                        : "⚠️ Chưa đăng nhập hoàn toàn"
+                    }</h4>
+                    <div class="user-detail">
+                        <span class="label">ID:</span>
+                        <span class="value">${userData.id || "N/A"}</span>
+                    </div>
+                    <div class="user-detail">
+                        <span class="label">Email:</span>
+                        <span class="value">${userData.email || "N/A"}</span>
+                    </div>
+                    <div class="user-detail">
+                        <span class="label">Họ tên:</span>
+                        <span class="value">${userData.hoTen || "N/A"}</span>
+                    </div>
+                    <div class="user-detail">
+                        <span class="label">Token:</span>
+                        <span class="value">${userData.token || "N/A"}</span>
+                    </div>
+                    <div class="user-detail">
+                        <span class="label">isLoggedIn:</span>
+                        <span class="value">${isLoggedIn}</span>
+                    </div>
+                `;
+        } catch (e) {
+          container.innerHTML = `
+                    <h4>❌ Lỗi dữ liệu</h4>
+                    <p>Không thể parse thông tin người dùng: ${e.message}</p>
+                `;
+        }
+      }
+
+      async function checkLoginStatus() {
+        setLoading(true);
+        updateProgress(10, "Kiểm tra đăng nhập...");
+
+        try {
+          const user = localStorage.getItem("user");
+          const isLoggedIn = localStorage.getItem("isLoggedIn");
+          const isAuthenticated = !!(user && isLoggedIn === "true");
+
+          updateStatus(
+            0,
+            isAuthenticated ? "success" : "error",
+            isAuthenticated ? "✅ Đã đăng nhập" : "❌ Chưa đăng nhập"
+          );
+
+          showResult(
+            `=== Kiểm tra trạng thái đăng nhập ===\n
+📋 localStorage.user: ${user ? "Có dữ liệu" : "Không có dữ liệu"}
+📋 localStorage.isLoggedIn: ${isLoggedIn}
+✅ Is authenticated: ${isAuthenticated}
+
+${user ? `👤 User data: ${JSON.stringify(JSON.parse(user), null, 2)}` : ""}`,
+            isAuthenticated ? "success" : "error"
+          );
+
+          updateProgress(20, "Hoàn thành kiểm tra đăng nhập");
+          return isAuthenticated;
+        } catch (error) {
+          updateStatus(0, "error", "❌ Lỗi kiểm tra");
+          showResult(`❌ Lỗi kiểm tra đăng nhập: ${error.message}`, "error");
+          updateProgress(20, "Lỗi kiểm tra đăng nhập");
+          return false;
+        } finally {
+          setLoading(false);
+        }
+      }
+
+      async function checkSession() {
+        setLoading(true);
+        updateProgress(30, "Kiểm tra session...");
+
+        try {
+          const response = await fetch(
+            "http://localhost:8080/api/auth/check-session",
+            {
+              method: "GET",
+              headers: { "Content-Type": "application/json" },
+              credentials: "include",
+            }
+          );
+
+          const success = response.ok;
+          updateStatus(
+            1,
+            success ? "success" : "error",
+            success ? "✅ Session OK" : "❌ Session lỗi"
+          );
+
+          if (success) {
+            const result = await response.json();
+            showResult(
+              `=== Kiểm tra session ===\n
+📡 Session status: ${response.status}
+✅ Session result: ${JSON.stringify(result, null, 2)}`,
+              "success"
+            );
+          } else {
+            const error = await response.text();
+            showResult(
+              `=== Kiểm tra session ===\n
+📡 Session status: ${response.status}
+❌ Session error: ${error}`,
+              "error"
+            );
+          }
+
+          updateProgress(40, "Hoàn thành kiểm tra session");
+          return success;
+        } catch (error) {
+          updateStatus(1, "error", "❌ Lỗi kết nối");
+          showResult(`❌ Lỗi kiểm tra session: ${error.message}`, "error");
+          updateProgress(40, "Lỗi kiểm tra session");
+          return false;
+        } finally {
+          setLoading(false);
+        }
+      }
+
+      async function checkCart() {
+        setLoading(true);
+        updateProgress(50, "Kiểm tra giỏ hàng...");
+
+        try {
+          const response = await fetch("http://localhost:8080/api/cart", {
+            method: "GET",
+            headers: { "Content-Type": "application/json" },
+            credentials: "include",
+          });
+
+          const success = response.ok;
+          updateStatus(
+            2,
+            success ? "success" : "error",
+            success ? "✅ Giỏ hàng OK" : "❌ Giỏ hàng lỗi"
+          );
+
+          if (success) {
+            const cartItems = await response.json();
+            showResult(
+              `=== Kiểm tra giỏ hàng ===\n
+📡 Cart status: ${response.status}
+📋 Cart items count: ${cartItems.length}
+📋 Cart items: ${JSON.stringify(cartItems, null, 2)}`,
+              "success"
+            );
+          } else {
+            const error = await response.text();
+            showResult(
+              `=== Kiểm tra giỏ hàng ===\n
+📡 Cart status: ${response.status}
+❌ Cart error: ${error}`,
+              "error"
+            );
+          }
+
+          updateProgress(60, "Hoàn thành kiểm tra giỏ hàng");
+          return success;
+        } catch (error) {
+          updateStatus(2, "error", "❌ Lỗi kết nối");
+          showResult(`❌ Lỗi kiểm tra giỏ hàng: ${error.message}`, "error");
+          updateProgress(60, "Lỗi kiểm tra giỏ hàng");
+          return false;
+        } finally {
+          setLoading(false);
+        }
+      }
+
+      async function checkStock() {
+        setLoading(true);
+        updateProgress(70, "Kiểm tra tồn kho...");
+
+        try {
+          const response = await fetch(
+            "http://localhost:8080/api/cart/check-stock/1",
+            {
+              method: "GET",
+              headers: { "Content-Type": "application/json" },
+              credentials: "include",
+            }
+          );
+
+          const success = response.ok;
+          updateStatus(
+            3,
+            success ? "success" : "error",
+            success ? "✅ Tồn kho OK" : "❌ Tồn kho lỗi"
+          );
+
+          if (success) {
+            const stockInfo = await response.json();
+            showResult(
+              `=== Kiểm tra tồn kho ===\n
+📡 Stock status: ${response.status}
+📊 Stock info: ${JSON.stringify(stockInfo, null, 2)}`,
+              "success"
+            );
+          } else {
+            const error = await response.text();
+            showResult(
+              `=== Kiểm tra tồn kho ===\n
+📡 Stock status: ${response.status}
+❌ Stock error: ${error}`,
+              "error"
+            );
+          }
+
+          updateProgress(80, "Hoàn thành kiểm tra tồn kho");
+          return success;
+        } catch (error) {
+          updateStatus(3, "error", "❌ Lỗi kết nối");
+          showResult(`❌ Lỗi kiểm tra tồn kho: ${error.message}`, "error");
+          updateProgress(80, "Lỗi kiểm tra tồn kho");
+          return false;
+        } finally {
+          setLoading(false);
+        }
+      }
+
+      async function addToCart() {
+        setLoading(true);
+        try {
+          const response = await fetch("http://localhost:8080/api/cart/add", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            credentials: "include",
+            body: JSON.stringify({
+              chiTietSanPhamId: 1,
+              soLuong: 1,
+            }),
+          });
+
+          if (response.ok) {
+            showResult(
+              "✅ Đã thêm sản phẩm vào giỏ hàng thành công!",
+              "success"
+            );
+            checkCart(); // Tự động kiểm tra lại giỏ hàng
+          } else {
+            const error = await response.text();
+            showResult(`❌ Thêm vào giỏ hàng thất bại: ${error}`, "error");
+          }
+        } catch (error) {
+          showResult(`❌ Lỗi thêm vào giỏ hàng: ${error.message}`, "error");
+        } finally {
+          setLoading(false);
+        }
+      }
+
+      async function updateCart() {
+        setLoading(true);
+        try {
+          // Lấy giỏ hàng hiện tại
+          const cartResponse = await fetch("http://localhost:8080/api/cart", {
+            method: "GET",
+            headers: { "Content-Type": "application/json" },
+            credentials: "include",
+          });
+
+          if (cartResponse.ok) {
+            const cartItems = await cartResponse.json();
+            if (cartItems.length > 0) {
+              const firstItem = cartItems[0];
+              const newQuantity = firstItem.soLuong + 1;
+
+              const updateResponse = await fetch(
+                `http://localhost:8080/api/cart/update/${firstItem.id}`,
+                {
+                  method: "PUT",
+                  headers: { "Content-Type": "application/json" },
+                  credentials: "include",
+                  body: JSON.stringify({ soLuong: newQuantity }),
+                }
+              );
+
+              if (updateResponse.ok) {
+                showResult(
+                  `✅ Đã cập nhật số lượng sản phẩm thành ${newQuantity}!`,
+                  "success"
+                );
+                checkCart();
+              } else {
+                const error = await updateResponse.text();
+                showResult(`❌ Cập nhật giỏ hàng thất bại: ${error}`, "error");
+              }
+            } else {
+              showResult(
+                "⚠️ Giỏ hàng trống, không có gì để cập nhật",
+                "warning"
+              );
+            }
+          } else {
+            showResult("❌ Không thể lấy giỏ hàng", "error");
+          }
+        } catch (error) {
+          showResult(`❌ Lỗi cập nhật giỏ hàng: ${error.message}`, "error");
+        } finally {
+          setLoading(false);
+        }
+      }
+
+      async function clearCart() {
+        setLoading(true);
+        try {
+          const cartResponse = await fetch("http://localhost:8080/api/cart", {
+            method: "GET",
+            headers: { "Content-Type": "application/json" },
+            credentials: "include",
+          });
+
+          if (cartResponse.ok) {
+            const cartItems = await cartResponse.json();
+            let clearedCount = 0;
+
+            for (const item of cartItems) {
+              const deleteResponse = await fetch(
+                `http://localhost:8080/api/cart/remove/${item.id}`,
+                {
+                  method: "DELETE",
+                  headers: { "Content-Type": "application/json" },
+                  credentials: "include",
+                }
+              );
+
+              if (deleteResponse.ok) {
+                clearedCount++;
+              }
+            }
+
+            showResult(
+              `✅ Đã xóa ${clearedCount} sản phẩm khỏi giỏ hàng!`,
+              "success"
+            );
+            checkCart();
+          } else {
+            showResult("❌ Không thể lấy giỏ hàng", "error");
+          }
+        } catch (error) {
+          showResult(`❌ Lỗi xóa giỏ hàng: ${error.message}`, "error");
+        } finally {
+          setLoading(false);
+        }
+      }
+
+      async function testCheckout() {
+        setLoading(true);
+        updateProgress(85, "Test checkout cơ bản...");
+
+        try {
+          const checkoutData = {
+            cartItems: [
+              {
+                chiTietSanPhamId: 1,
+                soLuong: 1,
+                gia: 100000,
+                thanhTien: 100000,
+              },
+            ],
+            diaChiId: 1,
+            phuongThucThanhToanId: 1,
+            ghiChuKhachHang: "Test checkout cơ bản",
+            phiVanChuyen: 30000,
+            tongTienHang: 100000,
+            tongThanhToan: 130000,
+          };
+
+          const response = await fetch(
+            "http://localhost:8080/api/checkout/process",
+            {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              credentials: "include",
+              body: JSON.stringify(checkoutData),
+            }
+          );
+
+          const success = response.ok;
+          updateStatus(
+            4,
+            success ? "success" : "error",
+            success ? "✅ Checkout OK" : "❌ Checkout lỗi"
+          );
+
+          if (success) {
+            const result = await response.json();
+            showResult(
+              `=== Test checkout cơ bản ===\n
+📡 Checkout status: ${response.status}
+✅ Checkout result: ${JSON.stringify(result, null, 2)}`,
+              "success"
+            );
+          } else {
+            const error = await response.text();
+            showResult(
+              `=== Test checkout cơ bản ===\n
+📡 Checkout status: ${response.status}
+❌ Checkout error: ${error}`,
+              "error"
+            );
+          }
+
+          updateProgress(90, "Hoàn thành test checkout cơ bản");
+          return success;
+        } catch (error) {
+          updateStatus(4, "error", "❌ Lỗi kết nối");
+          showResult(`❌ Lỗi test checkout: ${error.message}`, "error");
+          updateProgress(90, "Lỗi test checkout");
+          return false;
+        } finally {
+          setLoading(false);
+        }
+      }
+
+      async function testCheckoutWithSession() {
+        setLoading(true);
+        updateProgress(85, "Test checkout với session...");
+
+        try {
+          // Kiểm tra session trước
+          const sessionResponse = await fetch(
+            "http://localhost:8080/api/auth/check-session",
+            {
+              method: "GET",
+              headers: { "Content-Type": "application/json" },
+              credentials: "include",
+            }
+          );
+
+          if (sessionResponse.status !== 200) {
+            throw new Error("Session không hợp lệ");
+          }
+
+          const checkoutData = {
+            cartItems: [
+              {
+                chiTietSanPhamId: 1,
+                soLuong: 1,
+                gia: 100000,
+                thanhTien: 100000,
+              },
+            ],
+            diaChiId: 1,
+            phuongThucThanhToanId: 1,
+            ghiChuKhachHang: "Test checkout với session validation",
+            phiVanChuyen: 30000,
+            tongTienHang: 100000,
+            tongThanhToan: 130000,
+          };
+
+          const response = await fetch(
+            "http://localhost:8080/api/checkout/process",
+            {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              credentials: "include",
+              body: JSON.stringify(checkoutData),
+            }
+          );
+
+          const success = response.ok;
+          updateStatus(
+            4,
+            success ? "success" : "error",
+            success ? "✅ Checkout OK" : "❌ Checkout lỗi"
+          );
+
+          if (success) {
+            const result = await response.json();
+            showResult(
+              `=== Test checkout với session ===\n
+📡 Checkout status: ${response.status}
+✅ Checkout result: ${JSON.stringify(result, null, 2)}`,
+              "success"
+            );
+          } else {
+            const error = await response.text();
+            showResult(
+              `=== Test checkout với session ===\n
+📡 Checkout status: ${response.status}
+❌ Checkout error: ${error}`,
+              "error"
+            );
+          }
+
+          updateProgress(90, "Hoàn thành test checkout với session");
+          return success;
+        } catch (error) {
+          updateStatus(4, "error", "❌ Lỗi kết nối");
+          showResult(
+            `❌ Lỗi test checkout với session: ${error.message}`,
+            "error"
+          );
+          updateProgress(90, "Lỗi test checkout với session");
+          return false;
+        } finally {
+          setLoading(false);
+        }
+      }
+
+      async function testCheckoutWithStock() {
+        setLoading(true);
+        updateProgress(85, "Test checkout với tồn kho...");
+
+        try {
+          // Kiểm tra tồn kho trước
+          const stockResponse = await fetch(
+            "http://localhost:8080/api/cart/check-stock/1",
+            {
+              method: "GET",
+              headers: { "Content-Type": "application/json" },
+              credentials: "include",
+            }
+          );
+
+          if (!stockResponse.ok) {
+            throw new Error("Không thể kiểm tra tồn kho");
+          }
+
+          const stockInfo = await stockResponse.json();
+          if (!stockInfo.available) {
+            throw new Error("Sản phẩm không có sẵn");
+          }
+
+          const checkoutData = {
+            cartItems: [
+              {
+                chiTietSanPhamId: 1,
+                soLuong: 1,
+                gia: 100000,
+                thanhTien: 100000,
+              },
+            ],
+            diaChiId: 1,
+            phuongThucThanhToanId: 1,
+            ghiChuKhachHang: "Test checkout với kiểm tra tồn kho",
+            phiVanChuyen: 30000,
+            tongTienHang: 100000,
+            tongThanhToan: 130000,
+          };
+
+          const response = await fetch(
+            "http://localhost:8080/api/checkout/process",
+            {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              credentials: "include",
+              body: JSON.stringify(checkoutData),
+            }
+          );
+
+          const success = response.ok;
+          updateStatus(
+            4,
+            success ? "success" : "error",
+            success ? "✅ Checkout OK" : "❌ Checkout lỗi"
+          );
+
+          if (success) {
+            const result = await response.json();
+            showResult(
+              `=== Test checkout với tồn kho ===\n
+📡 Checkout status: ${response.status}
+✅ Checkout result: ${JSON.stringify(result, null, 2)}`,
+              "success"
+            );
+          } else {
+            const error = await response.text();
+            showResult(
+              `=== Test checkout với tồn kho ===\n
+📡 Checkout status: ${response.status}
+❌ Checkout error: ${error}`,
+              "error"
+            );
+          }
+
+          updateProgress(90, "Hoàn thành test checkout với tồn kho");
+          return success;
+        } catch (error) {
+          updateStatus(4, "error", "❌ Lỗi kết nối");
+          showResult(
+            `❌ Lỗi test checkout với tồn kho: ${error.message}`,
+            "error"
+          );
+          updateProgress(90, "Lỗi test checkout với tồn kho");
+          return false;
+        } finally {
+          setLoading(false);
+        }
+      }
+
+      async function runCompleteTest() {
+        setLoading(true);
+        updateProgress(0, "Bắt đầu test toàn bộ...");
+
+        try {
+          showResult("🚀 Bắt đầu test toàn bộ hệ thống...", "info");
+
+          // 1. Kiểm tra đăng nhập
+          updateProgress(10, "Kiểm tra đăng nhập...");
+          const loginOk = await checkLoginStatus();
+
+          // 2. Kiểm tra session
+          updateProgress(30, "Kiểm tra session...");
+          const sessionOk = await checkSession();
+
+          // 3. Kiểm tra giỏ hàng
+          updateProgress(50, "Kiểm tra giỏ hàng...");
+          const cartOk = await checkCart();
+
+          // 4. Kiểm tra tồn kho
+          updateProgress(70, "Kiểm tra tồn kho...");
+          const stockOk = await checkStock();
+
+          // 5. Test checkout
+          updateProgress(85, "Test checkout...");
+          const checkoutOk = await testCheckout();
+
+          // Tổng kết
+          updateProgress(100, "Hoàn thành test toàn bộ");
+          const allOk = loginOk && sessionOk && cartOk && stockOk && checkoutOk;
+
+          updateStatus(
+            5,
+            allOk ? "success" : "warning",
+            allOk ? "✅ Tất cả OK" : "⚠️ Có vấn đề"
+          );
+
+          if (allOk) {
+            showResult(
+              "🎉 Tất cả test đều thành công! Hệ thống hoạt động tốt",
+              "success"
+            );
+          } else {
+            showResult(
+              "⚠️ Có một số test thất bại, cần kiểm tra lại",
+              "warning"
+            );
+          }
+
+          return allOk;
+        } catch (error) {
+          updateStatus(5, "error", "❌ Lỗi test");
+          showResult(`❌ Lỗi trong test toàn bộ: ${error.message}`, "error");
+          updateProgress(100, "Lỗi test toàn bộ");
+          return false;
+        } finally {
+          setLoading(false);
+        }
+      }
+
+      function forceUpdateToken() {
+        try {
+          const userStr = localStorage.getItem("user");
+          if (userStr) {
+            const userData = JSON.parse(userStr);
+            if (userData.id) {
+              userData.token = `customer-token-${userData.id}`;
+              localStorage.setItem("user", JSON.stringify(userData));
+              localStorage.setItem("isLoggedIn", "true");
+
+              showResult(
+                `🔧 Force updated token\n
+👤 User ID: ${userData.id}
+🔑 Token: ${userData.token}
+✅ isLoggedIn: true`,
+                "success"
+              );
+
+              displayUserInfo();
+              return;
+            }
+          }
+
+          showResult("❌ No user data found for force update", "error");
+        } catch (error) {
+          showResult(`❌ Error in force update: ${error.message}`, "error");
+        }
+      }
+
+      function clearResults() {
+        document.getElementById("results").innerHTML = "";
+        updateProgress(0, "Chưa bắt đầu test");
+
+        // Reset status
+        const items = document.querySelectorAll("#statusGrid .status-item");
+        items.forEach((item, index) => {
+          item.className = "status-item info";
+          const title = item.querySelector("h4").textContent;
+          item.innerHTML = `<h4>${title}</h4><p>Chưa kiểm tra</p>`;
+        });
+      }
+
+      // Auto-load user info on page load
+      window.onload = function () {
+        displayUserInfo();
+      };
+    </script>
+  </body>
+</html>

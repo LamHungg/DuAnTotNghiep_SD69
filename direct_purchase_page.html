@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Mua Sản Phẩm Trực Tiếp</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 20px;
+        background-color: #f5f5f5;
+      }
+      .container {
+        background: white;
+        padding: 30px;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        margin-bottom: 20px;
+      }
+      .form-group {
+        margin-bottom: 20px;
+      }
+      label {
+        display: block;
+        margin-bottom: 5px;
+        font-weight: bold;
+        color: #333;
+      }
+      input[type="number"] {
+        width: 100%;
+        padding: 12px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        font-size: 16px;
+        box-sizing: border-box;
+      }
+      .button-group {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 20px;
+        flex-wrap: wrap;
+      }
+      .btn {
+        padding: 12px 20px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 16px;
+        font-weight: bold;
+        transition: background-color 0.3s;
+      }
+      .btn:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+      }
+      .btn-info {
+        background: #17a2b8;
+        color: white;
+      }
+      .btn-info:hover:not(:disabled) {
+        background: #138496;
+      }
+      .btn-warning {
+        background: #ffc107;
+        color: #212529;
+      }
+      .btn-warning:hover:not(:disabled) {
+        background: #e0a800;
+      }
+      .btn-success {
+        background: #28a745;
+        color: white;
+      }
+      .btn-success:hover:not(:disabled) {
+        background: #218838;
+      }
+      .btn-danger {
+        background: #dc3545;
+        color: white;
+      }
+      .btn-danger:hover:not(:disabled) {
+        background: #c82333;
+      }
+      .result {
+        margin: 15px 0;
+        padding: 15px;
+        border-radius: 4px;
+        font-family: monospace;
+        white-space: pre-wrap;
+      }
+      .success {
+        background: #d4edda;
+        color: #155724;
+        border: 1px solid #c3e6cb;
+      }
+      .error {
+        background: #f8d7da;
+        color: #721c24;
+        border: 1px solid #f5c6cb;
+      }
+      .info {
+        background: #d1ecf1;
+        color: #0c5460;
+        border: 1px solid #bee5eb;
+      }
+      .warning {
+        background: #fff3cd;
+        color: #856404;
+        border: 1px solid #ffeaa7;
+      }
+      .product-list {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        gap: 15px;
+        margin-top: 20px;
+      }
+      .product-item {
+        background: #f8f9fa;
+        border: 1px solid #dee2e6;
+        border-radius: 4px;
+        padding: 15px;
+        text-align: center;
+      }
+      .product-item:hover {
+        background: #e9ecef;
+        cursor: pointer;
+      }
+      .product-id {
+        font-size: 18px;
+        font-weight: bold;
+        color: #007bff;
+      }
+      .product-name {
+        margin-top: 5px;
+        color: #666;
+      }
+      .quick-actions {
+        margin-top: 10px;
+      }
+      .quick-btn {
+        padding: 5px 10px;
+        margin: 2px;
+        border: none;
+        border-radius: 3px;
+        cursor: pointer;
+        font-size: 12px;
+      }
+      .quick-test {
+        background: #ffc107;
+        color: #212529;
+      }
+      .quick-buy {
+        background: #28a745;
+        color: white;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>🛒 Mua Sản Phẩm Trực Tiếp</h1>
+      <p>Nhập ID sản phẩm để mua trực tiếp, không cần qua giỏ hàng</p>
+    </div>
+
+    <div class="container">
+      <h3>📝 Thông Tin Mua Hàng</h3>
+
+      <div class="form-group">
+        <label for="productId">ID Sản Phẩm:</label>
+        <input
+          type="number"
+          id="productId"
+          placeholder="Nhập ID sản phẩm..."
+          min="1"
+        />
+      </div>
+
+      <div class="form-group">
+        <label for="quantity">Số Lượng:</label>
+        <input type="number" id="quantity" value="1" min="1" />
+      </div>
+
+      <div class="form-group">
+        <label for="addressId">ID Địa Chỉ:</label>
+        <input type="number" id="addressId" value="1" min="1" />
+      </div>
+
+      <div class="form-group">
+        <label for="paymentMethodId">ID Phương Thức Thanh Toán:</label>
+        <input type="number" id="paymentMethodId" value="1" min="1" />
+      </div>
+
+      <div class="button-group">
+        <button class="btn btn-info" onclick="checkProduct()" id="checkBtn">
+          🔍 Kiểm Tra Sản Phẩm
+        </button>
+        <button class="btn btn-warning" onclick="testPurchase()" id="testBtn">
+          🧪 Test Mua Hàng
+        </button>
+        <button class="btn btn-success" onclick="buyProduct()" id="buyBtn">
+          🛒 Mua Hàng Thực Tế
+        </button>
+        <button class="btn btn-danger" onclick="clearResults()">
+          🧹 Xóa Kết Quả
+        </button>
+      </div>
+
+      <div id="results"></div>
+    </div>
+
+    <div class="container">
+      <h3>📋 Danh Sách Sản Phẩm Có Sẵn</h3>
+      <button class="btn btn-info" onclick="loadProducts()">
+        🔄 Tải Danh Sách Sản Phẩm
+      </button>
+      <div id="productList" class="product-list"></div>
+    </div>
+
+    <div class="container">
+      <h3>📋 Hướng Dẫn Sử Dụng</h3>
+      <ul>
+        <li>
+          <strong>Kiểm Tra Sản Phẩm:</strong> Kiểm tra xem sản phẩm có tồn tại
+          không
+        </li>
+        <li>
+          <strong>Test Mua Hàng:</strong> Test quá trình mua hàng (không tạo đơn
+          hàng thực)
+        </li>
+        <li><strong>Mua Hàng Thực Tế:</strong> Tạo đơn hàng thực tế</li>
+        <li>
+          <strong>Lưu ý:</strong> Đảm bảo đã đăng nhập trước khi mua hàng!
+        </li>
+      </ul>
+    </div>
+
+    <script>
+      let isLoading = false;
+
+      function showResult(message, type = "info") {
+        const resultsDiv = document.getElementById("results");
+        const resultDiv = document.createElement("div");
+        resultDiv.className = `result ${type}`;
+        resultDiv.innerHTML = message;
+        resultsDiv.appendChild(resultDiv);
+        resultsDiv.scrollIntoView({ behavior: "smooth" });
+      }
+
+      function setLoading(loading) {
+        isLoading = loading;
+        const buttons = ["checkBtn", "testBtn", "buyBtn"];
+        buttons.forEach((id) => {
+          const btn = document.getElementById(id);
+          btn.disabled = loading;
+          if (loading) {
+            btn.innerHTML = "⏳ Đang xử lý...";
+          } else {
+            // Reset button text
+            if (id === "checkBtn") btn.innerHTML = "🔍 Kiểm Tra Sản Phẩm";
+            if (id === "testBtn") btn.innerHTML = "🧪 Test Mua Hàng";
+            if (id === "buyBtn") btn.innerHTML = "🛒 Mua Hàng Thực Tế";
+          }
+        });
+      }
+
+      async function checkProduct() {
+        const productId = document.getElementById("productId").value;
+        if (!productId) {
+          showResult("❌ Vui lòng nhập ID sản phẩm!", "error");
+          return;
+        }
+
+        setLoading(true);
+        try {
+          const response = await fetch(
+            `http://localhost:8080/api/products/${productId}`,
+            {
+              method: "GET",
+              headers: { "Content-Type": "application/json" },
+              credentials: "include",
+            }
+          );
+
+          if (response.ok) {
+            const product = await response.json();
+            showResult(
+              `✅ Sản phẩm ID ${productId} tồn tại!\n\n${JSON.stringify(
+                product,
+                null,
+                2
+              )}`,
+              "success"
+            );
+          } else {
+            showResult(`❌ Sản phẩm ID ${productId} không tồn tại!`, "error");
+          }
+        } catch (error) {
+          showResult(`❌ Lỗi kiểm tra sản phẩm: ${error.message}`, "error");
+        } finally {
+          setLoading(false);
+        }
+      }
+
+      async function testPurchase() {
+        const productId = document.getElementById("productId").value;
+        const quantity = document.getElementById("quantity").value;
+
+        if (!productId) {
+          showResult("❌ Vui lòng nhập ID sản phẩm!", "error");
+          return;
+        }
+
+        setLoading(true);
+        try {
+          const testData = {
+            cartItems: [
+              {
+                chiTietSanPhamId: parseInt(productId),
+                soLuong: parseInt(quantity),
+                gia: 100000,
+                thanhTien: 100000 * parseInt(quantity),
+              },
+            ],
+            diaChiId: parseInt(document.getElementById("addressId").value),
+            phuongThucThanhToanId: parseInt(
+              document.getElementById("paymentMethodId").value
+            ),
+            ghiChuKhachHang: "Test mua trực tiếp",
+            phiVanChuyen: 30000,
+            tongTienHang: 100000 * parseInt(quantity),
+            tongThanhToan: 100000 * parseInt(quantity) + 30000,
+          };
+
+          const response = await fetch(
+            "http://localhost:8080/api/checkout/test-process",
+            {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              credentials: "include",
+              body: JSON.stringify(testData),
+            }
+          );
+
+          if (response.ok) {
+            const result = await response.json();
+            showResult(
+              `✅ Test mua hàng thành công!\n\n${JSON.stringify(
+                result,
+                null,
+                2
+              )}`,
+              "success"
+            );
+          } else {
+            const error = await response.text();
+            showResult(`❌ Test mua hàng thất bại: ${error}`, "error");
+          }
+        } catch (error) {
+          showResult(`❌ Lỗi test mua hàng: ${error.message}`, "error");
+        } finally {
+          setLoading(false);
+        }
+      }
+
+      async function buyProduct() {
+        const productId = document.getElementById("productId").value;
+        const quantity = document.getElementById("quantity").value;
+
+        if (!productId) {
+          showResult("❌ Vui lòng nhập ID sản phẩm!", "error");
+          return;
+        }
+
+        if (!confirm("Bạn có chắc chắn muốn mua sản phẩm này?")) {
+          return;
+        }
+
+        setLoading(true);
+        try {
+          const buyData = {
+            cartItems: [
+              {
+                chiTietSanPhamId: parseInt(productId),
+                soLuong: parseInt(quantity),
+                gia: 100000,
+                thanhTien: 100000 * parseInt(quantity),
+              },
+            ],
+            diaChiId: parseInt(document.getElementById("addressId").value),
+            phuongThucThanhToanId: parseInt(
+              document.getElementById("paymentMethodId").value
+            ),
+            ghiChuKhachHang: "Mua trực tiếp từ website",
+            phiVanChuyen: 30000,
+            tongTienHang: 100000 * parseInt(quantity),
+            tongThanhToan: 100000 * parseInt(quantity) + 30000,
+          };
+
+          const response = await fetch(
+            "http://localhost:8080/api/checkout/process",
+            {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              credentials: "include",
+              body: JSON.stringify(buyData),
+            }
+          );
+
+          if (response.ok) {
+            const result = await response.json();
+            showResult(
+              `✅ Mua hàng thành công!\n\n${JSON.stringify(result, null, 2)}`,
+              "success"
+            );
+          } else {
+            const error = await response.text();
+            showResult(`❌ Mua hàng thất bại: ${error}`, "error");
+          }
+        } catch (error) {
+          showResult(`❌ Lỗi mua hàng: ${error.message}`, "error");
+        } finally {
+          setLoading(false);
+        }
+      }
+
+      function clearResults() {
+        document.getElementById("results").innerHTML = "";
+      }
+
+      async function loadProducts() {
+        setLoading(true);
+        try {
+          const response = await fetch("http://localhost:8080/api/products", {
+            method: "GET",
+            headers: { "Content-Type": "application/json" },
+            credentials: "include",
+          });
+
+          if (response.ok) {
+            const products = await response.json();
+            displayProducts(products);
+          } else {
+            showResult("❌ Không thể tải danh sách sản phẩm", "error");
+          }
+        } catch (error) {
+          showResult(`❌ Lỗi tải sản phẩm: ${error.message}`, "error");
+        } finally {
+          setLoading(false);
+        }
+      }
+
+      function displayProducts(products) {
+        const productList = document.getElementById("productList");
+        productList.innerHTML = "";
+
+        products.forEach((product) => {
+          const productDiv = document.createElement("div");
+          productDiv.className = "product-item";
+          productDiv.innerHTML = `
+                    <div class="product-id">ID: ${product.id}</div>
+                    <div class="product-name">${
+                      product.tenSanPham || "Tên sản phẩm"
+                    }</div>
+                    <div class="quick-actions">
+                        <button class="quick-btn quick-test" onclick="quickTest(${
+                          product.id
+                        })">Test</button>
+                        <button class="quick-btn quick-buy" onclick="quickBuy(${
+                          product.id
+                        })">Mua</button>
+                    </div>
+                `;
+          productList.appendChild(productDiv);
+        });
+      }
+
+      function quickTest(productId) {
+        document.getElementById("productId").value = productId;
+        testPurchase();
+      }
+
+      function quickBuy(productId) {
+        document.getElementById("productId").value = productId;
+        buyProduct();
+      }
+
+
+      // Auto-load products on page load
+      window.onload = function () {
+        loadProducts();
+      };
+    </script>
+  </body>
+</html>

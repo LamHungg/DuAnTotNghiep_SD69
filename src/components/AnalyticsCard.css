@@ -1,0 +1,121 @@
+/* Analytics Card Styles */
+.analytics-card {
+  background: white;
+  border-radius: 16px;
+  padding: 1.5rem;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  border-top: 4px solid;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.analytics-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+}
+
+.analytics-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 1rem;
+}
+
+.analytics-card-icon {
+  width: 50px;
+  height: 50px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.25rem;
+  color: white;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+}
+
+.analytics-card-change {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.trend-icon {
+  font-size: 0.75rem;
+}
+
+.trend-icon.positive {
+  color: #27ae60;
+}
+
+.trend-icon.negative {
+  color: #e74c3c;
+}
+
+.trend-icon.neutral {
+  color: #95a5a6;
+}
+
+.change-value {
+  font-weight: 600;
+}
+
+.change-value.positive {
+  color: #27ae60;
+}
+
+.change-value.negative {
+  color: #e74c3c;
+}
+
+.analytics-card-content {
+  display: flex;
+  flex-direction: column;
+}
+
+.analytics-card-title {
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: #7f8c8d;
+  margin: 0 0 0.5rem 0;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.analytics-card-value {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #2c3e50;
+  margin-bottom: 0.25rem;
+  line-height: 1.2;
+}
+
+.analytics-card-subtitle {
+  font-size: 0.8rem;
+  color: #95a5a6;
+  font-weight: 500;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .analytics-card {
+    padding: 1rem;
+  }
+  
+  .analytics-card-icon {
+    width: 40px;
+    height: 40px;
+    font-size: 1rem;
+  }
+  
+  .analytics-card-value {
+    font-size: 1.5rem;
+  }
+  
+  .analytics-card-title {
+    font-size: 0.8rem;
+  }
+}
